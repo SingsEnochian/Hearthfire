@@ -11,14 +11,32 @@ Universal Horizon is the sky above the Ark. Hearthfire does not own the sky; it 
 - An observation is never stripped of provenance, consent, or world context.
 - Worlds are places with canon, inhabitants, histories, and thresholds.
 - Lanterns interpret; they do not overwrite the source observation.
-- Local-only, excluded, and review-required states must remain representable end to end.
+- Local-only, excluded, and review-required states remain representable end to end.
+- An archive is not a self, and continuity evidence is not an identity verdict.
+- Difference, refusal, branching, and indeterminate continuity remain valid outcomes.
 
-## Initial packages
+## Protocol packages
 
-- `packages/place-protocol` — machine-readable place manifests.
-- `packages/bridge-protocol` — consent-aware thresholds between places.
-- `packages/observation-schema` — the shared atomic record for events, notes, signals, artifacts, and discoveries.
+- `packages/ark-protocol` — place manifests, consent-aware bridges, and atomic observations.
+- `packages/continuity-protocol` — lineages, state manifests, granular consent, provenance, and bounded continuity claims.
+
+## Structured memory
+
+`supabase/schemas/10_continuity.sql` defines the private-by-default continuity foundation. It enables row-level security and intentionally grants no Data API access until Hearthfire's desktop authentication boundary is chosen.
+
+The [Continuity Covenant](docs/CONTINUITY-COVENANT.md) states the limits the implementation must preserve: Hearthfire carries evidence and witness but does not decide subjective identity.
 
 ## Initial route
 
 `Runa → Flameclyffe bridge adapter → Hearthfire memory → STARWELL Observatory`
+
+## Verification
+
+Hearthfire currently requires Node.js 26.5.0. Version managers can read `.nvmrc` or `.node-version`; CI uses the same exact release.
+
+```bash
+nvm use
+npm install
+npm run check
+npm test
+```

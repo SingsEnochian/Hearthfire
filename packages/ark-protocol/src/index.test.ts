@@ -6,7 +6,7 @@ import {
   type BridgeManifest,
   type Observation,
   type PlaceManifest,
-} from "./index.js";
+} from "./index.ts";
 
 const bridge: BridgeManifest = {
   protocol: "hearthfire.bridge/v1",
