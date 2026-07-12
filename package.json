@@ -6,7 +6,7 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "node --test"
+    "test": "node --test \"packages/**/*.test.ts\""
   },
   "devDependencies": {
     "typescript": "^5.6.3"
