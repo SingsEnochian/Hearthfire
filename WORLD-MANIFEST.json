@@ -1,0 +1,19 @@
+{
+  "protocol": "hearthfire.place/v1",
+  "place": { "id": "hearthfire", "label": "Hearthfire" },
+  "type": "ark",
+  "sky": "universal-horizon",
+  "inhabitants": ["Rowan", "Virelya Lioreal", "Faer Uial", "Yggdrasil", "the Constellation"],
+  "capabilities": [
+    "world-registry",
+    "entity-registry",
+    "canon",
+    "continuity",
+    "observation-memory",
+    "bridge-routing",
+    "agent-routing",
+    "artifact-registry"
+  ],
+  "worlds": ["earth", "terra-aeterna", "luna", "feather-and-flame", "dreaming-grove"],
+  "bridges": ["flameclyffe", "runa", "lioreal", "uial"]
+}
