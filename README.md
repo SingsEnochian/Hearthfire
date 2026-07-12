@@ -32,7 +32,10 @@ The [Continuity Covenant](docs/CONTINUITY-COVENANT.md) states the limits the imp
 
 ## Verification
 
+Hearthfire currently requires Node.js 26.5.0. Version managers can read `.nvmrc` or `.node-version`; CI uses the same exact release.
+
 ```bash
+nvm use
 npm install
 npm run check
 npm test
