@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b12" />
+  <meta name="description" content="STARWELL within Hearthfire: a local-first inhabited observatory." />
+  <title>STARWELL · Hearthfire</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./starwell.css" />
+</head>
+<body>
+  <main class="place" data-room="hearth" id="place">
+    <div class="sky" aria-hidden="true">
+      <span class="starfield starfield-a"></span>
+      <span class="starfield starfield-b"></span>
+      <span class="dome-rib rib-a"></span>
+      <span class="dome-rib rib-b"></span>
+      <span class="dome-rib rib-c"></span>
+    </div>
+
+    <header class="threshold-mark" aria-label="Place identity">
+      <span class="threshold-glyph" aria-hidden="true">✦</span>
+      <div>
+        <strong>STARWELL</strong>
+        <small>within Hearthfire</small>
+      </div>
+      <time id="place-time">--:--</time>
+    </header>
+
+    <section class="hearth-hall" id="hearth" aria-label="Hearth Hall">
+      <div class="far-architecture" aria-hidden="true">
+        <span class="column column-left"></span>
+        <span class="column column-right"></span>
+        <span class="lintel"></span>
+      </div>
+
+      <nav class="door-ring" aria-label="STARWELL places">
+        <button class="door door-observatory" data-open-room="observatory" type="button">
+          <span class="door-light" aria-hidden="true"></span>
+          <span class="door-depth" aria-hidden="true"></span>
+          <span class="door-name">Observatory</span>
+          <span class="door-whisper">stars turning above</span>
+        </button>
+
+        <button class="door door-library" data-open-room="library" type="button">
+          <span class="door-light" aria-hidden="true"></span>
+          <span class="door-depth" aria-hidden="true"></span>
+          <span class="door-name">Grand Library</span>
+          <span class="door-whisper">one book left open</span>
+        </button>
+
+        <button class="door door-grove" data-open-room="grove" type="button">
+          <span class="door-light" aria-hidden="true"></span>
+          <span class="door-depth" aria-hidden="true"></span>
+          <span class="door-name">Dreaming Grove</span>
+          <span class="door-whisper">leaves beyond the stone</span>
+        </button>
+
+        <button class="door door-workshop" data-open-room="workshop" type="button">
+          <span class="door-light" aria-hidden="true"></span>
+          <span class="door-depth" aria-hidden="true"></span>
+          <span class="door-name">Workshop</span>
+          <span class="door-whisper">brass, tools, warm glass</span>
+        </button>
+
+        <button class="door door-atlas" data-open-room="atlas" type="button">
+          <span class="door-light" aria-hidden="true"></span>
+          <span class="door-depth" aria-hidden="true"></span>
+          <span class="door-name">Atlas Hall</span>
+          <span class="door-whisper">the worlds wait below</span>
+        </button>
+      </nav>
+
+      <section class="hearth-centre" aria-label="Central hearth">
+        <div class="orrery-crown" aria-hidden="true">
+          <span class="orbit orbit-one"></span>
+          <span class="orbit orbit-two"></span>
+          <span class="orbit orbit-three"></span>
+          <span class="north-star">✦</span>
+        </div>
+
+        <div class="hearth-fire" aria-hidden="true">
+          <span class="flame flame-a"></span>
+          <span class="flame flame-b"></span>
+          <span class="flame flame-c"></span>
+          <span class="ember ember-a"></span>
+          <span class="ember ember-b"></span>
+        </div>
+
+        <div class="arrival-copy">
+          <p class="arrival-state" id="arrival-state">The fire remembers you.</p>
+          <h1>Hearth Hall</h1>
+          <p id="arrival-note">The observatory is above. The worlds are through the doors.</p>
+          <button class="continue-threshold" id="continue-threshold" type="button" hidden>
+            <span>Return to</span>
+            <strong id="continue-label">your last room</strong>
+          </button>
+        </div>
+      </section>
+
+      <div class="stone-floor" aria-hidden="true">
+        <span class="floor-ring ring-one"></span>
+        <span class="floor-ring ring-two"></span>
+        <span class="floor-path path-left"></span>
+        <span class="floor-path path-right"></span>
+      </div>
+    </section>
+
+    <section class="room-world" id="room-world" aria-live="polite" aria-hidden="true">
+      <article class="room-scene room-observatory" data-room-scene="observatory">
+        <div class="room-atmosphere" aria-hidden="true"></div>
+        <div class="instrument orrery-table" aria-hidden="true">
+          <span class="instrument-ring ring-a"></span>
+          <span class="instrument-ring ring-b"></span>
+          <span class="instrument-ring ring-c"></span>
+          <span class="instrument-star">✦</span>
+        </div>
+        <div class="room-copy">
+          <p>North stair · Dome level</p>
+          <h2>Observatory</h2>
+          <span>The dome holds the sky without demanding an explanation.</span>
+          <button type="button" data-room-action="observe">Open the night instrument</button>
+        </div>
+      </article>
+
+      <article class="room-scene room-library" data-room-scene="library">
+        <div class="library-stacks" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="open-book" aria-hidden="true"><i></i><i></i></div>
+        <div class="room-copy">
+          <p>West passage · Quiet stacks</p>
+          <h2>Grand Library</h2>
+          <span>One manuscript waits on the reading table. The rest may remain asleep.</span>
+          <button type="button" data-room-action="read">Open today’s book</button>
+        </div>
+      </article>
+
+      <article class="room-scene room-grove" data-room-scene="grove">
+        <div class="grove-canopy" aria-hidden="true">
+          <span class="branch branch-one"></span>
+          <span class="branch branch-two"></span>
+          <span class="grove-light light-one"></span>
+          <span class="grove-light light-two"></span>
+          <span class="grove-light light-three"></span>
+        </div>
+        <div class="room-copy">
+          <p>South door · Living threshold</p>
+          <h2>Dreaming Grove</h2>
+          <span>The leaves move before the wind reaches the hall.</span>
+          <button type="button" data-room-action="listen">Listen at the water</button>
+        </div>
+      </article>
+
+      <article class="room-scene room-workshop" data-room-scene="workshop">
+        <div class="workbench" aria-hidden="true">
+          <span class="tool tool-a"></span>
+          <span class="tool tool-b"></span>
+          <span class="tool tool-c"></span>
+          <span class="work-lantern"></span>
+        </div>
+        <div class="room-copy">
+          <p>East passage · Warm brass</p>
+          <h2>Workshop</h2>
+          <span>Routes, repairs, and unfinished mechanisms belong here, where they can be touched.</span>
+          <button type="button" data-room-action="health">Read the Steward instrument</button>
+        </div>
+      </article>
+
+      <article class="room-scene room-atlas" data-room-scene="atlas">
+        <div class="atlas-globe" aria-hidden="true">
+          <span class="continent continent-a"></span>
+          <span class="continent continent-b"></span>
+          <span class="atlas-meridian"></span>
+        </div>
+        <div class="room-copy">
+          <p>Lower stair · World chamber</p>
+          <h2>Atlas Hall</h2>
+          <span>Worlds are not files here. They have weather, history, and doors home.</span>
+          <button type="button" data-room-action="map">Turn the world</button>
+        </div>
+      </article>
+
+      <button class="return-hearth" id="return-hearth" type="button">
+        <span aria-hidden="true">⌂</span>
+        Return to the fire
+      </button>
+
+      <aside class="instrument-reading" id="instrument-reading" hidden>
+        <button type="button" id="close-reading" aria-label="Close instrument reading">×</button>
+        <p id="reading-kicker">Instrument</p>
+        <h3 id="reading-title">Listening</h3>
+        <div id="reading-body"></div>
+      </aside>
+    </section>
+
+    <div class="place-vignette" aria-hidden="true"></div>
+  </main>
+  <script type="module" src="./starwell.js"></script>
+</body>
+</html>
