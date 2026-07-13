@@ -5,6 +5,7 @@
   "hostPlace": "hearthfire",
   "centre": "hearth",
   "kind": "inhabited-observatory",
+  "framework": "rei-mythience",
   "visibility": "private",
   "rooms": [
     { "id": "hearth", "purpose": "arrival-return-gathering" },
@@ -18,12 +19,14 @@
     "persistence": "device-local",
     "actions": "user-invoked",
     "healthRoute": "/health",
-    "placeStateRoute": "/api/state"
+    "placeStateRoute": "/api/state",
+    "reiMythienceRoute": "/api/rei"
   },
   "principles": [
     "the-hearth-is-the-centre-of-gravity",
     "one-room-one-purpose-one-invitation",
     "missing-routes-are-never-reported-as-healthy",
-    "a-place-is-not-a-tab"
+    "a-place-is-not-a-tab",
+    "mythic-meaning-and-measurement-remain-mutually-visible"
   ]
 }
