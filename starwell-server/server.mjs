@@ -53,12 +53,14 @@ async function serveStatic(request, response) {
       'x-content-type-options': 'nosniff',
       'referrer-policy': 'same-origin',
     });
-    response.end(body);
+    if (request.method === 'HEAD') response.end();
+    else response.end(body);
   } catch {
     try {
       const fallback = await readFile(join(publicRoot, 'index.html'));
       response.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' });
-      response.end(fallback);
+      if (request.method === 'HEAD') response.end();
+      else response.end(fallback);
     } catch {
       json(response, 404, { ok: false, error: 'place-not-found' });
     }
