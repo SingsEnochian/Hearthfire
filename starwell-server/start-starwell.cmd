@@ -4,6 +4,7 @@ setlocal EnableExtensions
 set "SCRIPT_DIR=%~dp0"
 for %%I in ("%SCRIPT_DIR%..") do set "REPO_ROOT=%%~fI"
 set "TAILSCALE_IP=100.115.238.53"
+set "TAILSCALE_FOUND="
 set "HOST=0.0.0.0"
 set "PORT=4173"
 
@@ -70,7 +71,7 @@ cd /d "%SCRIPT_DIR%"
 echo.
 echo =====================================================
 echo   HEARTHFIRE ^> STARWELL PORTAL
-necho   REI Mythience ^| Concordance Engine 0.2.0
+echo   REI Mythience ^| Concordance Engine 0.2.0
 echo =====================================================
 echo.
 echo Node:            %NODE_VERSION%
