@@ -26,7 +26,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: starwell-server-pages
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -35,10 +35,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Hearthfire
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Resolve current Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
           check-latest: true
@@ -65,7 +65,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout Hearthfire
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
