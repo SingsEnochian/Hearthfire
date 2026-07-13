@@ -1,9 +1,8 @@
-name: STARWELL Server
+name: STARWELL Server Verify
 
 on:
   push:
     branches:
-      - feat/starwell-server
       - main
     paths:
       - 'starwell-server/**'
@@ -22,8 +21,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
@@ -33,6 +30,7 @@ jobs:
   verify:
     name: Verify place
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout Hearthfire
         uses: actions/checkout@v5
@@ -52,29 +50,5 @@ jobs:
       - name: Check client syntax
         run: node --check starwell-server/public/starwell.js
 
-      - name: Test place contract
+      - name: Test place and REI Mythience contracts
         run: node --test starwell-server/test/*.test.mjs
-
-  deploy:
-    name: Publish place
-    if: github.event_name != 'pull_request'
-    needs: verify
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout Hearthfire
-        uses: actions/checkout@v5
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload STARWELL place
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: starwell-server/public
-
-      - name: Deploy STARWELL
-        id: deployment
-        uses: actions/deploy-pages@v4
