@@ -4,15 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080b12" />
-  <meta name="description" content="STARWELL within Hearthfire: a local-first inhabited observatory." />
+  <meta name="description" content="STARWELL within Hearthfire: a local-first REI Mythience observatory." />
   <title>STARWELL · Hearthfire</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./starwell.css" />
+  <link rel="stylesheet" href="./portal-concordance.css" />
+  <link rel="stylesheet" href="./portal-layering.css" />
 </head>
 <body>
-  <main class="place" data-room="hearth" id="place">
+  <main class="place" data-room="hearth" data-skin="hearthfire" data-portal="closed" id="place">
     <div class="sky" aria-hidden="true">
       <span class="starfield starfield-a"></span>
       <span class="starfield starfield-b"></span>
@@ -24,8 +26,8 @@
     <header class="threshold-mark" aria-label="Place identity">
       <span class="threshold-glyph" aria-hidden="true">✦</span>
       <div>
-        <strong>STARWELL</strong>
-        <small>within Hearthfire</small>
+        <strong>HEARTHFIRE</strong>
+        <small id="skin-state">the room before the threshold</small>
       </div>
       <time id="place-time">--:--</time>
     </header>
@@ -37,12 +39,26 @@
         <span class="lintel"></span>
       </div>
 
-      <nav class="door-ring" aria-label="STARWELL places">
+      <button class="portal-doorway" id="starwell-portal" type="button" aria-pressed="false">
+        <span class="portal-arch" aria-hidden="true">
+          <span class="portal-depth"></span>
+          <span class="portal-stars"></span>
+          <span class="portal-horizon"></span>
+          <span class="portal-sigil">✦</span>
+        </span>
+        <span class="portal-copy">
+          <small>Reality Engine Interface</small>
+          <strong id="portal-label">Open STARWELL</strong>
+          <em id="portal-note">Reskin this room. Keep its state.</em>
+        </span>
+      </button>
+
+      <nav class="door-ring" aria-label="Hearthfire and STARWELL places">
         <button class="door door-observatory" data-open-room="observatory" type="button">
           <span class="door-light" aria-hidden="true"></span>
           <span class="door-depth" aria-hidden="true"></span>
           <span class="door-name">Observatory</span>
-          <span class="door-whisper">stars turning above</span>
+          <span class="door-whisper">concordance held under glass</span>
         </button>
 
         <button class="door door-library" data-open-room="library" type="button">
@@ -93,7 +109,7 @@
         <div class="arrival-copy">
           <p class="arrival-state" id="arrival-state">The fire remembers you.</p>
           <h1>Hearth Hall</h1>
-          <p id="arrival-note">The observatory is above. The worlds are through the doors.</p>
+          <p id="arrival-note">Open the threshold when the room is ready to become STARWELL.</p>
           <button class="continue-threshold" id="continue-threshold" type="button" hidden>
             <span>Return to</span>
             <strong id="continue-label">your last room</strong>
@@ -119,10 +135,10 @@
           <span class="instrument-star">✦</span>
         </div>
         <div class="room-copy">
-          <p>North stair · Dome level</p>
+          <p>North stair · Concordance level</p>
           <h2>Observatory</h2>
-          <span>The dome holds the sky without demanding an explanation.</span>
-          <button type="button" data-room-action="observe">Open the night instrument</button>
+          <span>The Lens compares the six observed terms without pretending the result is a law of nature.</span>
+          <button type="button" data-room-action="concordance">Open the Concordance Lens</button>
         </div>
       </article>
 
@@ -197,6 +213,7 @@
       </aside>
     </section>
 
+    <p class="sr-status" id="portal-status" aria-live="polite"></p>
     <div class="place-vignette" aria-hidden="true"></div>
   </main>
   <script type="module" src="./starwell.js"></script>

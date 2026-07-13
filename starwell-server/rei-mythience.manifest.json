@@ -2,13 +2,14 @@
   "$schema": "hearthfire.rei-mythience/v1",
   "id": "rei-mythience",
   "name": "Reality Engine Interface Mythience",
-  "status": "active-construction",
+  "status": "functional-prototype",
   "hostPlace": "hearthfire",
   "interfaces": {
     "observatory": "starwell",
     "instrument": "deep",
     "implementationSpine": "concordance-engine",
-    "observerInterface": "concordance-lens"
+    "observerInterface": "concordance-lens",
+    "portal": "same-room-starwell-reskin"
   },
   "cosmology": {
     "universalHorizon": "sky",
@@ -40,6 +41,25 @@
       "world-state",
       "observer-state"
     ]
+  },
+  "concordance": {
+    "engineVersion": "0.2.0",
+    "inputSchemaRoute": "/api/concordance/schema",
+    "evaluationRoute": "/api/concordance/evaluate",
+    "formula": "0.16P + 0.22C + 0.22R + 0.10(1-E) + 0.14M + 0.16A",
+    "inputs": ["pulse", "coherence", "resonance", "entropy", "memory", "axis"],
+    "output": ["quotient", "phase", "signal", "stability", "strongest", "tension", "provenance", "trace"],
+    "mode": "manual-observation-with-device-local-fallback",
+    "boundary": "transparent-heuristic-not-validated-physical-law"
+  },
+  "portal": {
+    "version": "room-reskin-v1",
+    "origin": "hearthfire",
+    "destinationSkin": "starwell",
+    "preserves": ["room", "last-room", "visits", "concordance-vector"],
+    "changes": ["materials", "light", "sky", "instrument-grammar", "place-identity"],
+    "crossing": "explicit-user-invoked",
+    "return": "reversible"
   },
   "boundaries": [
     "theoretical-and-instrumental-not-ontological-proof",

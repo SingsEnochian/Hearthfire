@@ -1,0 +1,19 @@
+.door-ring {
+  pointer-events: none;
+}
+
+.door {
+  pointer-events: auto;
+}
+
+.hearth-centre {
+  pointer-events: none;
+}
+
+.hearth-centre button {
+  pointer-events: auto;
+}
+
+.portal-doorway {
+  pointer-events: auto;
+}

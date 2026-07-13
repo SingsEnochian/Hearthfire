@@ -47,6 +47,9 @@ jobs:
       - name: Check server syntax
         run: node --check starwell-server/server.mjs
 
+      - name: Check Concordance Engine syntax
+        run: node --check starwell-server/public/concordance-engine.js
+
       - name: Check client syntax
         run: node --check starwell-server/public/starwell.js
 

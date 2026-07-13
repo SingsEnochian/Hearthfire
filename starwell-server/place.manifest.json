@@ -9,7 +9,7 @@
   "visibility": "private",
   "rooms": [
     { "id": "hearth", "purpose": "arrival-return-gathering" },
-    { "id": "observatory", "purpose": "observation-orientation" },
+    { "id": "observatory", "purpose": "observation-concordance-orientation" },
     { "id": "library", "purpose": "sources-manuscripts" },
     { "id": "grove", "purpose": "rest-listening-dream" },
     { "id": "workshop", "purpose": "build-repair-stewardship" },
@@ -20,13 +20,23 @@
     "actions": "user-invoked",
     "healthRoute": "/health",
     "placeStateRoute": "/api/state",
-    "reiMythienceRoute": "/api/rei"
+    "reiMythienceRoute": "/api/rei",
+    "concordanceSchemaRoute": "/api/concordance/schema",
+    "concordanceEvaluateRoute": "/api/concordance/evaluate",
+    "portalMode": "same-room-reversible-reskin"
   },
+  "preservedAcrossPortal": [
+    "active-room",
+    "last-room",
+    "visit-counts",
+    "concordance-vector"
+  ],
   "principles": [
     "the-hearth-is-the-centre-of-gravity",
     "one-room-one-purpose-one-invitation",
     "missing-routes-are-never-reported-as-healthy",
     "a-place-is-not-a-tab",
-    "mythic-meaning-and-measurement-remain-mutually-visible"
+    "mythic-meaning-and-measurement-remain-mutually-visible",
+    "a-portal-transforms-the-room-without-erasing-its-state"
   ]
 }
