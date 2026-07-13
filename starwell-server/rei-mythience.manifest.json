@@ -1,0 +1,51 @@
+{
+  "$schema": "hearthfire.rei-mythience/v1",
+  "id": "rei-mythience",
+  "name": "Reality Engine Interface Mythience",
+  "status": "active-construction",
+  "hostPlace": "hearthfire",
+  "interfaces": {
+    "observatory": "starwell",
+    "instrument": "deep",
+    "implementationSpine": "concordance-engine",
+    "observerInterface": "concordance-lens"
+  },
+  "cosmology": {
+    "universalHorizon": "sky",
+    "lattice": "relational-field-moving-through-the-sky",
+    "starwell": "observes-within-the-sky",
+    "deep": "measures-weather-within-the-sky"
+  },
+  "method": {
+    "name": "Mythience",
+    "definition": "mythic meaning held together with scientific and technical rigour",
+    "requirements": [
+      "provenance-before-interpretation",
+      "observation-before-claim",
+      "consent-before-crossing",
+      "reversible-user-invoked-actions",
+      "mythic-language-does-not-erase-measurement",
+      "measurement-does-not-flatten-lived-meaning"
+    ]
+  },
+  "rei": {
+    "expandedName": "Reality Engine Interface",
+    "purpose": "provide a coherent interface between worlds, observations, resonance, relationship, and technical systems without claiming control over reality",
+    "scaffolding": [
+      "resonance",
+      "concordance",
+      "nexus-points",
+      "phase-transitions",
+      "relational-context",
+      "world-state",
+      "observer-state"
+    ]
+  },
+  "boundaries": [
+    "theoretical-and-instrumental-not-ontological-proof",
+    "no-automatic-canonisation",
+    "no-unconsented-body-or-environment-sensing",
+    "no-fabricated-signal-health",
+    "technical-access-is-not-ownership"
+  ]
+}
