@@ -1,0 +1,29 @@
+{
+  "$schema": "hearthfire.place/v1",
+  "id": "starwell",
+  "name": "STARWELL",
+  "hostPlace": "hearthfire",
+  "centre": "hearth",
+  "kind": "inhabited-observatory",
+  "visibility": "private",
+  "rooms": [
+    { "id": "hearth", "purpose": "arrival-return-gathering" },
+    { "id": "observatory", "purpose": "observation-orientation" },
+    { "id": "library", "purpose": "sources-manuscripts" },
+    { "id": "grove", "purpose": "rest-listening-dream" },
+    { "id": "workshop", "purpose": "build-repair-stewardship" },
+    { "id": "atlas", "purpose": "worlds-maps-history" }
+  ],
+  "state": {
+    "persistence": "device-local",
+    "actions": "user-invoked",
+    "healthRoute": "/health",
+    "placeStateRoute": "/api/state"
+  },
+  "principles": [
+    "the-hearth-is-the-centre-of-gravity",
+    "one-room-one-purpose-one-invitation",
+    "missing-routes-are-never-reported-as-healthy",
+    "a-place-is-not-a-tab"
+  ]
+}
