@@ -3,10 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*",
+    "starwell-server"
+  ],
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "node --test"
+    "test": "node --test",
+    "starwell:start": "npm --workspace @hearthfire/starwell-server start",
+    "starwell:dev": "npm --workspace @hearthfire/starwell-server dev",
+    "starwell:check": "npm --workspace @hearthfire/starwell-server check",
+    "starwell:test": "npm --workspace @hearthfire/starwell-server test"
   },
   "devDependencies": {
     "typescript": "^5.6.3"
