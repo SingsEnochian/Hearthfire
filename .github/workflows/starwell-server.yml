@@ -46,14 +46,14 @@ jobs:
       - name: Show runtime
         run: node --version
 
-      - name: Install workspace
-        run: npm install
+      - name: Check server syntax
+        run: node --check starwell-server/server.mjs
 
-      - name: Check server and client syntax
-        run: npm run starwell:check
+      - name: Check client syntax
+        run: node --check starwell-server/public/starwell.js
 
       - name: Test place contract
-        run: npm run starwell:test
+        run: node --test starwell-server/test/*.test.mjs
 
   deploy:
     name: Publish place
