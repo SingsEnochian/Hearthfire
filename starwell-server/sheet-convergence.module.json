@@ -1,0 +1,65 @@
+{
+  "$schema": "hearthgate.module/v1",
+  "id": "sheet-convergence",
+  "name": "Sheet Convergence",
+  "version": "1.0.0",
+  "status": "bundled-core",
+  "epistemicRegisters": ["MATHEMATICAL_DERIVATION", "LOCATION_INPUT"],
+  "claimLabel": "speculative-theory",
+
+  "description": "Polynomial fiber map F:ℂ³→ℂ³ with det(DF)=-2 everywhere. Measures proximity to certified preimage fibers and the certified target. Location-direct: normalises lat/lon/alt into the mathematical state space.",
+
+  "mathematics": {
+    "map": "F(x,y,z) defined by three polynomial components over three preimage fibers",
+    "jacobianDeterminant": -2,
+    "certifiedTarget": [-0.25, 0, 0],
+    "certifiedPreimages": [
+      { "label": "earth-p1", "coordinates": [0, 0, -0.25] },
+      { "label": "p2",       "coordinates": [1, -1.5, 6.5] },
+      { "label": "p3",       "coordinates": [-1, 1.5, 6.5] }
+    ],
+    "localFoldProbability": 0,
+    "physicalFoldProbability": null,
+    "physicalStatus": "UNAVAILABLE_UNTIL_CALIBRATED",
+    "boundary": "det(J)=-2 everywhere; map is nonsingular; no mathematical fold singularity exists. Physical spacetime fold is not claimed."
+  },
+
+  "locationNormalisation": {
+    "x": "longitude / 180",
+    "y": "latitude / 90",
+    "z": "tanh(altitudeM / 10000) + sin(2π × dayFraction_UTC)"
+  },
+
+  "exports": [
+    "CERTIFIED_TARGET",
+    "CERTIFIED_PREIMAGES",
+    "sheetConvergenceMap",
+    "sheetConvergenceJacobian",
+    "determinant3",
+    "singularValues3",
+    "normaliseLocationState",
+    "calculateSheetConvergence"
+  ],
+
+  "delivery": "bundled-core",
+  "entryPoint": "./sheet-convergence.mjs",
+
+  "hosts": [
+    {
+      "host": "hearthgate",
+      "mount": "laboratory/observatory",
+      "routes": ["/api/hearthgate/fold", "/api/hearthgate/modules/sheet-convergence"]
+    }
+  ],
+
+  "attribution": {
+    "author": "Vee",
+    "sourceProject": "Flameclyffe",
+    "sourceFile": "apps/starwell/src/lib/sheetConvergence.js",
+    "portedDate": "2026-07-19",
+    "portedBy": "Box",
+    "portNotes": "ES module port; -(x**3) fix for bare Node.js 24 unary-minus precedence. Vee retains authorship and credit.",
+    "contributionType": "mathematical-core",
+    "epistemicRegister": "MATHEMATICAL_DERIVATION"
+  }
+}

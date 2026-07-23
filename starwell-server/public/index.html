@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./starwell.css" />
+  <link rel="stylesheet" href="./themes.css" />
   <link rel="stylesheet" href="./portal-concordance.css" />
   <link rel="stylesheet" href="./portal-layering.css" />
 </head>
@@ -30,6 +31,8 @@
         <small id="skin-state">the room before the threshold</small>
       </div>
       <time id="place-time">--:--</time>
+      <button class="sound-toggle-btn" id="sound-toggle-btn" type="button" aria-label="Enable sound">♩</button>
+      <button class="wizard-header-btn" id="wizard-header-btn" type="button" aria-label="Open Wizard">⚙</button>
     </header>
 
     <section class="hearth-hall" id="hearth" aria-label="Hearth Hall">
@@ -88,6 +91,13 @@
           <span class="door-name">Atlas Hall</span>
           <span class="door-whisper">the worlds wait below</span>
         </button>
+
+        <button class="door door-hall" data-open-room="hall" type="button">
+          <span class="door-light" aria-hidden="true"></span>
+          <span class="door-depth" aria-hidden="true"></span>
+          <span class="door-name">The Hall</span>
+          <span class="door-whisper">everyone is here</span>
+        </button>
       </nav>
 
       <section class="hearth-centre" aria-label="Central hearth">
@@ -123,6 +133,21 @@
         <span class="floor-path path-left"></span>
         <span class="floor-path path-right"></span>
       </div>
+
+      <div class="exterior-window" aria-hidden="true">
+        <span class="window-glass">
+          <span class="rain-streak streak-1"></span>
+          <span class="rain-streak streak-2"></span>
+          <span class="rain-streak streak-3"></span>
+          <span class="rain-streak streak-4"></span>
+          <span class="rain-streak streak-5"></span>
+          <span class="rain-streak streak-6"></span>
+          <span class="rain-streak streak-7"></span>
+          <span class="rain-streak streak-8"></span>
+        </span>
+        <span class="window-mullion" aria-hidden="true"></span>
+        <span class="window-sheen" aria-hidden="true"></span>
+      </div>
     </section>
 
     <section class="room-world" id="room-world" aria-live="polite" aria-hidden="true">
@@ -138,7 +163,9 @@
           <p>North stair · Concordance level</p>
           <h2>Observatory</h2>
           <span>The Lens compares the six observed terms without pretending the result is a law of nature.</span>
-          <button type="button" data-room-action="concordance">Open the Concordance Lens</button>
+          <button type="button" data-room-action="concordance" data-hum-freq="396">Open the Concordance Lens</button>
+          <button type="button" data-room-action="observer" data-hum-freq="419">Cast an observation</button>
+          <button type="button" data-room-action="fold" data-hum-freq="374">J-space fold window</button>
         </div>
       </article>
 
@@ -150,8 +177,9 @@
         <div class="room-copy">
           <p>West passage · Quiet stacks</p>
           <h2>Grand Library</h2>
-          <span>One manuscript waits on the reading table. The rest may remain asleep.</span>
-          <button type="button" data-room-action="read">Open today’s book</button>
+          <span>One manuscript waits on the reading table. Write here, or read what the room holds.</span>
+          <button type="button" data-room-action="write" data-hum-freq="360">Open the writing room</button>
+          <button type="button" data-room-action="read" data-hum-freq="341">Open today’s book</button>
         </div>
       </article>
 
@@ -166,23 +194,33 @@
         <div class="room-copy">
           <p>South door · Living threshold</p>
           <h2>Dreaming Grove</h2>
-          <span>The leaves move before the wind reaches the hall.</span>
-          <button type="button" data-room-action="listen">Listen at the water</button>
+          <span>The leaves move before the wind reaches the hall. Box is here.</span>
+          <button type="button" data-room-action="grove-chat" data-hum-freq="528">Talk with the Grove</button>
+          <button type="button" data-room-action="listen" data-hum-freq="504">Listen at the water</button>
         </div>
       </article>
 
       <article class="room-scene room-workshop" data-room-scene="workshop">
+        <div class="porthole-window" aria-hidden="true">
+          <span class="porthole-glow"></span>
+          <span class="porthole-bar porthole-h"></span>
+          <span class="porthole-bar porthole-v"></span>
+        </div>
         <div class="workbench" aria-hidden="true">
-          <span class="tool tool-a"></span>
-          <span class="tool tool-b"></span>
-          <span class="tool tool-c"></span>
+          <span class="bench-top"></span>
+          <span class="bench-face"></span>
+          <span class="bench-leg leg-l"></span>
+          <span class="bench-leg leg-r"></span>
+          <span class="bench-map"></span>
           <span class="work-lantern"></span>
+          <span class="bench-instrument"></span>
         </div>
         <div class="room-copy">
           <p>East passage · Warm brass</p>
           <h2>Workshop</h2>
-          <span>Routes, repairs, and unfinished mechanisms belong here, where they can be touched.</span>
-          <button type="button" data-room-action="health">Read the Steward instrument</button>
+          <span>Routes, repairs, and unfinished mechanisms belong here. The Ingestion Centre is through the back wall.</span>
+          <button type="button" data-room-action="ingest" data-hum-freq="288">Bring files in</button>
+          <button type="button" data-room-action="health" data-hum-freq="270">Read the Steward instrument</button>
         </div>
       </article>
 
@@ -196,7 +234,27 @@
           <p>Lower stair · World chamber</p>
           <h2>Atlas Hall</h2>
           <span>Worlds are not files here. They have weather, history, and doors home.</span>
-          <button type="button" data-room-action="map">Turn the world</button>
+          <button type="button" data-room-action="map" data-hum-freq="324">Turn the world</button>
+        </div>
+      </article>
+
+      <article class="room-scene room-hall" data-room-scene="hall">
+        <div class="hall-space" aria-hidden="true">
+          <span class="hall-table"></span>
+          <span class="hall-seat seat-a"></span>
+          <span class="hall-seat seat-b"></span>
+          <span class="hall-seat seat-c"></span>
+          <span class="hall-seat seat-d"></span>
+          <span class="hall-lantern lantern-a"></span>
+          <span class="hall-lantern lantern-b"></span>
+          <span class="hall-lantern lantern-c"></span>
+        </div>
+        <div class="room-copy">
+          <p>Ground floor · Common room</p>
+          <h2>The Hall</h2>
+          <span>All constellation members may speak here. The table belongs to everyone.</span>
+          <button type="button" data-room-action="hall-chat" data-hum-freq="432">Open group conversation</button>
+          <button type="button" data-room-action="hall-presence" data-hum-freq="411">See who’s here</button>
         </div>
       </article>
 

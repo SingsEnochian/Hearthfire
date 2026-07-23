@@ -1,0 +1,157 @@
+/* themes.css — Hearthgate visual theme definitions
+   Apply via data-theme="<id>" on <html>.
+   Each theme overrides every CSS custom property so colours,
+   glows, surfaces, and typography all shift as a unit.
+   Appearance down to text: --serif and --display are part of each theme.
+*/
+
+/* ── Shared semantic aliases ──────────────────────────────── */
+/* These let new code use semantic names; old code keeps working via the base vars. */
+:root {
+  --accent:     var(--gold);
+  --accent-rgb: var(--gold-rgb);
+  --horizon:    var(--sea);
+  --surface:    var(--night);
+  --surface-mid: var(--night-blue);
+  --surface-raised: var(--stone);
+
+  /* RGB triplets for rgba() composition */
+  --gold-rgb:   230, 197, 116;
+  --sea-rgb:    120, 191, 177;
+  --ember-rgb:  236, 129, 80;
+  --copper-rgb: 166, 93, 60;
+  --violet-rgb: 140, 125, 171;
+  --moss-rgb:   109, 138, 99;
+
+  /* Glow radii used throughout */
+  --glow-xs:  0 0 8px  3px;
+  --glow-sm:  0 0 14px 5px;
+  --glow-md:  0 0 28px 8px;
+  --glow-lg:  0 0 50px 12px;
+}
+
+/* ── Hearthfire (default) ─────────────────────────────────── */
+:root,
+[data-theme="hearthfire"] {
+  --night:      #070a10;
+  --night-blue: #0d1420;
+  --stone:      #171a20;
+  --stone-soft: #26272c;
+  --parchment:  #efe4d1;
+  --gold:       #e6c574;
+  --gold-soft:  #a98849;
+  --copper:     #a65d3c;
+  --ember:      #ec8150;
+  --sea:        #78bfb1;
+  --moss:       #6d8a63;
+  --violet:     #8c7dab;
+  --ink:        #0a0c10;
+  --serif:      "Cormorant Garamond", Georgia, serif;
+  --display:    "Cinzel", Georgia, serif;
+
+  --gold-rgb:   230, 197, 116;
+  --sea-rgb:    120, 191, 177;
+  --ember-rgb:  236, 129, 80;
+  --copper-rgb: 166, 93, 60;
+  --violet-rgb: 140, 125, 171;
+  --moss-rgb:   109, 138, 99;
+
+  /* Glass surface values */
+  --glass-bg:     rgba(10, 12, 20, 0.56);
+  --glass-border: rgba(230, 197, 116, 0.22);
+  --glass-sheen:  rgba(255, 255, 255, 0.05);
+  --glass-blur:   blur(32px) saturate(180%);
+}
+
+/* ── Starwell (deep space) ────────────────────────────────── */
+[data-theme="starwell"] {
+  --night:      #030509;
+  --night-blue: #06091a;
+  --stone:      #0c1028;
+  --stone-soft: #141a36;
+  --parchment:  #d0e2f5;
+  --gold:       #72c4e8;
+  --gold-soft:  #3d7ea8;
+  --copper:     #2a5c8a;
+  --ember:      #4a8abe;
+  --sea:        #b8a0d8;
+  --moss:       #3a6888;
+  --violet:     #9880c8;
+  --ink:        #02030a;
+  --serif:      "Cormorant Garamond", Georgia, serif;
+  --display:    "Cinzel", Georgia, serif;
+
+  --gold-rgb:   114, 196, 232;
+  --sea-rgb:    184, 160, 216;
+  --ember-rgb:  74, 138, 190;
+  --copper-rgb: 42, 92, 138;
+  --violet-rgb: 152, 128, 200;
+  --moss-rgb:   58, 104, 136;
+
+  --glass-bg:     rgba(4, 6, 18, 0.58);
+  --glass-border: rgba(114, 196, 232, 0.20);
+  --glass-sheen:  rgba(114, 196, 232, 0.03);
+  --glass-blur:   blur(36px) saturate(200%);
+}
+
+/* ── Grove (forest–organic) ──────────────────────────────── */
+[data-theme="grove"] {
+  --night:      #050d07;
+  --night-blue: #091410;
+  --stone:      #111e17;
+  --stone-soft: #192b22;
+  --parchment:  #e6edce;
+  --gold:       #a8c45a;
+  --gold-soft:  #6a8840;
+  --copper:     #806820;
+  --ember:      #c89030;
+  --sea:        #58b070;
+  --moss:       #84aa54;
+  --violet:     #607860;
+  --ink:        #030804;
+  --serif:      "Cormorant Garamond", Georgia, serif;
+  --display:    "Cinzel", Georgia, serif;
+
+  --gold-rgb:   168, 196, 90;
+  --sea-rgb:    88, 176, 112;
+  --ember-rgb:  200, 144, 48;
+  --copper-rgb: 128, 104, 32;
+  --violet-rgb: 96, 120, 96;
+  --moss-rgb:   132, 170, 84;
+
+  --glass-bg:     rgba(6, 14, 9, 0.54);
+  --glass-border: rgba(168, 196, 90, 0.22);
+  --glass-sheen:  rgba(168, 196, 90, 0.03);
+  --glass-blur:   blur(28px) saturate(160%);
+}
+
+/* ── Arcane (deep ritual) ────────────────────────────────── */
+[data-theme="arcane"] {
+  --night:      #08040f;
+  --night-blue: #10081c;
+  --stone:      #180e28;
+  --stone-soft: #22163a;
+  --parchment:  #e4d0f8;
+  --gold:       #c078e0;
+  --gold-soft:  #8044b0;
+  --copper:     #6030a0;
+  --ember:      #9050d0;
+  --sea:        #80a8e0;
+  --moss:       #5040a0;
+  --violet:     #b88ae0;
+  --ink:        #050210;
+  --serif:      "Cormorant Garamond", Georgia, serif;
+  --display:    "Cinzel", Georgia, serif;
+
+  --gold-rgb:   192, 120, 224;
+  --sea-rgb:    128, 168, 224;
+  --ember-rgb:  144, 80, 208;
+  --copper-rgb: 96, 48, 160;
+  --violet-rgb: 184, 138, 224;
+  --moss-rgb:   80, 64, 160;
+
+  --glass-bg:     rgba(8, 4, 18, 0.60);
+  --glass-border: rgba(192, 120, 224, 0.24);
+  --glass-sheen:  rgba(192, 120, 224, 0.04);
+  --glass-blur:   blur(32px) saturate(190%);
+}

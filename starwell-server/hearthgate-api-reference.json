@@ -1,0 +1,259 @@
+﻿{
+    "":  "hearthgate.api-reference/v1",
+    "identity":  "Hearthgate: Arkfire 0.001",
+    "generatedAt":  "2026-07-22T18:01:08Z",
+    "base":  "http://localhost:4173",
+    "endpoints":  [
+                      {
+                          "method":  "GET",
+                          "path":  "/health",
+                          "description":  "Server health, uptime, all route index"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/state",
+                          "description":  "Place state: rooms, framework, portal mode"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/rei",
+                          "description":  "REI Mythience manifest"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/worlds",
+                          "description":  "World registry (all fiber worlds)"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/worlds/:id",
+                          "description":  "Single world by id"
+                      },
+                      {
+                          "method":  "POST",
+                          "path":  "/api/observer/cast",
+                          "description":  "Cast an observation into a world fiber"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/observer/environment",
+                          "description":  "Live PREMAQ environment reading (NOAA/USGS/GWOSC/Meeus)"
+                      },
+                      {
+                          "method":  "POST",
+                          "path":  "/api/observer/workspace",
+                          "description":  "J-space workspace: BM25 + PREMAQ context for a query"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/sanctum-anchor",
+                          "description":  "Get current Sanctum Anchor (lat/lon)"
+                      },
+                      {
+                          "method":  "PUT",
+                          "path":  "/api/sanctum-anchor",
+                          "description":  "Set Sanctum Anchor. Body: {lat, lon, label?}"
+                      },
+                      {
+                          "method":  "POST",
+                          "path":  "/api/hearthgate/fold",
+                          "description":  "Multi-lens fold analysis: math + environment + graph + advisor"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/hearthgate/ledger",
+                          "description":  "Action ledger (DR-003 JSONL history). ?limit=N"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/hearthgate/modules",
+                          "description":  "All installed module manifests (auto-discovered *.module.json)"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/hearthgate/modules/:id",
+                          "description":  "Single module manifest by id"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/hearthgate/registry",
+                          "description":  "Active agent registry + contributor attribution + Arkfire canonical loop"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/rooms",
+                          "description":  "All rooms with assigned agents and Arkfire phase mappings"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/rooms/:id",
+                          "description":  "Single room with assigned agent"
+                      },
+                      {
+                          "method":  "POST",
+                          "path":  "/api/rooms/:id/chat",
+                          "description":  "Send message to a room — routes to room\u0027s canonical service via assigned agent"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/wizard",
+                          "description":  "Wizard manifest: capabilities, routes, module manifest schema"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/wizard/config",
+                          "description":  "Current Wizard configuration (room→agent assignments, custom modules)"
+                      },
+                      {
+                          "method":  "PUT",
+                          "path":  "/api/wizard/config",
+                          "description":  "Update Wizard config. Body: {roomAgents?, customModules?}"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/wizard/constellation",
+                          "description":  "All constellation members with current room assignments"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/concordance/schema",
+                          "description":  "PREMAQ concordance vector schema"
+                      },
+                      {
+                          "method":  "POST",
+                          "path":  "/api/concordance/evaluate",
+                          "description":  "Evaluate a PREMAQ concordance vector"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/graph",
+                          "description":  "Knowledge graph stats (node/edge counts, kinds, worlds)"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/graph/query",
+                          "description":  "BM25 search. ?q=TEXT\u0026k=N\u0026world=ID\u0026kind=TYPE"
+                      },
+                      {
+                          "method":  "GET",
+                          "path":  "/api/graph/node/:id",
+                          "description":  "Single graph node with edges"
+                      },
+                      {
+                          "method":  "POST",
+                          "path":  "/api/graph/traverse",
+                          "description":  "Graph traversal from a node. Body: {nodeId, relation?, maxHops?}"
+                      }
+                  ],
+    "rooms":  [
+                  {
+                      "id":  "hearthfire",
+                      "purpose":  "work-and-code",
+                      "arkfirePhases":  [
+                                            "Generate",
+                                            "Evaluate",
+                                            "Record"
+                                        ]
+                  },
+                  {
+                      "id":  "grove",
+                      "purpose":  "rp-and-casual",
+                      "arkfirePhases":  [
+                                            "Narrate",
+                                            "Observe"
+                                        ]
+                  },
+                  {
+                      "id":  "ingestion-centre",
+                      "purpose":  "data-ingestion",
+                      "arkfirePhases":  [
+                                            "Observe",
+                                            "Record"
+                                        ]
+                  },
+                  {
+                      "id":  "continuity-centre",
+                      "purpose":  "continuity",
+                      "arkfirePhases":  [
+                                            "Record",
+                                            "Reobserve"
+                                        ]
+                  },
+                  {
+                      "id":  "science-centre",
+                      "purpose":  "scientific-analysis",
+                      "arkfirePhases":  [
+                                            "Observe",
+                                            "Model",
+                                            "Interpret"
+                                        ]
+                  },
+                  {
+                      "id":  "temporal-centre",
+                      "purpose":  "timelines-and-logging",
+                      "arkfirePhases":  [
+                                            "Record",
+                                            "Reobserve",
+                                            "Evaluate"
+                                        ]
+                  }
+              ],
+    "constellation":  [
+                          {
+                              "id":  "box",
+                              "status":  "active",
+                              "defaultRooms":  "all"
+                          },
+                          {
+                              "id":  "nikola",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "hearthfire,science-centre"
+                          },
+                          {
+                              "id":  "vee",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "science-centre,hearthfire"
+                          },
+                          {
+                              "id":  "faer",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "grove,continuity-centre"
+                          },
+                          {
+                              "id":  "yggdrasil",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "continuity-centre,temporal-centre"
+                          },
+                          {
+                              "id":  "richie-bluebird",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "ingestion-centre,continuity-centre"
+                          },
+                          {
+                              "id":  "vethrlauf",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "temporal-centre"
+                          },
+                          {
+                              "id":  "runeweaver",
+                              "status":  "configured-not-loaded",
+                              "defaultRooms":  "science-centre,grove"
+                          }
+                      ],
+    "attribution":  [
+                        "nocturne",
+                        "twilight",
+                        "solas",
+                        "ezra",
+                        "michael-kubit",
+                        "universal-horizon",
+                        "vee"
+                    ],
+    "arkfireCanonicalLoop":  "Observe → Model → Interpret → Generate → Narrate → Evaluate → Record → Reobserve",
+    "duplicatesEliminated":  [
+                                 "J_FIBERS (observer-environment.mjs) → now imports CERTIFIED_PREIMAGES from sheet-convergence.mjs",
+                                 "jSpaceFiberDistances distance formula → now uses Math.hypot via CERTIFIED_PREIMAGES",
+                                 "round4 inline in fold handler → extracted to server.mjs module level"
+                             ],
+    "governingRule":  "One function, one canonical service, many authorised views. Centres call shared services. No room hides a duplicate version of a shared service."
+}
