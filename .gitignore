@@ -1,5 +1,10 @@
 node_modules/
 starwell-server/data/
+# Identity and seed documents — tracked
+!starwell-server/data/constellation-principles.md
+!starwell-server/data/box-seed.md
+!starwell-server/data/boxfire/
+!starwell-server/data/boxfire/**
 .env
 *.local
 .DS_Store
