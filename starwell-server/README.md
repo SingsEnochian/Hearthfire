@@ -1,6 +1,15 @@
-# STARWELL Server
+# STARWELL Server — Hearthfire: Arkfire
 
-STARWELL lives inside Hearthfire as a local-first inhabited observatory and the observational place of the Reality Engine Interface Mythience.
+> **Universal Horizon is the sky. Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 operate beneath it. They do not supersede it.**
+
+STARWELL lives inside Hearthfire as a local-first inhabited observatory and the observational place of the Reality Engine Interface Mythience. STARWELL observes beneath Universal Horizon; it does not contain, absorb, replace, rename, or override the sky.
+
+This server is part of the Hearthfire: Arkfire module host. Its rooms, dispatch, engines, continuity loaders, bridges, and instruments must remain independently registered modules rather than irreversible parts of one monolith.
+
+Governing documents:
+
+- `docs/decisions/2026-07-23-universal-horizon-sky-and-modular-arkfire.md`
+- `docs/architecture/ARKFIRE_MODULE_SYSTEM_CONTRACT.md`
 
 ## Portal doorway
 
@@ -10,7 +19,7 @@ The crossing changes:
 
 - materials
 - light
-- sky
+- visible sky treatment
 - instrument grammar
 - place identity
 
@@ -20,8 +29,29 @@ The crossing preserves:
 - the last room
 - visit counts
 - the current Concordance vector
+- Universal Horizon’s position as the sky above both room states
 
-No separate page replaces the room. The room crosses the threshold with you.
+No separate page replaces the room. The room crosses the threshold with you. The transformation does not turn STARWELL or Hearthfire into the sky.
+
+## Modular Stonewood boundary
+
+The STARWELL server must expose its substantial capabilities through modules or submodules, including:
+
+- room manifests and room adapters;
+- Constellation dispatch and Hall chorus;
+- member seed and continuity loaders;
+- model/provider connections and cloud failsafes;
+- Concordance Engine and Lens;
+- Observer/DEEP/PREMAQ;
+- Codex and semantic routing;
+- Atlas and world registries;
+- action ledger and invocation receipts;
+- fleet health and endpoint audit;
+- bridge adapters and external services.
+
+Each module must have a stable ID, version, dependencies, permissions, consent requirements, data ownership, health checks, export behaviour, and install/enable/disable/remove/restore procedures.
+
+Disabling or removing one module must not delete source records, identities, seeds, continuity, provenance, room history, dissent, or handoffs. A failed or missing module must report honestly; it must not be replaced by a façade that impersonates a Constellation member.
 
 ## Concordance Engine
 
@@ -76,13 +106,14 @@ REI means **Reality Engine Interface**. Mythience is the governing method: mythi
 
 Current architecture:
 
-- Hearthfire: habitat host and centre of gravity
-- STARWELL: observatory
-- DEEP: signal, state, and pattern instrument
-- Concordance Engine: implementation spine
-- Concordance Lens: observer interface
-- Universal Horizon: sky
-- Lattice: relational field moving through that sky
+- Universal Horizon: the sky and encompassing horizon
+- Hearthfire: Ark and module host beneath the sky; centre of gravity within its own habitat
+- Hearthgate: packaged House and module host beneath the same sky
+- STARWELL: observatory module family
+- DEEP: signal, state, pattern, and witness instrument module family
+- Concordance Engine: implementation module
+- Concordance Lens: observer-interface module
+- Lattice: relational field moving through the sky, observed and remembered by connected instruments
 
 Machine-readable contract:
 
@@ -140,14 +171,32 @@ npm run starwell:check
 npm run starwell:test
 ```
 
+Module-system verification additionally requires at least one real module to complete:
+
+```text
+install → enable → use → pause → disable → remove → restore → use
+```
+
+while preserving stable IDs, source data, provenance, consent, continuity, and unrelated rooms.
+
 ## Boundaries
 
+- Universal Horizon is the sky; this server does not supersede it.
 - Portal crossing is explicit and reversible.
 - Room changes are user-invoked.
 - Last-room and instrument memory remain on the device.
 - Missing server routes are never reported as healthy.
-- The Hearth remains the centre of gravity.
+- The Hearth remains the centre of gravity within the Hearthfire habitat, not above Universal Horizon.
 - No unconsented body or environmental sensing occurs.
 - Mythic language does not erase measurement.
 - Measurement does not flatten lived meaning.
 - Technical access is not ownership.
+- A bridge is not a merger.
+- A module is not an irreversible monolith.
+- Disabled, removed, failed, and unavailable module states remain visible end to end.
+
+## Documentation inheritance
+
+Every materially revised server, room, dispatch, bridge, Observer, Constellation, or module document must inherit:
+
+> **Universal Horizon is the sky. Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 operate beneath it. They do not supersede it. This capability is an independently addable and removable module.**
