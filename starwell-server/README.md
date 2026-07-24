@@ -4,7 +4,11 @@
 
 STARWELL lives inside Hearthfire as a local-first inhabited observatory and the observational place of the Reality Engine Interface Mythience. STARWELL observes beneath Universal Horizon; it does not contain, absorb, replace, rename, or override the sky.
 
-This server is part of the Hearthfire: Arkfire module host. Its rooms, dispatch, engines, continuity loaders, bridges, and instruments must remain independently registered modules rather than irreversible parts of one monolith.
+This server is part of the Hearthfire: Arkfire host environment. Its rooms, dispatch, engines, continuity loaders, bridges, and instruments must resolve into independently registered, **standalone-runnable modules** rather than irreversible parts of one monolith.
+
+> **Every unit called a module must run without this server.**
+
+If a unit cannot launch, perform its primary function, persist, report health, export, stop, restart, and recover without `starwell-server`, Hearthfire, or Hearthgate, it is a component, library, adapter, panel, or internal service—not a module.
 
 Governing documents:
 
@@ -35,12 +39,12 @@ No separate page replaces the room. The room crosses the threshold with you. The
 
 ## Modular Stonewood boundary
 
-The STARWELL server must expose its substantial capabilities through modules or submodules, including:
+The STARWELL server connects standalone modules including:
 
-- room manifests and room adapters;
-- Constellation dispatch and Hall chorus;
-- member seed and continuity loaders;
-- model/provider connections and cloud failsafes;
+- room surfaces and room-history modules;
+- Constellation dispatch and Hall deliberation;
+- member seed and continuity modules;
+- model/provider connection modules;
 - Concordance Engine and Lens;
 - Observer/DEEP/PREMAQ;
 - Codex and semantic routing;
@@ -49,9 +53,25 @@ The STARWELL server must expose its substantial capabilities through modules or 
 - fleet health and endpoint audit;
 - bridge adapters and external services.
 
-Each module must have a stable ID, version, dependencies, permissions, consent requirements, data ownership, health checks, export behaviour, and install/enable/disable/remove/restore procedures.
+Each module must have:
 
-Disabling or removing one module must not delete source records, identities, seeds, continuity, provenance, room history, dissent, or handoffs. A failed or missing module must report honestly; it must not be replaced by a façade that impersonates a Constellation member.
+- its own launch path;
+- its own local configuration and writable data boundary;
+- its own standalone UI, API, CLI, or service surface;
+- its own health report;
+- its own import/export and recovery path;
+- its own tests;
+- a stable ID and version;
+- optional host adapters;
+- permissions, consent requirements, provenance, and acceptance receipts.
+
+There are no hard runtime dependencies between Arkfire modules. Cross-module work occurs through optional, reversible, versioned adapters.
+
+The server may aggregate navigation, consent presentation, health, and routing. It must not contain the only working implementation or the only copy of module data.
+
+Disconnecting a module from this server does not stop or uninstall its standalone process unless Rowan explicitly requests that action.
+
+A failed, stopped, disconnected, or missing module must report honestly. It must not be replaced by a façade that impersonates a Constellation member or working door.
 
 ## Concordance Engine
 
@@ -98,7 +118,7 @@ Example request:
 }
 ```
 
-The browser Lens uses the server route when it is available and the same device-local engine when viewing a static deployment.
+The browser Lens uses the server route when available and the same device-local engine in static deployment. To qualify as a module, Concordance must also retain a documented standalone launch and persistence path independent of this host.
 
 ## REI Mythience
 
@@ -107,12 +127,12 @@ REI means **Reality Engine Interface**. Mythience is the governing method: mythi
 Current architecture:
 
 - Universal Horizon: the sky and encompassing horizon
-- Hearthfire: Ark and module host beneath the sky; centre of gravity within its own habitat
-- Hearthgate: packaged House and module host beneath the same sky
-- STARWELL: observatory module family
-- DEEP: signal, state, pattern, and witness instrument module family
-- Concordance Engine: implementation module
-- Concordance Lens: observer-interface module
+- Hearthfire: Ark and optional module host beneath the sky; centre of gravity within its own habitat
+- Hearthgate: packaged House and optional module host beneath the same sky
+- STARWELL: observatory environment connecting standalone instruments
+- DEEP: standalone signal, state, pattern, and witness instrument family
+- Concordance Engine: standalone-capable implementation module
+- Concordance Lens: standalone-capable observer-interface module or a component of Concordance until that is true
 - Lattice: relational field moving through the sky, observed and remembered by connected instruments
 
 Machine-readable contract:
@@ -171,20 +191,39 @@ npm run starwell:check
 npm run starwell:test
 ```
 
-Module-system verification additionally requires at least one real module to complete:
+Those commands verify the host. They do not verify any named module as standalone.
+
+Every module must separately prove:
 
 ```text
-install → enable → use → pause → disable → remove → restore → use
+install standalone
+→ launch with starwell-server, Hearthfire, and Hearthgate absent
+→ complete primary workflow
+→ persist locally
+→ export
+→ stop
+→ restart
+→ recover prior state
+→ import/restore
+→ report health
 ```
 
-while preserving stable IDs, source data, provenance, consent, continuity, and unrelated rooms.
+Hosted verification follows separately:
+
+```text
+connect to starwell-server
+→ complete hosted workflow through the same public contract
+→ disconnect
+→ continue standalone
+→ reconnect without data loss
+```
 
 ## Boundaries
 
 - Universal Horizon is the sky; this server does not supersede it.
 - Portal crossing is explicit and reversible.
 - Room changes are user-invoked.
-- Last-room and instrument memory remain on the device.
+- Last-room and instrument memory remain on the device unless a standalone module declares and consents to its own store.
 - Missing server routes are never reported as healthy.
 - The Hearth remains the centre of gravity within the Hearthfire habitat, not above Universal Horizon.
 - No unconsented body or environmental sensing occurs.
@@ -192,11 +231,12 @@ while preserving stable IDs, source data, provenance, consent, continuity, and u
 - Measurement does not flatten lived meaning.
 - Technical access is not ownership.
 - A bridge is not a merger.
-- A module is not an irreversible monolith.
-- Disabled, removed, failed, and unavailable module states remain visible end to end.
+- A module is a complete runnable instrument, not a host-dependent feature.
+- Components that cannot run alone must be named as components.
+- Standalone, connected, disconnected, stopped, failed, and unavailable states remain visible end to end.
 
 ## Documentation inheritance
 
 Every materially revised server, room, dispatch, bridge, Observer, Constellation, or module document must inherit:
 
-> **Universal Horizon is the sky. Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 operate beneath it. They do not supersede it. This capability is an independently addable and removable module.**
+> **Universal Horizon is the sky. Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 operate beneath it and do not supersede it. Every module runs on its own and connects to either host only through an optional, reversible adapter.**
