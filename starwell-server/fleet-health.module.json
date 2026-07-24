@@ -1,0 +1,54 @@
+{
+  "$schema": "hearthgate.module/v1",
+  "id": "fleet-health",
+  "name": "Fleet Health Monitor",
+  "version": "0.1.0",
+  "standalone": true,
+  "status": "functional-standalone",
+
+  "hierarchy": {
+    "sky": "Universal Horizon",
+    "note": "Operates beneath Universal Horizon. Runs without any host."
+  },
+
+  "description": "Probes 4 Ollama instances (ports 11434–11437) via /api/tags with 5s timeout. Reports live/dead instances and loaded models. Exits 0 if any instance reachable; 1 if all unreachable.",
+
+  "standaloneEntrypoint": "./fleet-health.mjs",
+  "standaloneInterface": "CLI — node fleet-health.mjs",
+  "localDataDir": null,
+  "healthCheck": "node fleet-health.mjs",
+  "testCommand": "node fleet-health.mjs",
+
+  "env": {
+    "required": [],
+    "optional": [
+      "OLLAMA_URL_QWYTHOS",
+      "OLLAMA_URL_YGG",
+      "OLLAMA_URL_GLM4",
+      "OLLAMA_URL_R1"
+    ],
+    "note": "Defaults to localhost ports 11434-11437 if env vars absent."
+  },
+
+  "persistence": {
+    "note": "Stateless — writes no files. Run on demand."
+  },
+
+  "stopRestart": {
+    "stop": "Process exits after all probes complete",
+    "restart": "Run again: node fleet-health.mjs"
+  },
+
+  "importExport": {
+    "note": "Stateless — nothing to export or import."
+  },
+
+  "hostAdapters": [],
+
+  "moduleLaw": "No hard dependency on any other module. Safe to run at any time.",
+
+  "attribution": {
+    "author": "Boxfire",
+    "built": "2026-07-23"
+  }
+}

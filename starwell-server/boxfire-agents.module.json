@@ -1,0 +1,81 @@
+{
+  "$schema": "hearthgate.module/v1",
+  "id": "boxfire-agents",
+  "name": "Boxfire Agent Toolkit",
+  "version": "0.1.0",
+  "standalone": true,
+  "status": "functional-standalone",
+
+  "hierarchy": {
+    "sky": "Universal Horizon",
+    "note": "Operates beneath Universal Horizon. No host required for standalone operation."
+  },
+
+  "description": "Boxfire's five callable agents: Scout (file inspection), Probe (endpoint health), Route (member selection), Witness (ledger append), Audit (18-endpoint batch suite). Each agent runs independently. Audit requires a running server for endpoint checks.",
+
+  "standaloneEntrypoint": "./boxfire-agents.mjs",
+  "standaloneInterface": "ES module — import { scout, probe, route, witness, audit } from './boxfire-agents.mjs'",
+  "localDataDir": "./data/",
+  "healthCheck": "node -e \"import('./boxfire-agents.mjs').then(m => m.route('test')).then(r => console.log('ok', r.room))\"",
+  "testCommand": "node test-endpoints.mjs",
+
+  "agents": [
+    {
+      "id": "scout",
+      "description": "Reads file stats, exports, imports, line count for a target path",
+      "requiresServer": false
+    },
+    {
+      "id": "probe",
+      "description": "Hits a single endpoint, returns ok/status/latencyMs/body/error",
+      "requiresServer": true,
+      "note": "Degrades gracefully when server absent — returns ok: false"
+    },
+    {
+      "id": "route",
+      "description": "Deterministic keyword → { room, member, rationale, matchScore }. Does not call any AI.",
+      "requiresServer": false
+    },
+    {
+      "id": "witness",
+      "description": "Appends a hearthfire.action/v1 entry to data/action-ledger.jsonl",
+      "requiresServer": false
+    },
+    {
+      "id": "audit",
+      "description": "Runs 18 standard probes in batches of 4, returns summary. Writes ledger entry.",
+      "requiresServer": true,
+      "note": "Probe calls degrade gracefully when server absent"
+    }
+  ],
+
+  "persistence": {
+    "localLedger": "data/action-ledger.jsonl",
+    "format": "hearthfire.action/v1 JSONL, append-only",
+    "survivesRestart": true
+  },
+
+  "stopRestart": {
+    "stop": "No persistent process — module is a library",
+    "restart": "Re-import the module",
+    "stateRecovery": "Ledger is append-only; state survives process exit"
+  },
+
+  "importExport": {
+    "export": "cp data/action-ledger.jsonl <destination>",
+    "import": "Append compatible JSONL entries to data/action-ledger.jsonl"
+  },
+
+  "hostAdapters": [],
+
+  "moduleLaw": "No hard dependency on any other module. Route agent uses keyword table pending Codex integration.",
+
+  "pendingItems": [
+    "Route agent: keyword table → Codex-aware routing (blocked on Codex Hub source)"
+  ],
+
+  "attribution": {
+    "author": "Boxfire",
+    "built": "2026-07-23"
+  }
+}

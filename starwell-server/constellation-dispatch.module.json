@@ -1,0 +1,129 @@
+{
+  "$schema": "hearthgate.module/v1",
+  "id": "constellation-dispatch",
+  "name": "Constellation Dispatch",
+  "version": "0.1.0",
+  "standalone": true,
+  "status": "functional-standalone",
+
+  "hierarchy": {
+    "sky": "Universal Horizon",
+    "note": "This module operates beneath Universal Horizon. Hearthgate: Arkfire 0.002 and Hearthfire: Arkfire are optional hosts — not required for standalone operation. This module does not supersede, absorb, or rename Universal Horizon."
+  },
+
+  "description": "Constellation Connection Runtime. Routes messages to named members (Bluebird, Lioreal, Uial, Vethrlauf, Yggdrasil, Boxfire) using a hybrid Ollama-primary / cloud-failsafe stack. Runs Hall chorus via Promise.allSettled. Seeds each member from archive context. Standalone: operates without any other House module.",
+
+  "standaloneEntrypoint": "./server.mjs",
+  "standaloneInterface": "HTTP — POST /api/v1/constellation/dispatch, POST /api/v1/constellation/hall, GET /api/hearthgate/modules",
+  "localDataDir": "./data/",
+  "healthCheck": "node fleet-health.mjs",
+  "testCommand": "node test-endpoints.mjs",
+
+  "standaloneVerification": [
+    "node fleet-health.mjs (hosts absent is tolerated — reports offline members)",
+    "POST /api/v1/constellation/dispatch with { member, mode, userTurn }",
+    "GET /api/hearthgate/modules returns this manifest",
+    "Receipts written to data/action-ledger.jsonl",
+    "Kill process — restart — ledger survives",
+    "node test-endpoints.mjs passes with server running"
+  ],
+
+  "members": ["bluebird", "lioreal", "uial", "vethrlauf", "yggdrasil", "boxfire"],
+
+  "modules": [
+    {
+      "file": "arkfire-dispatch.mjs",
+      "role": "dispatch-logic",
+      "standalone": true,
+      "exports": ["dispatchMemberMode", "dispatchHallChorus", "dispatchRoom"]
+    },
+    {
+      "file": "bluebird-context.mjs",
+      "role": "seed-loader",
+      "standalone": true,
+      "exports": ["getBluebirdSeed", "getBluebirdRecentHistory", "getBluebirdHistoryCount"]
+    },
+    {
+      "file": "lioreal-context.mjs",
+      "role": "seed-loader",
+      "standalone": true,
+      "exports": ["getLiorealSeed", "getLiorealRecentHistory", "getLiorealContinuityPacket", "getLiorealHistoryCount"]
+    },
+    {
+      "file": "uial-context.mjs",
+      "role": "seed-loader",
+      "standalone": true,
+      "exports": ["getUialSeed", "getUialRecentHistory", "getUialHistoryCount"]
+    },
+    {
+      "file": "box-context.mjs",
+      "role": "seed-loader",
+      "standalone": true,
+      "exports": ["getBoxSeed", "getBoxRecentHistory", "getBoxHistoryCount"]
+    },
+    {
+      "file": "constellation-context.mjs",
+      "role": "principles-loader",
+      "standalone": true,
+      "exports": ["getConstellationPrinciples"]
+    }
+  ],
+
+  "env": {
+    "required": [],
+    "optional": [
+      "OLLAMA_URL_QWYTHOS",
+      "OLLAMA_URL_YGG",
+      "OLLAMA_URL_GLM4",
+      "OLLAMA_URL_R1",
+      "OPENAI_API_KEY",
+      "ANTHROPIC_API_KEY",
+      "SUPABASE_URL",
+      "SUPABASE_SECRET_KEY"
+    ],
+    "note": "All env vars are optional — module degrades gracefully when providers are absent."
+  },
+
+  "persistence": {
+    "localLedger": "data/action-ledger.jsonl",
+    "format": "hearthfire.action/v1 JSONL, append-only",
+    "survivesRestart": true,
+    "supabase": "optional — virelya_thinking_room read-only; no writes from this module"
+  },
+
+  "stopRestart": {
+    "stop": "SIGTERM or Ctrl-C — ledger is append-only and survives abrupt stop",
+    "restart": "node server.mjs (or node --env-file=.env server.mjs)",
+    "stateRecovery": "Ledger read from data/action-ledger.jsonl on startup; seed caches reload from files"
+  },
+
+  "importExport": {
+    "export": "cp data/action-ledger.jsonl <destination>",
+    "import": "cp <source>/action-ledger.jsonl data/ (append-compatible JSONL)"
+  },
+
+  "hostAdapters": [
+    {
+      "host": "hearthgate",
+      "adapter": "pending",
+      "contract": "GET /arkfire/health, GET /arkfire/members, GET /arkfire/modes, POST /arkfire/dispatch/member, POST /arkfire/dispatch/room, POST /arkfire/dispatch/hall",
+      "disconnectBehaviour": "module continues standalone; host reports Arkfire offline"
+    }
+  ],
+
+  "moduleLaw": "Disconnecting this module from a host must not stop or uninstall it. Other rooms and modules must survive this module's failure. If unavailable, hosts report offline — not a false member façade.",
+
+  "pendingItems": [
+    "Uial Thinking Room (faer_thinking_room) connection — 24 rows, not yet queried",
+    "Yggdrasil archive seed",
+    "Codex-aware routing (replaces keyword table; blocked on Codex Hub source location)",
+    "Second reviewer for dispatch logic before FUNCTIONAL certification",
+    "Physical fleet verification (ollama create boxfire:v0.1 + 4-port fleet test)"
+  ],
+
+  "attribution": {
+    "author": "Boxfire",
+    "built": "2026-07-23",
+    "conflict": "Boxfire authored this module. Cannot solely certify. Second reviewer required before FUNCTIONAL."
+  }
+}
