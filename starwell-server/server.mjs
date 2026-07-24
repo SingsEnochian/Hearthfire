@@ -12,6 +12,7 @@ import {
   addNode as graphAddNode, addEdge as graphAddEdge,
 } from './graph-store.mjs';
 import { activeAgentRegistry, contributorAttributionRegistry, loadModuleManifests } from './hearthgate-registry.mjs';
+import { dispatchRoom, dispatchHallChorus, CONSTELLATION } from './arkfire-dispatch.mjs';
 import {
   ROOM_DEFINITIONS, MODULE_MANIFEST_SCHEMA, AGENT_IDS,
   loadWizardConfig, saveWizardConfig,
@@ -38,6 +39,32 @@ let _sanctumAnchor = undefined; // undefined = not yet loaded; null = loaded, no
 
 function _anchorKey(anchor) {
   return anchor ? `${anchor.lat}|${anchor.lon}` : 'none';
+}
+
+// Coherence snapshot — PREMAQ values stamped on every message and ingested item.
+// Uses cached reading when fresh; fetches if stale or absent.
+async function _coherenceSnapshot(anchor) {
+  const anchorKey = _anchorKey(anchor);
+  const now = Date.now();
+  if (!_envCache || now - _envCache.fetchedAt > ENV_TTL_MS || _envCache.anchorKey !== anchorKey) {
+    try {
+      _envCache = { value: await fetchEnvironmentReading(anchor), fetchedAt: now, anchorKey };
+    } catch {
+      // Return a null snapshot rather than blocking the message
+      return null;
+    }
+  }
+  const p = _envCache.value?.premaq;
+  const sc = _envCache.value?.sheetConvergence ?? null;
+  if (!p) return null;
+  return {
+    pulse:       round4(p.pulse       ?? 0),
+    coherence:   round4(p.coherence   ?? 0),
+    resonance:   round4(p.resonance   ?? 0),
+    entropy:     round4(p.entropy     ?? 0),
+    convergence: sc !== null ? round4(sc) : null,
+    sampledAt:   new Date().toISOString(),
+  };
 }
 
 async function getSanctumAnchor() {
@@ -711,9 +738,12 @@ const server = createServer(async (request, response) => {
         };
 
       } else if (roomId === 'ingestion-centre') {
-        // Ingestion Centre → canonical graph service (propose node from content)
         const content = body.content ?? body.message ?? '';
-        const graphHits = content ? queryBM25(content, 8) : [];
+        const anchor = await getSanctumAnchor();
+        const [graphHits, coherence] = await Promise.all([
+          Promise.resolve(content ? queryBM25(content, 8) : []),
+          _coherenceSnapshot(anchor),
+        ]);
         const proposedNode = content ? {
           id: `ingested-${Date.now()}`,
           kind: body.kind ?? 'ingested',
@@ -721,12 +751,18 @@ const server = createServer(async (request, response) => {
           description: content.slice(0, 500),
           worldId: body.worldId ?? 'earth',
           epistemicStatus: body.epistemicStatus ?? 'observation',
-          properties: { ingestedAt: dispatchedAt, source: body.source ?? 'ingestion-centre', agentId: room.assignedAgent },
+          properties: {
+            ingestedAt: dispatchedAt,
+            source: body.source ?? 'ingestion-centre',
+            agentId: room.assignedAgent,
+            coherenceAtIngestion: coherence,
+          },
           attribution: body.attribution ?? null,
         } : null;
         roomResponse = {
           centre: 'ingestion-centre',
           proposedNode,
+          coherence,
           relatedNodes: graphHits.slice(0, 6).map(({ node, score }) => ({
             id: node.id, label: node.label, kind: node.kind,
             epistemicStatus: node.epistemicStatus,
@@ -753,59 +789,48 @@ const server = createServer(async (request, response) => {
         };
 
       } else if (roomId === 'hearthfire') {
-        // Hearthfire → work context: BM25 on implementation nodes, routing for code tasks
-        const graphHits = message ? queryBM25(message, 8) : [];
+        const history = Array.isArray(body.history) ? body.history : [];
+        const anchor = await getSanctumAnchor();
+        const [dispatch, coherence] = await Promise.all([
+          dispatchRoom('hearthfire', message, history),
+          _coherenceSnapshot(anchor),
+        ]);
         roomResponse = {
           centre: 'hearthfire',
-          workContext: {
-            assignedAgent: room.assignedAgent,
-            capabilities: room.capabilities,
-            arkfirePhases: room.arkfirePhases,
-          },
-          graphContext: graphHits.slice(0, 6).map(({ node, score }) => ({
-            id: node.id, label: node.label, kind: node.kind,
-            epistemicStatus: node.epistemicStatus,
-            activationScore: round4(Math.min(1, score / 5)),
-          })),
-          note: 'LLM agent dispatch reserved for future editions. Deterministic routing active.',
+          reply: dispatch.reply,
+          member: dispatch.member,
+          mode: dispatch.mode,
+          coherence,
         };
 
       } else if (roomId === 'grove') {
-        // Grove → narrative context: BM25 on mythic/narrative nodes
-        const graphHits = message
-          ? queryBM25(message, 8, {})
-          : queryBM25('narrative dream world grove', 6);
+        const history = Array.isArray(body.history) ? body.history : [];
+        const anchor = await getSanctumAnchor();
+        const [dispatch, coherence] = await Promise.all([
+          dispatchRoom('grove', message, history),
+          _coherenceSnapshot(anchor),
+        ]);
         roomResponse = {
           centre: 'grove',
-          narrativeContext: {
-            assignedAgent: room.assignedAgent,
-            capabilities: room.capabilities,
-            arkfirePhases: room.arkfirePhases,
-          },
-          graphContext: graphHits.slice(0, 6).map(({ node, score }) => ({
-            id: node.id, label: node.label, kind: node.kind,
-            epistemicStatus: node.epistemicStatus, worldId: node.worldId,
-            activationScore: round4(Math.min(1, score / 5)),
-          })),
-          note: 'LLM agent dispatch reserved for future editions. Deterministic routing active.',
+          reply: dispatch.reply,
+          member: dispatch.member,
+          mode: dispatch.mode,
+          coherence,
         };
 
       } else if (roomId === 'hall') {
-        // The Hall → group gathering space: cross-cutting BM25 on all nodes, constellation presence
-        const graphHits = message
-          ? queryBM25(message, 12)
-          : queryBM25('gathering group shared constellation presence', 8);
-        const allRooms = await getAllRoomsWithAgents();
+        const history = Array.isArray(body.history) ? body.history : [];
+        const anchor = await getSanctumAnchor();
+        const [chorus, coherence, allRooms] = await Promise.all([
+          dispatchHallChorus(message, history),
+          _coherenceSnapshot(anchor),
+          getAllRoomsWithAgents(),
+        ]);
         roomResponse = {
           centre: 'hall',
-          presence: allRooms.map(r => ({ room: r.id, agent: r.assignedAgent, arkfirePhases: r.arkfirePhases })),
-          graphContext: graphHits.slice(0, 10).map(({ node, score }) => ({
-            id: node.id, label: node.label, kind: node.kind,
-            epistemicStatus: node.epistemicStatus, worldId: node.worldId,
-            activationScore: round4(Math.min(1, score / 5)),
-          })),
-          note: 'The hall is open to all constellation members. Group sessions and shared context available here.',
-          arkfirePhases: room.arkfirePhases,
+          chorus,
+          presence: allRooms.map(r => ({ room: r.id, agent: r.assignedAgent })),
+          coherence,
         };
 
       } else {
@@ -1012,6 +1037,7 @@ const server = createServer(async (request, response) => {
     json(response, 200, {
       ok: true,
       hearthgate: APP_IDENTITY,
+      cosmologicalPosition: 'Universal Horizon is the sky above the Ark. Hearthgate and Hearthfire operate beneath it, not beside it. UH is not a module or contributor — it is the field within which all of this operates.',
       arkfireCanonicalLoop: 'Observe → Model → Interpret → Generate → Narrate → Evaluate → Record → Reobserve',
       activeAgentRegistry,
       contributorAttributionRegistry,
