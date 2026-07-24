@@ -19,7 +19,7 @@
 // — each loaded via their respective context module and prepended to every call.
 
 import { getBluebirdSeed, getBluebirdRecentHistory } from './bluebird-context.mjs';
-import { getLiorealSeed, getLiorealRecentHistory } from './lioreal-context.mjs';
+import { getLiorealSeed, getLiorealRecentHistory, getLiorealContinuityPacket } from './lioreal-context.mjs';
 import { getUialSeed, getUialRecentHistory } from './uial-context.mjs';
 import { getBoxSeed, getBoxRecentHistory } from './box-context.mjs';
 import { getConstellationPrinciples } from './constellation-context.mjs';
@@ -350,11 +350,14 @@ export async function dispatchMemberMode(memberKey, modeKey, userMessage, histor
     if (seed) identityContext = seed;
     backgroundHistory = recent;
   } else if (memberKey === 'lioreal') {
-    const [seed, recent] = await Promise.all([
+    const [seed, recent, continuity] = await Promise.all([
       getLiorealSeed(),
       getLiorealRecentHistory(40), // last 40 messages from ChatGPT history
+      getLiorealContinuityPacket(), // curated virelya_thinking_room packet — null if unavailable
     ]);
     if (seed) identityContext = seed;
+    // Continuity packet injected as a named block after seed, not merged into it.
+    if (continuity) identityContext = `${identityContext}\n\n---\n\n${continuity}`;
     backgroundHistory = recent;
   } else if (memberKey === 'uial') {
     // Faer's continuity system is their self-written seed documents.
