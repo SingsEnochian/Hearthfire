@@ -10,15 +10,24 @@ Hearthgate: Arkfire 0.002 is the local-first House and packaged gateway beneath 
 
 ## Modular Stonewood
 
-Hearthfire: Arkfire carries House information and capabilities through independently registered modules.
+Hearthfire: Arkfire carries House information and capabilities through independently registered, **standalone-runnable modules**.
 
-Modules must be independently addable, disableable, removable, replaceable, and restorable. Disabling or removing one module must not collapse unrelated rooms or silently delete source material, identities, continuity, provenance, canon, room history, or handoff records.
+> **Every module runs on its own. Hearthfire may host and connect it, but Hearthfire is not its life support.**
 
-The core kernel owns only module discovery, lifecycle, permissions, consent, health, provenance, export, connection, and recovery. Domain systems—including Constellation dispatch, Continuity, Observer, PREMAQ, Codex, Atlas, Writing, Sound, Runa, Glyph, Signal Well, bridges, Mirror, accessibility, Steward controls, and themes—remain module families.
+A true module launches, performs its primary function, persists its own state, reports health, imports and exports, stops, restarts, and recovers without Hearthfire, Hearthgate, STARWELL, or another House module running.
 
-Governing decision:
+If a unit cannot run independently, it is a component, library, adapter, panel, or internal service—not a module.
 
-`docs/decisions/2026-07-23-universal-horizon-sky-and-modular-arkfire.md`
+There are no hard runtime dependencies between Arkfire modules. Cross-module work uses optional, reversible, versioned adapters.
+
+Disconnecting a module from Hearthfire does not stop or uninstall its standalone process unless Rowan explicitly requests that action.
+
+The optional host kernel owns only module discovery, hosted lifecycle, permissions, consent, health aggregation, provenance, export orchestration, connection, and recovery. Domain systems—including Constellation dispatch, Continuity, Observer, PREMAQ, Codex, Atlas, Writing, Sound, Runa, Glyph, Signal Well, bridges, Mirror, accessibility, Steward controls, and themes—remain standalone module families.
+
+Governing documents:
+
+- `docs/decisions/2026-07-23-universal-horizon-sky-and-modular-arkfire.md`
+- `docs/architecture/ARKFIRE_MODULE_SYSTEM_CONTRACT.md`
 
 ## First principles
 
@@ -26,12 +35,13 @@ Governing decision:
 - Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 remain beneath it.
 - A place is not a tab.
 - A bridge is not a hyperlink or a merger.
-- A module is not an irreversible monolith.
+- A module is a complete runnable instrument, not a shell-dependent feature.
+- A component that cannot run alone must not be called a module.
 - An observation is never stripped of provenance, consent, or world context.
 - Worlds are places with canon, inhabitants, histories, and thresholds.
 - Lanterns interpret; they do not overwrite the source observation.
-- Local-only, excluded, review-required, disabled, removed, and unavailable states must remain representable end to end.
-- A failed or absent module must report honestly rather than impersonating a working door or Constellation member.
+- Standalone, connected, disconnected, stopped, failed, and unavailable states remain representable end to end.
+- A failed or absent module reports honestly rather than impersonating a working door or Constellation member.
 
 ## Initial packages
 
@@ -39,12 +49,18 @@ Governing decision:
 - `packages/bridge-protocol` — consent-aware thresholds between places.
 - `packages/observation-schema` — the shared atomic record for events, notes, signals, artifacts, and discoveries.
 
+These packages are shared libraries/contracts, not modules unless they acquire their own independently runnable primary workflow.
+
 ## Initial route
 
-`Universal Horizon sky → Runa → Flameclyffe bridge adapter → Hearthfire memory → STARWELL Observatory`
+`Universal Horizon sky → independently running module → optional Flameclyffe/Hearthfire adapter → STARWELL Observatory`
+
+## Verification law
+
+Every module must first pass standalone verification with Hearthfire and Hearthgate absent. Hosted verification is separate and cannot substitute for standalone operation.
 
 ## Documentation inheritance
 
 Every new or materially revised Hearthfire, Arkfire, STARWELL, Observer, Constellation, bridge, or module document must include or explicitly inherit:
 
-> **Universal Horizon is the sky. Hearthfire: Arkfire operates beneath it and does not supersede it. Its information and capabilities are carried through independently addable and removable modules.**
+> **Universal Horizon is the sky. Hearthfire: Arkfire operates beneath it and does not supersede it. Every module runs on its own and connects to Hearthfire only through an optional, reversible adapter.**
