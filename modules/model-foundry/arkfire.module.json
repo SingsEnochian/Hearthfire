@@ -2,11 +2,11 @@
   "schemaVersion": "arkfire.module/v1",
   "moduleId": "arkfire.models",
   "canonicalName": "Arkfire Model Foundry",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "status": "PARTIAL",
   "owner": "Rowan",
   "maintainers": ["Nikola!Vee"],
-  "description": "Standalone local-first provider and model registry with Ollama discovery, health receipts, persistence, import, export, and an optional Hearthgate adapter.",
+  "description": "Standalone local-first provider and model registry with Ollama discovery, encrypted API Stuff intake, health receipts, persistence, import, export, and an optional Hearthgate adapter.",
   "standalone": true,
   "hierarchy": {
     "sky": "Universal Horizon",
@@ -16,7 +16,7 @@
   "standaloneEntrypoints": {
     "service": "node src/server.mjs",
     "desktop": "electron .",
-    "windowsInstaller": "dist-electron/Arkfire-Model-Foundry-Setup-0.1.0-x64.exe"
+    "windowsInstaller": "dist-electron/Arkfire-Model-Foundry-Setup-0.1.1-x64.exe"
   },
   "standaloneInterface": ["web-ui", "http-api", "desktop-application"],
   "standaloneDataDirectory": {
@@ -44,36 +44,54 @@
     "health-receipts",
     "registry-import",
     "registry-export",
+    "api-stuff-label-parser",
+    "encrypted-desktop-credential-intake",
+    "bridge-credential-classification",
     "standalone-desktop"
   ],
   "dataContracts": [
     "arkfire.model-foundry-registry/v1",
     "arkfire.model-health-receipt/v1",
-    "arkfire.model-foundry-export/v1"
+    "arkfire.model-foundry-export/v1",
+    "arkfire.api-stuff-parse/v1",
+    "arkfire.encrypted-credentials/v1"
   ],
   "dataOwnership": [
     "provider-profiles",
     "discovered-model-profiles",
-    "health-receipts"
+    "health-receipts",
+    "encrypted-model-provider-credential-references"
   ],
   "storageLocations": [
     "registry.json",
-    "health-receipts.jsonl"
+    "health-receipts.jsonl",
+    "credentials.enc.json"
   ],
   "optionalIntegrations": [
     "ollama-local-services",
+    "openai-provider-profile",
+    "anthropic-provider-profile",
+    "deepseek-provider-profiles",
     "hearthgate-host-adapter",
-    "hearthfire-host-adapter"
+    "hearthfire-host-adapter",
+    "future-bridges-module-handoff"
   ],
   "permissions": [
     "read-write-own-data-directory",
-    "network-access-to-user-configured-provider-endpoints"
+    "network-access-to-user-configured-provider-endpoints",
+    "user-selected-local-text-file-read",
+    "os-backed-credential-encryption"
   ],
   "consentRequirements": [
     {
       "action": "probe-provider-endpoint",
       "defaultScope": "configured-local-endpoints",
-      "note": "MF-001 does not send prompts or project content to providers."
+      "note": "MF-001.1 does not send prompts or project content to providers."
+    },
+    {
+      "action": "import-api-stuff",
+      "defaultScope": "one-user-selected-file",
+      "note": "The desktop shell reads only the selected file, encrypts recognised credentials with Electron safeStorage, and exposes only secret-free metadata to the renderer and registry."
     }
   ],
   "networkRequirements": [
@@ -82,9 +100,15 @@
       "purpose": "Reach configured Ollama endpoints for health and model discovery."
     }
   ],
-  "deviceRequirements": [],
+  "deviceRequirements": [
+    {
+      "kind": "optional",
+      "purpose": "Native API Stuff import requires the Electron desktop shell and OS-backed safeStorage. No plaintext fallback is permitted."
+    }
+  ],
   "routes": [
     "GET /health",
+    "GET /api/session",
     "GET /.well-known/arkfire-module",
     "GET /api/registry",
     "PUT /api/registry",
@@ -95,13 +119,9 @@
     "POST /api/import"
   ],
   "rooms": [],
-  "commands": [
-    "npm start",
-    "npm test",
-    "npm run electron:build:win"
-  ],
+  "commands": ["npm start", "npm test", "npm run electron:build:win"],
   "configurationSchema": "arkfire.model-foundry-registry/v1",
-  "migrationVersion": 1,
+  "migrationVersion": 2,
   "lifecycle": {
     "install": "Run the NSIS installer or unpack the portable ZIP.",
     "launchStandalone": "Launch Arkfire Model Foundry or run npm start.",
@@ -110,23 +130,27 @@
     "disableInHost": "Disable the host adapter without stopping the module.",
     "removeFromHost": "Delete only the host adapter record.",
     "uninstallStandalone": "Use Windows Apps or remove the portable directory.",
-    "restore": "Install or unpack again, then import a prior export bundle."
+    "restore": "Install or unpack again, then import a prior export bundle. Encrypted credentials remain machine/user-bound and are not exported."
   },
-  "importProcedure": "POST an arkfire.model-foundry-export/v1 bundle to /api/import or use the standalone UI.",
-  "exportProcedure": "GET /api/export or use Export Registry in the standalone UI.",
+  "importProcedure": "Use Import API Stuff.txt in the desktop application for encrypted credential classification, or POST an arkfire.model-foundry-export/v1 bundle to /api/import for secret-free registry restoration.",
+  "exportProcedure": "GET /api/export or use Export Registry in the standalone UI. Exports contain the complete health receipt history and no credentials.",
   "healthChecks": [
     "service responds on /health",
     "registry store is readable and writable",
-    "each configured provider reports available or unavailable honestly"
+    "each configured Ollama provider reports available or unavailable honestly",
+    "mutating HTTP routes require same-origin CSRF validation"
   ],
   "acceptanceTests": [
     "launch with Hearthfire and Hearthgate absent",
     "persist a provider profile",
     "probe a mock Ollama endpoint",
     "report an unavailable endpoint without crashing",
-    "export registry and receipts",
+    "reject cross-origin or tokenless mutations",
+    "serialize concurrent registry mutations without lost updates",
+    "export the full registry and receipt history",
+    "merge imported receipts without erasing the local audit trail",
+    "parse API Stuff labels without placing raw secrets in registry or export structures",
     "restart and recover prior state",
-    "import the exported bundle into an empty data directory",
     "build an unsigned Windows NSIS installer and portable ZIP"
   ],
   "provenance": [
@@ -140,13 +164,19 @@
       "contribution": "Existing model endpoint and model-name definitions inspected; dispatch remains untouched during MF-001 extraction."
     },
     {
+      "source": "API STUFF.txt",
+      "contribution": "User-owned plaintext source format for provider and bridge credential labels. Raw values remain outside repository, renderer, exports, and logs."
+    },
+    {
       "source": "Flameclyffe Hearthgate Electron/NSIS lane",
       "contribution": "Installer conventions reused without creating a runtime dependency on Hearthgate."
     }
   ],
   "knownLimitations": [
-    "MF-001 discovers and records models but does not invoke them.",
-    "Cloud provider calls, route recommendations, cost estimates, and consented prompt transfer are deferred.",
+    "MF-001.1 discovers and records models but does not invoke them.",
+    "Imported cloud provider profiles remain disabled and invocation-locked until MF-002 adds explicit route consent.",
+    "HydraDB, Supabase, and Notion credentials are classified for a future Bridges module but are not connected by Model Foundry.",
+    "Encrypted credentials are bound to the current operating-system user and are deliberately absent from registry exports.",
     "The Hearthgate adapter contract is present but host-side installation is not yet implemented.",
     "Installer builds are unsigned until code signing is configured.",
     "The module remains PARTIAL until CI and a second reviewer provide standalone and packaging receipts."
