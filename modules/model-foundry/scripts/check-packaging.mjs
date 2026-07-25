@@ -15,7 +15,6 @@ const requiredFiles = [
   'src/api-stuff-parser.mjs',
   'src/server.mjs',
 ];
-
 for (const relativePath of requiredFiles) await access(resolve(root, relativePath));
 
 const packageJson = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
@@ -24,6 +23,7 @@ const adapter = JSON.parse(await readFile(resolve(root, 'adapters/hearthgate.ada
 const mainSource = await readFile(resolve(root, 'electron/main.cjs'), 'utf8');
 const rendererSource = await readFile(resolve(root, 'public/index.html'), 'utf8');
 const ollamaSource = await readFile(resolve(root, 'src/ollama.mjs'), 'utf8');
+const parserSource = await readFile(resolve(root, 'src/api-stuff-parser.mjs'), 'utf8');
 
 if (manifest.schemaVersion !== 'arkfire.module/v1') throw new Error('Manifest must use arkfire.module/v1');
 if (manifest.moduleId !== 'arkfire.models') throw new Error('Unexpected moduleId');
@@ -41,10 +41,13 @@ if (!rendererSource.includes('Import API Stuff.txt')) throw new Error('Native AP
 if (!rendererSource.includes('credential stored · disabled')) throw new Error('Imported cloud credentials are not labelled clearly');
 if (!rendererSource.includes('cloud-via-local-router')) throw new Error('Renderer does not respect explicit model runtime classification');
 if (!ollamaSource.includes('external-processing-possible')) throw new Error('Cloud-routed Ollama tags are not classified honestly');
+if (!parserSource.includes('const providers = new Map()')) throw new Error('Parser does not deduplicate provider labels');
+if (!parserSource.includes('current.credentials.findIndex')) throw new Error('Parser does not deduplicate credential slots');
 
 console.log('Model Foundry packaging preflight passed.');
 console.log(`Module: ${manifest.canonicalName} ${manifest.version}`);
 console.log(`Installer: ${packageJson.build.artifactName}`);
 console.log('Credential import: native encrypted store; no renderer plaintext fallback');
+console.log('Duplicate labels: reported and resolved deterministically');
 console.log('Cloud-routed tags: external-processing-possible');
 console.log('Signing: unsigned development build');
