@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "arkfire.host-adapter/v1",
+  "adapterId": "arkfire.models.hearthgate/v1",
+  "moduleId": "arkfire.models",
+  "hostId": "hearthgate.arkfire",
+  "status": "SPECIFIED",
+  "optional": true,
+  "reversible": true,
+  "discovery": {
+    "manifestRoute": "/.well-known/arkfire-module",
+    "healthRoute": "/health",
+    "defaultBaseUrl": "http://127.0.0.1:4387"
+  },
+  "publicRoutes": {
+    "registry": "GET /api/registry",
+    "probe": "POST /api/probe",
+    "export": "GET /api/export"
+  },
+  "hostPermissions": [
+    "read-module-manifest",
+    "read-health",
+    "read-provider-registry",
+    "request-user-approved-health-probe"
+  ],
+  "hostRestrictions": [
+    "Host must not mutate module files directly.",
+    "Host must not store provider credentials in browser-readable state.",
+    "Host must not treat unavailable providers as healthy.",
+    "Host must request separate consent before any future cloud invocation.",
+    "Disconnecting this adapter must not stop or uninstall the standalone module."
+  ],
+  "connectionStates": [
+    "discovered",
+    "connected",
+    "enabled",
+    "active",
+    "paused",
+    "disabled",
+    "disconnected",
+    "reconnectable"
+  ],
+  "disconnectBehaviour": {
+    "moduleProcess": "continues-running",
+    "moduleData": "unchanged",
+    "hostState": "reports-disconnected",
+    "recovery": "reconnect using the same base URL or rediscover the manifest"
+  },
+  "knownLimitations": [
+    "Host-side installer and lifecycle UI are not part of MF-001.",
+    "MF-001 exposes discovery and health only; model invocation is deferred."
+  ]
+}
