@@ -86,7 +86,7 @@ async function importApiStuffFile(filePath) {
   const importedAt = new Date().toISOString();
   const sourceFile = basename(filePath);
   const credentialStore = await readCredentialStore();
-  const providerMetadata = [];
+  const providerMap = new Map();
   const integrationMetadata = [];
 
   for (const provider of parsed.providers) {
@@ -100,7 +100,7 @@ async function importApiStuffFile(filePath) {
       importedAt,
     });
     const { secretValue: _secretValue, ...metadata } = provider;
-    providerMetadata.push({
+    providerMap.set(provider.providerId, {
       ...metadata,
       credentialRef,
       credentialStatus: 'stored-encrypted',
@@ -141,6 +141,7 @@ async function importApiStuffFile(filePath) {
     updatedAt: importedAt,
     entries: credentialStore.entries,
   });
+  const providerMetadata = [...providerMap.values()];
   const registry = await runtime.store.applyCredentialImport({ providers: providerMetadata, integrations: integrationMetadata });
   const summary = secretFreeImportSummary(parsed);
 
@@ -151,8 +152,8 @@ async function importApiStuffFile(filePath) {
     integrationCount: integrationMetadata.length,
     unknownLabels: summary.unknownLabels,
     duplicateLabels: summary.duplicateLabels,
-    providerNames: summary.providers.map((provider) => provider.displayName),
-    integrationNames: summary.integrations.map((integration) => integration.displayName),
+    providerNames: [...new Set(summary.providers.map((provider) => provider.displayName))],
+    integrationNames: [...new Set(summary.integrations.map((integration) => integration.displayName))],
     registryRevision: registry.revision,
   };
 }
