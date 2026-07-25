@@ -17,13 +17,22 @@ async function startMockOllama() {
     if (request.url === '/api/tags') {
       response.writeHead(200, { 'content-type': 'application/json' });
       response.end(JSON.stringify({
-        models: [{
-          name: 'test-model:latest',
-          size: 123456,
-          digest: 'sha256:test',
-          modified_at: '2026-07-25T00:00:00.000Z',
-          details: { family: 'test' },
-        }],
+        models: [
+          {
+            name: 'test-model:latest',
+            size: 123456,
+            digest: 'sha256:test',
+            modified_at: '2026-07-25T00:00:00.000Z',
+            details: { family: 'test' },
+          },
+          {
+            name: 'test-cloud:cloud',
+            size: 0,
+            digest: 'sha256:cloud',
+            modified_at: '2026-07-25T00:00:00.000Z',
+            details: { family: 'remote-router' },
+          },
+        ],
       }));
       return;
     }
@@ -94,7 +103,7 @@ test('registry persists provider profiles across a new store instance', async ()
   }
 });
 
-test('standalone service discovers a configured Ollama model and records health', async () => {
+test('standalone service discovers configured Ollama models and classifies cloud-routed tags', async () => {
   const directory = await temporaryDirectory('model-foundry-service');
   const ollama = await startMockOllama();
   const foundry = await startFoundryServer({ port: 0, dataDirectory: directory, logger: { error() {} } });
@@ -109,18 +118,22 @@ test('standalone service discovers a configured Ollama model and records health'
     const probe = await response.json();
     assert.equal(probe.results[0].status, 'available');
     assert.equal(probe.results[0].models[0].name, 'test-model:latest');
+    const cloudModel = probe.results[0].models.find((model) => model.name === 'test-cloud:cloud');
+    assert.equal(cloudModel.runtime, 'cloud-via-local-router');
+    assert.equal(cloudModel.privacyClass, 'external-processing-possible');
+    assert.ok(cloudModel.routeWarning);
 
     response = await fetch(`${foundry.url}/api/registry`);
     const registryBody = await response.json();
     const provider = registryBody.registry.providers.find((entry) => entry.providerId === 'ollama.mock');
     assert.equal(provider.lastHealth.status, 'available');
-    assert.equal(provider.models[0].name, 'test-model:latest');
+    assert.equal(provider.models.length, 2);
 
     response = await fetch(`${foundry.url}/health`);
     const health = await response.json();
     assert.equal(health.ok, true);
     assert.equal(health.moduleId, 'arkfire.models');
-    assert.equal(health.models.discovered >= 1, true);
+    assert.equal(health.models.discovered >= 2, true);
   } finally {
     await foundry.close();
     await ollama.close();
