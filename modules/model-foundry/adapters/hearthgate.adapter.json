@@ -9,12 +9,20 @@
   "discovery": {
     "manifestRoute": "/.well-known/arkfire-module",
     "healthRoute": "/health",
+    "sessionRoute": "/api/session",
     "defaultBaseUrl": "http://127.0.0.1:4387"
   },
   "publicRoutes": {
     "registry": "GET /api/registry",
     "probe": "POST /api/probe",
     "export": "GET /api/export"
+  },
+  "mutationContract": {
+    "contentType": "application/json",
+    "csrfHeader": "X-Arkfire-CSRF",
+    "csrfSource": "GET /api/session",
+    "origin": "same-origin-only",
+    "nonLoopbackAuthentication": "Bearer ARKFIRE_MODEL_FOUNDRY_AUTH_TOKEN"
   },
   "hostPermissions": [
     "read-module-manifest",
@@ -25,6 +33,7 @@
   "hostRestrictions": [
     "Host must not mutate module files directly.",
     "Host must not store provider credentials in browser-readable state.",
+    "Host must not request or expose the encrypted credential store.",
     "Host must not treat unavailable providers as healthy.",
     "Host must request separate consent before any future cloud invocation.",
     "Disconnecting this adapter must not stop or uninstall the standalone module."
@@ -46,7 +55,7 @@
     "recovery": "reconnect using the same base URL or rediscover the manifest"
   },
   "knownLimitations": [
-    "Host-side installer and lifecycle UI are not part of MF-001.",
-    "MF-001 exposes discovery and health only; model invocation is deferred."
+    "Host-side installer and lifecycle UI are not part of MF-001.1.",
+    "MF-001.1 exposes discovery, health, and encrypted credential classification only; model invocation is deferred."
   ]
 }
