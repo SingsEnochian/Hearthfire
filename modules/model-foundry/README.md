@@ -62,6 +62,7 @@ This milestone provides:
 - configurable local Ollama provider registry;
 - live `/api/tags` discovery with explicit unavailable states;
 - provider and model counts shown separately;
+- Ollama tags containing `cloud` classified as `external-processing-possible` rather than device-local;
 - encrypted API Stuff intake in the desktop shell;
 - bridge credential classification;
 - atomic and serialised local persistence;
