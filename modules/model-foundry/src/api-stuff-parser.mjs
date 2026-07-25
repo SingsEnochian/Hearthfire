@@ -58,7 +58,7 @@ function integrationShell(rule) {
 }
 
 export function parseApiStuff(text) {
-  const providers = [];
+  const providers = new Map();
   const integrations = new Map();
   const unknownLabels = [];
   const duplicateLabels = [];
@@ -85,7 +85,7 @@ export function parseApiStuff(text) {
     }
 
     if (rule.type === 'provider') {
-      providers.push({
+      providers.set(rule.providerId, {
         providerId: rule.providerId,
         displayName: rule.displayName,
         kind: rule.kind,
@@ -103,14 +103,20 @@ export function parseApiStuff(text) {
 
     const current = integrations.get(rule.integrationId) || integrationShell(rule);
     current.sourceLabels.push(sourceLabel);
-    if (rule.type === 'integration-endpoint') current.endpoint = value;
-    else current.credentials.push({ slot: rule.slot, sourceLabel, secretValue: value });
+    if (rule.type === 'integration-endpoint') {
+      current.endpoint = value;
+    } else {
+      const credential = { slot: rule.slot, sourceLabel, secretValue: value };
+      const index = current.credentials.findIndex((entry) => entry.slot === rule.slot);
+      if (index >= 0) current.credentials[index] = credential;
+      else current.credentials.push(credential);
+    }
     integrations.set(rule.integrationId, current);
   }
 
   return {
     schemaVersion: 'arkfire.api-stuff-parse/v1',
-    providers,
+    providers: [...providers.values()],
     integrations: [...integrations.values()],
     unknownLabels: [...new Set(unknownLabels)],
     duplicateLabels: [...new Set(duplicateLabels)],
