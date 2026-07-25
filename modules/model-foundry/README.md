@@ -36,7 +36,7 @@ The desktop package uses Electron and stores module data beneath its own per-use
 
 ## API Stuff.txt intake
 
-The Windows desktop application provides **Import API Stuff.txt**. The selected file is read by the Electron main process, never by renderer JavaScript.
+The Windows desktop application provides **Import API Stuff.txt**. Rowan selects the source file explicitly. The Electron main process reads that one file, and renderer JavaScript never receives its raw contents.
 
 Recognised model-provider labels include:
 
