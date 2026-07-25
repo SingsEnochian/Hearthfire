@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { probeProviders } from './ollama.mjs';
 import { RegistryStore, validateRegistry } from './store.mjs';
 
@@ -9,6 +10,7 @@ const moduleRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const publicRoot = join(moduleRoot, 'public');
 const manifestPath = join(moduleRoot, 'arkfire.module.json');
 const MAX_BODY_BYTES = 512 * 1024;
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -25,6 +27,8 @@ function setCommonHeaders(response) {
   response.setHeader('x-content-type-options', 'nosniff');
   response.setHeader('referrer-policy', 'no-referrer');
   response.setHeader('cross-origin-resource-policy', 'same-origin');
+  response.setHeader('cross-origin-opener-policy', 'same-origin');
+  response.setHeader('content-security-policy', "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
 }
 
 function sendJson(response, statusCode, body, method = 'GET', extraHeaders = {}) {
@@ -35,6 +39,54 @@ function sendJson(response, statusCode, body, method = 'GET', extraHeaders = {})
   });
   if (method === 'HEAD') response.end();
   else response.end(`${JSON.stringify(body, null, 2)}\n`);
+}
+
+function constantTimeEqual(left, right) {
+  const a = Buffer.from(String(left || ''));
+  const b = Buffer.from(String(right || ''));
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function isLoopbackHost(host) {
+  return ['127.0.0.1', '::1', 'localhost'].includes(String(host).toLowerCase());
+}
+
+function assertMutationRequest(request, { csrfToken, expectedOrigin, authToken }) {
+  const contentType = String(request.headers['content-type'] || '').toLowerCase();
+  if (!contentType.startsWith('application/json')) {
+    const error = new Error('application-json-required');
+    error.statusCode = 415;
+    throw error;
+  }
+
+  const origin = request.headers.origin;
+  if (origin && origin !== expectedOrigin) {
+    const error = new Error('cross-origin-request-denied');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const fetchSite = String(request.headers['sec-fetch-site'] || '');
+  if (fetchSite && !['same-origin', 'none'].includes(fetchSite)) {
+    const error = new Error('cross-site-request-denied');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (!constantTimeEqual(request.headers['x-arkfire-csrf'], csrfToken)) {
+    const error = new Error('csrf-token-required');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (authToken) {
+    const supplied = String(request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    if (!constantTimeEqual(supplied, authToken)) {
+      const error = new Error('authentication-required');
+      error.statusCode = 401;
+      throw error;
+    }
+  }
 }
 
 async function readRequestJson(request) {
@@ -92,10 +144,7 @@ async function loadManifest() {
 }
 
 function errorBody(error) {
-  return {
-    ok: false,
-    error: error?.message || 'unexpected-error',
-  };
+  return { ok: false, error: error?.message || 'unexpected-error' };
 }
 
 export async function startFoundryServer({
@@ -103,16 +152,34 @@ export async function startFoundryServer({
   port = Number(process.env.PORT || 4387),
   dataDirectory = null,
   logger = console,
+  authToken = process.env.ARKFIRE_MODEL_FOUNDRY_AUTH_TOKEN || null,
 } = {}) {
+  if (!isLoopbackHost(host) && !authToken) {
+    throw new Error('Non-loopback binding requires ARKFIRE_MODEL_FOUNDRY_AUTH_TOKEN');
+  }
+
   const store = new RegistryStore(dataDirectory);
   await store.init();
   const startedAt = Date.now();
+  const csrfToken = randomBytes(32).toString('base64url');
+  let allowedHosts = new Set();
 
   const server = createServer(async (request, response) => {
-    const requestUrl = new URL(request.url || '/', `http://${request.headers.host || '127.0.0.1'}`);
+    const hostHeader = String(request.headers.host || '').toLowerCase();
+    if (!allowedHosts.has(hostHeader)) {
+      sendJson(response, 421, { ok: false, error: 'host-header-denied' }, request.method);
+      return;
+    }
+
+    const expectedOrigin = `http://${hostHeader}`;
+    const requestUrl = new URL(request.url || '/', expectedOrigin);
     const pathname = requestUrl.pathname;
 
     try {
+      if (MUTATION_METHODS.has(request.method)) {
+        assertMutationRequest(request, { csrfToken, expectedOrigin, authToken });
+      }
+
       if (pathname === '/health') {
         if (!['GET', 'HEAD'].includes(request.method)) {
           sendJson(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
@@ -120,12 +187,14 @@ export async function startFoundryServer({
         }
         const registry = await store.init();
         const enabledProviders = registry.providers.filter((provider) => provider.enabled);
-        const availableProviders = enabledProviders.filter((provider) => provider.lastHealth?.status === 'available');
+        const localProviders = enabledProviders.filter((provider) => provider.kind === 'ollama');
+        const availableProviders = localProviders.filter((provider) => provider.lastHealth?.status === 'available');
+        const discoveredModels = registry.providers.reduce((sum, provider) => sum + provider.models.length, 0);
         sendJson(response, 200, {
           ok: true,
           moduleId: 'arkfire.models',
           canonicalName: 'Arkfire Model Foundry',
-          version: '0.1.0',
+          version: '0.1.1',
           status: 'PARTIAL',
           runtime: 'standalone',
           uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
@@ -133,9 +202,22 @@ export async function startFoundryServer({
           providers: {
             configured: registry.providers.length,
             enabled: enabledProviders.length,
+            localEnabled: localProviders.length,
             available: availableProviders.length,
+            cloudConfigured: registry.providers.filter((provider) => provider.runtime === 'cloud').length,
           },
+          models: { discovered: discoveredModels },
+          integrations: { classified: registry.integrationCandidates.length },
         }, request.method);
+        return;
+      }
+
+      if (pathname === '/api/session') {
+        if (!['GET', 'HEAD'].includes(request.method)) {
+          sendJson(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+          return;
+        }
+        sendJson(response, 200, { ok: true, csrfToken, mutationContentType: 'application/json' }, request.method);
         return;
       }
 
@@ -243,6 +325,9 @@ export async function startFoundryServer({
   const boundPort = typeof address === 'object' && address ? address.port : port;
   const displayHost = ['0.0.0.0', '::'].includes(boundHost) ? '127.0.0.1' : boundHost;
   const url = `http://${displayHost.includes(':') ? `[${displayHost}]` : displayHost}:${boundPort}`;
+  allowedHosts = isLoopbackHost(host)
+    ? new Set([`127.0.0.1:${boundPort}`, `localhost:${boundPort}`, `[::1]:${boundPort}`])
+    : new Set([`${host}:${boundPort}`.toLowerCase()]);
 
   return {
     server,
