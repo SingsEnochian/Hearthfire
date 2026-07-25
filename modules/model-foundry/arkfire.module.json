@@ -40,6 +40,7 @@
     "provider-registry",
     "model-discovery",
     "ollama-health-probe",
+    "cloud-routed-tag-classification",
     "availability-snapshots",
     "health-receipts",
     "registry-import",
@@ -138,12 +139,14 @@
     "service responds on /health",
     "registry store is readable and writable",
     "each configured Ollama provider reports available or unavailable honestly",
+    "cloud-routed model tags are not labelled device-local",
     "mutating HTTP routes require same-origin CSRF validation"
   ],
   "acceptanceTests": [
     "launch with Hearthfire and Hearthgate absent",
     "persist a provider profile",
     "probe a mock Ollama endpoint",
+    "classify cloud-routed Ollama tags as external-processing-possible",
     "report an unavailable endpoint without crashing",
     "reject cross-origin or tokenless mutations",
     "serialize concurrent registry mutations without lost updates",
@@ -175,6 +178,7 @@
   "knownLimitations": [
     "MF-001.1 discovers and records models but does not invoke them.",
     "Imported cloud provider profiles remain disabled and invocation-locked until MF-002 adds explicit route consent.",
+    "Ollama tags containing cloud are marked as potentially externally processed; the Foundry does not invoke them in this milestone.",
     "HydraDB, Supabase, and Notion credentials are classified for a future Bridges module but are not connected by Model Foundry.",
     "Encrypted credentials are bound to the current operating-system user and are deliberately absent from registry exports.",
     "The Hearthgate adapter contract is present but host-side installation is not yet implemented.",
