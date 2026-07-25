@@ -46,7 +46,7 @@
     .provider h2 { font-size:1.05rem; margin:0; }
     .provider-id,code { color:var(--muted); font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.82rem; overflow-wrap:anywhere; }
     .provider-meta { display:grid; gap:.35rem; margin:.65rem 0; color:var(--muted); }
-    .availability { font-weight:650; }
+    .availability { font-weight:650; text-align:right; }
     .available { color:var(--green); } .unavailable { color:var(--red); } .unknown { color:var(--muted); }
     .badge { display:inline-flex; width:max-content; align-items:center; border:1px solid var(--border); border-radius:999px; padding:.2rem .48rem; font-size:.72rem; color:var(--muted); }
     .badge.local { color:var(--green); } .badge.cloud { color:var(--violet); } .badge.locked { color:var(--copper); }
@@ -164,8 +164,17 @@
     }
 
     function statusClass(provider){
-      if(!provider.enabled) return 'unknown';
       if(provider.kind!=='ollama') return provider.credentialStatus==='stored-encrypted'?'available':'unknown';
+      if(!provider.enabled) return 'unknown';
+      return provider.lastHealth?.status||'unknown';
+    }
+
+    function statusText(provider){
+      if(provider.kind!=='ollama'){
+        if(provider.credentialStatus==='stored-encrypted') return provider.enabled?'credential stored':'credential stored · disabled';
+        return 'credential missing';
+      }
+      if(!provider.enabled) return 'disabled';
       return provider.lastHealth?.status||'unknown';
     }
 
@@ -228,8 +237,7 @@
         const id=document.createElement('div'); id.className='provider-id'; id.textContent=provider.providerId;
         titleWrap.append(title,id);
         const state=statusClass(provider);
-        const availability=document.createElement('span'); availability.className=`availability ${state}`;
-        availability.textContent=!provider.enabled?'disabled':provider.kind==='ollama'?state:(provider.credentialStatus==='stored-encrypted'?'credential stored':'credential missing');
+        const availability=document.createElement('span'); availability.className=`availability ${state}`; availability.textContent=statusText(provider);
         head.append(titleWrap,availability);
 
         const meta=document.createElement('div'); meta.className='provider-meta';
