@@ -122,4 +122,4 @@ The Hearthgate adapter consumes the same public routes. Disconnecting the adapte
 
 The module owns provider/model registry records, health receipts, and encrypted model-provider credentials. Bridge credentials are classified but remain destined for the future Bridges module. Secrets, Constellation memories, room history, canon, and host configuration never enter registry exports.
 
-The module remains `PARTIAL` until the updated CI build passes and a second reviewer accepts the implementation.
+The module remains `PARTIAL` until the updated CI build passes and a second reviewer accepts the implementation. A passing package build is evidence for this milestone, not permission to merge without review.
