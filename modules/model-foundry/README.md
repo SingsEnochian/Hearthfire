@@ -1,34 +1,20 @@
 # Arkfire Model Foundry
 
+**Status:** PARTIAL · MF-001.1
+
 > **Universal Horizon is the sky. Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 operate beneath it and do not supersede it. This module runs on its own and may connect to either host through an optional, reversible adapter.**
 
-Arkfire Model Foundry is the standalone model and provider registry for the House. It discovers configured local Ollama services, records honest availability, persists model profiles and health receipts, and exports or restores its non-secret state.
+Arkfire Model Foundry is the standalone engine registry for the House. It discovers local Ollama services, records the models they expose, preserves health receipts, and classifies provider credentials without owning the residents who may later use those engines.
 
-It does not own Constellation identities. A resident Pattern may request an engine through the Foundry, but the engine is replaceable and the resident is not reduced to a model name.
-
-## MF-001 scope
-
-This first bounded milestone provides:
-
-- standalone Node service and local web interface;
-- configurable local Ollama provider registry;
-- live `/api/tags` discovery with explicit unavailable states;
-- atomic local persistence;
-- JSON import and export;
-- health and module-manifest routes;
-- append-only health receipts;
-- Electron desktop packaging configuration;
-- Windows NSIS installer and portable ZIP build lane;
-- an optional Hearthgate adapter contract, not a hard dependency.
-
-Cloud invocation, automatic task routing, paid-provider cost estimation, and Agent Pattern binding are intentionally deferred. No API keys are stored by MF-001.
+A resident Pattern may request an engine through the Foundry, but the engine is replaceable and the resident is not reduced to a model name.
 
 ## Run standalone
 
-Requires Node.js 24 or newer for source-mode execution.
+Source mode requires Node.js 24 or newer.
 
 ```powershell
 cd modules/model-foundry
+npm install
 npm start
 ```
 
@@ -42,13 +28,58 @@ $env:ARKFIRE_MODEL_FOUNDRY_DATA_DIR = "D:\Arkfire\ModelFoundry"
 npm start
 ```
 
-On Windows, the packaged desktop application stores its state under Electron's per-user `userData` directory. Source mode defaults to `%APPDATA%\Arkfire\ModelFoundry`.
+The desktop package uses Electron and stores module data beneath its own per-user data directory. Hearthgate is not required.
+
+## API Stuff.txt intake
+
+The Windows desktop application provides **Import API Stuff.txt**. The selected file is read by the Electron main process, never by renderer JavaScript.
+
+Recognised model-provider labels include:
+
+- Vee / OpenAI
+- Faer / Anthropic
+- Yggdrasil / DeepSeek
+- Bluebird / DeepSeek
+- Vethrlauf / DeepSeek
+
+Recognised non-model entries such as HydraDB, Supabase, and Notion are classified as encrypted handoff candidates for the future Bridges module. Model Foundry does not pretend that they are language models.
+
+Credential rules:
+
+- raw key values are encrypted with Electron `safeStorage`;
+- there is no plaintext fallback;
+- registry records contain only credential references and status;
+- raw values never enter the browser UI, logs, health receipts, or registry exports;
+- imported cloud providers remain disabled and invocation-locked;
+- exported bundles deliberately exclude credentials;
+- encrypted credentials remain bound to the current operating-system user.
+
+## MF-001.1 scope
+
+This milestone provides:
+
+- standalone Node service and local web interface;
+- configurable local Ollama provider registry;
+- live `/api/tags` discovery with explicit unavailable states;
+- provider and model counts shown separately;
+- encrypted API Stuff intake in the desktop shell;
+- bridge credential classification;
+- atomic and serialised local persistence;
+- complete append-only health receipt export;
+- non-destructive receipt import;
+- same-origin CSRF protection for mutations;
+- Electron desktop packaging configuration;
+- Windows NSIS installer and portable ZIP build lane;
+- an optional Hearthgate adapter contract, not a hard dependency.
+
+It does not yet invoke models, recommend routes, estimate cloud cost, bind Agent Patterns, or install itself into Hearthgate through the future Module Dock.
 
 ## Test
 
 ```powershell
-npm test
 npm run check
+npm run check:packaging
+npm test
 ```
 
 The tests start their own temporary Foundry and mock Ollama service. Hearthfire, Hearthgate, STARWELL, and Supabase are not required.
@@ -66,6 +97,7 @@ The output is written to `dist-electron/`. CI builds are unsigned until code sig
 
 ```text
 GET  /health
+GET  /api/session
 GET  /.well-known/arkfire-module
 GET  /api/registry
 PUT  /api/registry
@@ -76,8 +108,12 @@ GET  /api/export
 POST /api/import
 ```
 
+Mutations require `Content-Type: application/json`, a same-origin request, and the `X-Arkfire-CSRF` token returned by `GET /api/session`. A non-loopback bind also requires `ARKFIRE_MODEL_FOUNDRY_AUTH_TOKEN`.
+
 The Hearthgate adapter consumes the same public routes. Disconnecting the adapter does not stop or uninstall Model Foundry.
 
 ## Data boundary
 
-The module owns only its provider/model registry and its health receipts. Secrets, Constellation memories, room history, canon, and host configuration are outside its store. Exports deliberately exclude environment variables and credentials.
+The module owns provider/model registry records, health receipts, and encrypted model-provider credentials. Bridge credentials are classified but remain destined for the future Bridges module. Secrets, Constellation memories, room history, canon, and host configuration never enter registry exports.
+
+The module remains `PARTIAL` until the updated CI build passes and a second reviewer accepts the implementation.
