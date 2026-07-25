@@ -1,0 +1,65 @@
+{
+  "name": "@arkfire/model-foundry",
+  "productName": "Arkfire Model Foundry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node src/server.mjs",
+    "check": "node --check src/store.mjs && node --check src/ollama.mjs && node --check src/server.mjs && node --check electron/main.cjs && node --check scripts/check-packaging.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check:packaging": "node scripts/check-packaging.mjs",
+    "electron:dev": "electron .",
+    "electron:pack:win": "electron-builder --win dir --x64 --publish never",
+    "electron:build:win": "electron-builder --win nsis zip --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^35.7.5",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.hearthweave.arkfire.modelfoundry",
+    "productName": "Arkfire Model Foundry",
+    "artifactName": "Arkfire-Model-Foundry-Setup-${version}-${arch}.${ext}",
+    "copyright": "Hearthweave",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "asar": false,
+    "files": [
+      "arkfire.module.json",
+      "adapters/**/*",
+      "electron/**/*",
+      "public/**/*",
+      "src/**/*",
+      "package.json",
+      "!dist-electron",
+      "!data/**",
+      "!.env"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Arkfire Model Foundry",
+      "uninstallDisplayName": "Arkfire Model Foundry",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
