@@ -2,6 +2,7 @@
   "name": "@arkfire/model-foundry",
   "productName": "Arkfire Model Foundry",
   "version": "0.1.1",
+  "description": "Standalone Arkfire provider and model registry with encrypted API Stuff intake.",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
