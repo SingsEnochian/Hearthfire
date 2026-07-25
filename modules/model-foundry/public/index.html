@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0d1018" />
+  <title>Arkfire Model Foundry</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0d14;
+      --surface: #121722;
+      --surface-2: #1a2130;
+      --border: #30394d;
+      --text: #e9e5dc;
+      --muted: #9aa4b7;
+      --copper: #d39a63;
+      --green: #69c3a7;
+      --red: #dc7d79;
+      --blue: #8da6e8;
+      --focus: #f0c98c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% -10%, rgba(76, 104, 170, .20), transparent 36rem),
+        radial-gradient(circle at 90% 110%, rgba(184, 108, 55, .17), transparent 38rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button, input, select {
+      border: 1px solid var(--border);
+      border-radius: .6rem;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: .66rem .8rem;
+    }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--copper); }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--focus) 55%, transparent);
+      outline-offset: 2px;
+    }
+    button.primary { background: #745233; border-color: #b27c4e; }
+    button.danger { color: #ffd7d5; }
+    button:disabled { opacity: .45; cursor: wait; }
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.4rem clamp(1rem, 4vw, 3rem);
+      border-bottom: 1px solid var(--border);
+      background: rgba(10, 13, 20, .82);
+      backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    h1 { margin: 0; font-family: Georgia, serif; font-weight: 500; letter-spacing: .025em; }
+    header p { margin: .35rem 0 0; color: var(--muted); max-width: 56rem; }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .45rem .7rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot { width: .65rem; height: .65rem; border-radius: 50%; background: var(--muted); }
+    .dot.ok { background: var(--green); box-shadow: 0 0 1rem rgba(105, 195, 167, .55); }
+    main { width: min(1180px, calc(100% - 2rem)); margin: 1.4rem auto 4rem; }
+    .toolbar, .panel {
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: rgba(18, 23, 34, .90);
+      box-shadow: 0 1.2rem 4rem rgba(0, 0, 0, .18);
+    }
+    .toolbar { display: flex; flex-wrap: wrap; gap: .65rem; padding: .9rem; }
+    .toolbar .spacer { flex: 1; }
+    .notice {
+      margin: 1rem 0;
+      padding: .9rem 1rem;
+      border-left: 3px solid var(--blue);
+      background: rgba(76, 104, 170, .10);
+      color: var(--muted);
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)); gap: 1rem; }
+    .provider {
+      border: 1px solid var(--border);
+      border-radius: .9rem;
+      background: var(--surface);
+      padding: 1rem;
+      min-width: 0;
+    }
+    .provider header { position: static; padding: 0 0 .8rem; border: 0; background: none; backdrop-filter: none; }
+    .provider h2 { font-size: 1.05rem; margin: 0; }
+    .provider-id, code { color: var(--muted); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .82rem; overflow-wrap: anywhere; }
+    .provider-meta { display: grid; gap: .35rem; margin: .65rem 0; color: var(--muted); }
+    .availability { font-weight: 650; }
+    .available { color: var(--green); }
+    .unavailable { color: var(--red); }
+    .unknown { color: var(--muted); }
+    .models { margin: .8rem 0 0; padding: .7rem; border-radius: .6rem; background: #0d121c; }
+    .models ul { margin: .45rem 0 0; padding-left: 1.2rem; }
+    .provider-actions { display: flex; gap: .55rem; margin-top: .85rem; }
+    .panel { margin-top: 1rem; padding: 1rem; }
+    .panel h2 { margin: 0 0 .8rem; font-size: 1.08rem; }
+    form { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+    label { display: grid; gap: .35rem; color: var(--muted); }
+    label.full { grid-column: 1 / -1; }
+    .form-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
+    .message { min-height: 1.5rem; margin: .8rem 0 0; color: var(--muted); }
+    .message.error { color: var(--red); }
+    .hidden { display: none !important; }
+    footer { margin-top: 1.2rem; color: var(--muted); font-size: .9rem; }
+    @media (max-width: 660px) {
+      header { position: static; flex-direction: column; }
+      form { grid-template-columns: 1fr; }
+      label.full, .form-actions { grid-column: auto; }
+      .toolbar .spacer { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Arkfire Model Foundry</h1>
+      <p>See which engines are truly present. The Foundry records providers and availability; it does not own the residents who may use them.</p>
+    </div>
+    <div class="status-chip" aria-live="polite"><span class="dot" id="health-dot"></span><span id="health-text">Listening…</span></div>
+  </header>
+
+  <main>
+    <div class="toolbar" aria-label="Registry actions">
+      <button class="primary" id="probe-all">Probe local fleet</button>
+      <button id="refresh">Refresh registry</button>
+      <span class="spacer"></span>
+      <button id="export">Export registry</button>
+      <button id="import">Import registry</button>
+      <input class="hidden" id="import-file" type="file" accept="application/json,.json" />
+    </div>
+
+    <p class="notice">MF-001 performs health and model discovery only. It sends no prompts, project files, memories, or canon to a provider. Cloud invocation remains locked outside this milestone.</p>
+
+    <section class="grid" id="providers" aria-live="polite"></section>
+
+    <section class="panel">
+      <h2>Add or update an Ollama provider</h2>
+      <form id="provider-form">
+        <label>Provider ID
+          <input name="providerId" required pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,80}" placeholder="ollama.studio" />
+        </label>
+        <label>Display name
+          <input name="displayName" required placeholder="Studio Ollama" />
+        </label>
+        <label class="full">Endpoint
+          <input name="endpoint" type="url" required placeholder="http://127.0.0.1:11434" />
+        </label>
+        <label><span>Enabled</span>
+          <select name="enabled"><option value="true">Yes</option><option value="false">No</option></select>
+        </label>
+        <div class="form-actions"><button type="submit">Save provider</button></div>
+      </form>
+      <p class="message" id="message" aria-live="polite"></p>
+    </section>
+
+    <footer>Standalone data remains in the module’s own local directory. Hearthgate may connect through the public adapter contract, but disconnecting it does not stop this instrument.</footer>
+  </main>
+
+  <script>
+    'use strict';
+    const providersNode = document.getElementById('providers');
+    const messageNode = document.getElementById('message');
+    const probeButton = document.getElementById('probe-all');
+    const healthDot = document.getElementById('health-dot');
+    const healthText = document.getElementById('health-text');
+    let registry = null;
+
+    function message(text, error = false) {
+      messageNode.textContent = text;
+      messageNode.classList.toggle('error', error);
+    }
+
+    async function request(path, options = {}) {
+      const response = await fetch(path, {
+        ...options,
+        headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) },
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      return body;
+    }
+
+    function statusClass(provider) {
+      return provider.lastHealth?.status || 'unknown';
+    }
+
+    function renderRegistry(nextRegistry) {
+      registry = nextRegistry;
+      providersNode.replaceChildren();
+      if (!registry.providers.length) {
+        const empty = document.createElement('p');
+        empty.textContent = 'No providers are configured.';
+        providersNode.append(empty);
+        return;
+      }
+
+      for (const provider of registry.providers) {
+        const card = document.createElement('article');
+        card.className = 'provider';
+        const head = document.createElement('header');
+        const titleWrap = document.createElement('div');
+        const title = document.createElement('h2');
+        title.textContent = provider.displayName;
+        const id = document.createElement('div');
+        id.className = 'provider-id';
+        id.textContent = provider.providerId;
+        titleWrap.append(title, id);
+        const availability = document.createElement('span');
+        const state = statusClass(provider);
+        availability.className = `availability ${state}`;
+        availability.textContent = provider.enabled ? state : 'disabled';
+        head.append(titleWrap, availability);
+
+        const meta = document.createElement('div');
+        meta.className = 'provider-meta';
+        const endpoint = document.createElement('code');
+        endpoint.textContent = provider.endpoint;
+        const timing = document.createElement('span');
+        timing.textContent = provider.lastHealth
+          ? `${provider.lastHealth.latencyMs ?? '—'} ms · ${provider.lastHealth.checkedAt}`
+          : 'Not yet probed';
+        meta.append(endpoint, timing);
+        if (provider.lastHealth?.error) {
+          const error = document.createElement('span');
+          error.className = 'unavailable';
+          error.textContent = provider.lastHealth.error;
+          meta.append(error);
+        }
+
+        const models = document.createElement('div');
+        models.className = 'models';
+        const modelLabel = document.createElement('strong');
+        modelLabel.textContent = `Models (${provider.models.length})`;
+        models.append(modelLabel);
+        if (provider.models.length) {
+          const list = document.createElement('ul');
+          for (const model of provider.models) {
+            const item = document.createElement('li');
+            item.textContent = model.name;
+            list.append(item);
+          }
+          models.append(list);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'provider-actions';
+        const probe = document.createElement('button');
+        probe.textContent = 'Probe';
+        probe.addEventListener('click', () => probeProviders([provider.providerId]));
+        const edit = document.createElement('button');
+        edit.textContent = 'Edit';
+        edit.addEventListener('click', () => fillForm(provider));
+        const remove = document.createElement('button');
+        remove.textContent = 'Remove';
+        remove.className = 'danger';
+        remove.addEventListener('click', () => removeProvider(provider.providerId));
+        actions.append(probe, edit, remove);
+
+        card.append(head, meta, models, actions);
+        providersNode.append(card);
+      }
+    }
+
+    function fillForm(provider) {
+      const form = document.getElementById('provider-form');
+      form.elements.providerId.value = provider.providerId;
+      form.elements.displayName.value = provider.displayName;
+      form.elements.endpoint.value = provider.endpoint;
+      form.elements.enabled.value = String(provider.enabled);
+      form.elements.displayName.focus();
+    }
+
+    async function loadRegistry() {
+      try {
+        const body = await request('/api/registry');
+        renderRegistry(body.registry);
+        const health = await request('/health');
+        healthDot.className = 'dot ok';
+        healthText.textContent = `${health.providers.available}/${health.providers.enabled} available`;
+      } catch (error) {
+        healthDot.className = 'dot';
+        healthText.textContent = 'Service unavailable';
+        message(error.message, true);
+      }
+    }
+
+    async function probeProviders(providerIds = null) {
+      probeButton.disabled = true;
+      message('Probing configured endpoints. No prompt content is being sent.');
+      try {
+        const body = await request('/api/probe', {
+          method: 'POST',
+          body: JSON.stringify(providerIds ? { providerIds } : {}),
+        });
+        renderRegistry(body.registry);
+        const available = body.results.filter((result) => result.status === 'available').length;
+        message(`Probe complete: ${available}/${body.results.length} endpoints available.`);
+        await loadRegistry();
+      } catch (error) {
+        message(error.message, true);
+      } finally {
+        probeButton.disabled = false;
+      }
+    }
+
+    async function removeProvider(providerId) {
+      if (!confirm(`Remove ${providerId} from this local registry?`)) return;
+      try {
+        const body = await request(`/api/providers/${encodeURIComponent(providerId)}`, { method: 'DELETE' });
+        renderRegistry(body.registry);
+        message(`Removed ${providerId}.`);
+      } catch (error) {
+        message(error.message, true);
+      }
+    }
+
+    document.getElementById('provider-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const data = new FormData(event.currentTarget);
+      const provider = {
+        providerId: data.get('providerId'),
+        displayName: data.get('displayName'),
+        endpoint: data.get('endpoint'),
+        kind: 'ollama',
+        enabled: data.get('enabled') === 'true',
+      };
+      try {
+        const body = await request('/api/providers', { method: 'POST', body: JSON.stringify(provider) });
+        renderRegistry(body.registry);
+        message(`Saved ${provider.providerId}.`);
+      } catch (error) {
+        message(error.message, true);
+      }
+    });
+
+    document.getElementById('refresh').addEventListener('click', loadRegistry);
+    probeButton.addEventListener('click', () => probeProviders());
+    document.getElementById('export').addEventListener('click', () => { window.location.href = '/api/export'; });
+    document.getElementById('import').addEventListener('click', () => document.getElementById('import-file').click());
+    document.getElementById('import-file').addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const bundle = JSON.parse(await file.text());
+        const body = await request('/api/import', { method: 'POST', body: JSON.stringify(bundle) });
+        renderRegistry(body.registry);
+        message(`Imported ${file.name}.`);
+      } catch (error) {
+        message(`Import failed: ${error.message}`, true);
+      } finally {
+        event.target.value = '';
+      }
+    });
+
+    loadRegistry();
+  </script>
+</body>
+</html>
