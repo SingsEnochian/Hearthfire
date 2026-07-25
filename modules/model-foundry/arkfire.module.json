@@ -63,11 +63,7 @@
     "health-receipts",
     "encrypted-model-provider-credential-references"
   ],
-  "storageLocations": [
-    "registry.json",
-    "health-receipts.jsonl",
-    "credentials.enc.json"
-  ],
+  "storageLocations": ["registry.json", "health-receipts.jsonl", "credentials.enc.json"],
   "optionalIntegrations": [
     "ollama-local-services",
     "openai-provider-profile",
@@ -95,18 +91,8 @@
       "note": "The desktop shell reads only the selected file, encrypts recognised credentials with Electron safeStorage, and exposes only secret-free metadata to the renderer and registry."
     }
   ],
-  "networkRequirements": [
-    {
-      "kind": "optional",
-      "purpose": "Reach configured Ollama endpoints for health and model discovery."
-    }
-  ],
-  "deviceRequirements": [
-    {
-      "kind": "optional",
-      "purpose": "Native API Stuff import requires the Electron desktop shell and OS-backed safeStorage. No plaintext fallback is permitted."
-    }
-  ],
+  "networkRequirements": [{ "kind": "optional", "purpose": "Reach configured Ollama endpoints for health and model discovery." }],
+  "deviceRequirements": [{ "kind": "optional", "purpose": "Native API Stuff import requires the Electron desktop shell and OS-backed safeStorage. No plaintext fallback is permitted." }],
   "routes": [
     "GET /health",
     "GET /api/session",
@@ -153,6 +139,7 @@
     "export the full registry and receipt history",
     "merge imported receipts without erasing the local audit trail",
     "parse API Stuff labels without placing raw secrets in registry or export structures",
+    "report duplicate API Stuff labels and use the last occurrence deterministically",
     "restart and recover prior state",
     "build an unsigned Windows NSIS installer and portable ZIP"
   ],
