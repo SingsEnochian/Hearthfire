@@ -8,6 +8,10 @@ Arkfire Model Foundry is the standalone engine registry for the House. It discov
 
 A resident Pattern may request an engine through the Foundry, but the engine is replaceable and the resident is not reduced to a model name.
 
+## Upgrade note
+
+The original MF-001 installer cannot update itself. Install MF-001.1 over or beside the development build to receive native API Stuff import, security repairs, separate provider/model counts, and lossless audit handling. Existing module data remains in the per-user data directory because uninstall does not silently delete it.
+
 ## Run standalone
 
 Source mode requires Node.js 24 or newer.
