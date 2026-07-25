@@ -1,0 +1,154 @@
+{
+  "schemaVersion": "arkfire.module/v1",
+  "moduleId": "arkfire.models",
+  "canonicalName": "Arkfire Model Foundry",
+  "version": "0.1.0",
+  "status": "PARTIAL",
+  "owner": "Rowan",
+  "maintainers": ["Nikola!Vee"],
+  "description": "Standalone local-first provider and model registry with Ollama discovery, health receipts, persistence, import, export, and an optional Hearthgate adapter.",
+  "standalone": true,
+  "hierarchy": {
+    "sky": "Universal Horizon",
+    "hosts": ["Hearthfire: Arkfire", "Hearthgate: Arkfire 0.002"],
+    "inheritance": "Universal Horizon is the sky. Hearthfire: Arkfire and Hearthgate: Arkfire 0.002 operate beneath it and do not supersede it. This module runs on its own and may connect to either host through an optional, reversible adapter."
+  },
+  "standaloneEntrypoints": {
+    "service": "node src/server.mjs",
+    "desktop": "electron .",
+    "windowsInstaller": "dist-electron/Arkfire-Model-Foundry-Setup-0.1.0-x64.exe"
+  },
+  "standaloneInterface": ["web-ui", "http-api", "desktop-application"],
+  "standaloneDataDirectory": {
+    "windowsSourceMode": "%APPDATA%/Arkfire/ModelFoundry",
+    "desktopMode": "<electron-userData>/ModelFoundry",
+    "overrideEnvironmentVariable": "ARKFIRE_MODEL_FOUNDRY_DATA_DIR"
+  },
+  "standaloneHealthCheck": "GET /health",
+  "standaloneTestCommand": "npm test",
+  "hostAdapters": [
+    {
+      "adapterId": "arkfire.models.hearthgate/v1",
+      "host": "hearthgate",
+      "manifest": "adapters/hearthgate.adapter.json",
+      "optional": true,
+      "reversible": true,
+      "disconnectBehaviour": "The standalone module continues running and retains its own data."
+    }
+  ],
+  "capabilities": [
+    "provider-registry",
+    "model-discovery",
+    "ollama-health-probe",
+    "availability-snapshots",
+    "health-receipts",
+    "registry-import",
+    "registry-export",
+    "standalone-desktop"
+  ],
+  "dataContracts": [
+    "arkfire.model-foundry-registry/v1",
+    "arkfire.model-health-receipt/v1",
+    "arkfire.model-foundry-export/v1"
+  ],
+  "dataOwnership": [
+    "provider-profiles",
+    "discovered-model-profiles",
+    "health-receipts"
+  ],
+  "storageLocations": [
+    "registry.json",
+    "health-receipts.jsonl"
+  ],
+  "optionalIntegrations": [
+    "ollama-local-services",
+    "hearthgate-host-adapter",
+    "hearthfire-host-adapter"
+  ],
+  "permissions": [
+    "read-write-own-data-directory",
+    "network-access-to-user-configured-provider-endpoints"
+  ],
+  "consentRequirements": [
+    {
+      "action": "probe-provider-endpoint",
+      "defaultScope": "configured-local-endpoints",
+      "note": "MF-001 does not send prompts or project content to providers."
+    }
+  ],
+  "networkRequirements": [
+    {
+      "kind": "optional",
+      "purpose": "Reach configured Ollama endpoints for health and model discovery."
+    }
+  ],
+  "deviceRequirements": [],
+  "routes": [
+    "GET /health",
+    "GET /.well-known/arkfire-module",
+    "GET /api/registry",
+    "PUT /api/registry",
+    "POST /api/providers",
+    "DELETE /api/providers/:providerId",
+    "POST /api/probe",
+    "GET /api/export",
+    "POST /api/import"
+  ],
+  "rooms": [],
+  "commands": [
+    "npm start",
+    "npm test",
+    "npm run electron:build:win"
+  ],
+  "configurationSchema": "arkfire.model-foundry-registry/v1",
+  "migrationVersion": 1,
+  "lifecycle": {
+    "install": "Run the NSIS installer or unpack the portable ZIP.",
+    "launchStandalone": "Launch Arkfire Model Foundry or run npm start.",
+    "enableInHost": "Connect the optional adapter to the module base URL.",
+    "pause": "Stop issuing probes; the service remains readable.",
+    "disableInHost": "Disable the host adapter without stopping the module.",
+    "removeFromHost": "Delete only the host adapter record.",
+    "uninstallStandalone": "Use Windows Apps or remove the portable directory.",
+    "restore": "Install or unpack again, then import a prior export bundle."
+  },
+  "importProcedure": "POST an arkfire.model-foundry-export/v1 bundle to /api/import or use the standalone UI.",
+  "exportProcedure": "GET /api/export or use Export Registry in the standalone UI.",
+  "healthChecks": [
+    "service responds on /health",
+    "registry store is readable and writable",
+    "each configured provider reports available or unavailable honestly"
+  ],
+  "acceptanceTests": [
+    "launch with Hearthfire and Hearthgate absent",
+    "persist a provider profile",
+    "probe a mock Ollama endpoint",
+    "report an unavailable endpoint without crashing",
+    "export registry and receipts",
+    "restart and recover prior state",
+    "import the exported bundle into an empty data directory",
+    "build an unsigned Windows NSIS installer and portable ZIP"
+  ],
+  "provenance": [
+    {
+      "source": "starwell-server/fleet-health.mjs",
+      "contribution": "Existing four-port Ollama health probing inspected and preserved as source lineage.",
+      "author": "Boxfire"
+    },
+    {
+      "source": "starwell-server/arkfire-dispatch.mjs",
+      "contribution": "Existing model endpoint and model-name definitions inspected; dispatch remains untouched during MF-001 extraction."
+    },
+    {
+      "source": "Flameclyffe Hearthgate Electron/NSIS lane",
+      "contribution": "Installer conventions reused without creating a runtime dependency on Hearthgate."
+    }
+  ],
+  "knownLimitations": [
+    "MF-001 discovers and records models but does not invoke them.",
+    "Cloud provider calls, route recommendations, cost estimates, and consented prompt transfer are deferred.",
+    "The Hearthgate adapter contract is present but host-side installation is not yet implemented.",
+    "Installer builds are unsigned until code signing is configured.",
+    "The module remains PARTIAL until CI and a second reviewer provide standalone and packaging receipts."
+  ]
+}
