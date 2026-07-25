@@ -80,24 +80,18 @@ This milestone provides:
 
 It does not yet invoke models, recommend routes, estimate cloud cost, bind Agent Patterns, or install itself into Hearthgate through the future Module Dock.
 
-## Test
+## Verification
 
 ```powershell
 npm run check
 npm run check:packaging
 npm test
-```
-
-The tests start their own temporary Foundry and mock Ollama service. Hearthfire, Hearthgate, STARWELL, and Supabase are not required.
-
-## Build the Windows installer
-
-```powershell
-npm install
 npm run electron:build:win
 ```
 
-The output is written to `dist-electron/`. CI builds are unsigned until code signing is configured, so Windows may display a SmartScreen warning.
+The automated Windows lane has passed source checks, packaging preflight, standalone tests, installer construction, portable package construction, packaged-file checks, checksums, and artefact upload for the current MF-001.1 commit. Hearthfire, Hearthgate, STARWELL, and Supabase were not required for the tests.
+
+The CI output is unsigned until code signing is configured, so Windows may display a SmartScreen warning.
 
 ## Public standalone contract
 
@@ -122,4 +116,4 @@ The Hearthgate adapter consumes the same public routes. Disconnecting the adapte
 
 The module owns provider/model registry records, health receipts, and encrypted model-provider credentials. Bridge credentials are classified but remain destined for the future Bridges module. Secrets, Constellation memories, room history, canon, and host configuration never enter registry exports.
 
-The module remains `PARTIAL` until the updated CI build passes and a second reviewer accepts the implementation. A passing package build is evidence for this milestone, not permission to merge without review.
+The module remains `PARTIAL` until a second reviewer accepts the implementation. A passing package build is evidence for this milestone, not permission to merge without review.
