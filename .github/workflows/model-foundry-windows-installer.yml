@@ -84,10 +84,22 @@ jobs:
             "$unpackedRoot/arkfire.module.json",
             "$unpackedRoot/adapters/hearthgate.adapter.json",
             "$unpackedRoot/public/index.html",
-            "$unpackedRoot/src/server.mjs"
+            "$unpackedRoot/electron/main.cjs",
+            "$unpackedRoot/electron/preload.cjs",
+            "$unpackedRoot/src/server.mjs",
+            "$unpackedRoot/src/api-stuff-parser.mjs"
           )
           foreach ($path in $required) {
             if (-not (Test-Path $path)) { throw "Packaged application is missing $path" }
+          }
+
+          $mainSource = Get-Content -Raw -Path "$unpackedRoot/electron/main.cjs"
+          $rendererSource = Get-Content -Raw -Path "$unpackedRoot/public/index.html"
+          if (-not $mainSource.Contains("safeStorage.encryptString")) {
+            throw "Packaged desktop shell is missing OS-backed credential encryption."
+          }
+          if (-not $rendererSource.Contains("Import API Stuff.txt")) {
+            throw "Packaged renderer is missing API Stuff import control."
           }
 
           $files = @($installers[0], $portable[0])
@@ -101,11 +113,13 @@ jobs:
           "portable_name=$($portable[0].Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
           @"
-          ## Arkfire Model Foundry MF-001
+          ## Arkfire Model Foundry MF-001.1
 
           - Installer: ``$($installers[0].Name)``
           - Portable: ``$($portable[0].Name)``
           - Standalone tests: passed
+          - API Stuff intake: native file picker + OS-backed encrypted credential store
+          - Registry/export secret leakage: prohibited by tests and packaging preflight
           - Hearthgate runtime dependency: none
           - Signing: unsigned development build
           "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
