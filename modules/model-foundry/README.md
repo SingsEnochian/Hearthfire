@@ -52,7 +52,8 @@ Credential rules:
 - raw values never enter the browser UI, logs, health receipts, or registry exports;
 - imported cloud providers remain disabled and invocation-locked;
 - exported bundles deliberately exclude credentials;
-- encrypted credentials remain bound to the current operating-system user.
+- encrypted credentials remain bound to the current operating-system user;
+- repeated labels are reported and the last occurrence for each target/slot is used deterministically.
 
 ## MF-001.1 scope
 
