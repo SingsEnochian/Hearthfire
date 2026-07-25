@@ -39,6 +39,7 @@ if (!mainSource.includes('credentials.enc.json')) throw new Error('Encrypted cre
 if (rendererSource.includes('secretValue') || rendererSource.includes('apiKey')) throw new Error('Renderer must not handle raw credential fields');
 if (!rendererSource.includes('Import API Stuff.txt')) throw new Error('Native API Stuff import control is missing');
 if (!rendererSource.includes('credential stored · disabled')) throw new Error('Imported cloud credentials are not labelled clearly');
+if (!rendererSource.includes('cloud-via-local-router')) throw new Error('Renderer does not respect explicit model runtime classification');
 if (!ollamaSource.includes('external-processing-possible')) throw new Error('Cloud-routed Ollama tags are not classified honestly');
 
 console.log('Model Foundry packaging preflight passed.');
