@@ -1,17 +1,19 @@
 function modelProfile(providerId, raw) {
   const name = String(raw?.name || raw?.model || '').trim();
+  const cloudRouted = /(^|[:._-])cloud($|[:._-])/i.test(name);
   return {
     modelId: `${providerId}::${name}`,
     providerId,
     name,
-    runtime: 'local',
-    privacyClass: 'device-local',
+    runtime: cloudRouted ? 'cloud-via-local-router' : 'local',
+    privacyClass: cloudRouted ? 'external-processing-possible' : 'device-local',
     sizeBytes: Number.isFinite(raw?.size) ? raw.size : null,
     digest: raw?.digest || null,
     modifiedAt: raw?.modified_at || null,
     details: raw?.details && typeof raw.details === 'object' ? raw.details : null,
     capabilities: ['text'],
     availability: 'available',
+    routeWarning: cloudRouted ? 'The model tag indicates cloud routing. Invocation requires explicit external-processing consent.' : null,
   };
 }
 
