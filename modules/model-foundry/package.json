@@ -6,9 +6,7 @@
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
-  "engines": {
-    "node": ">=24"
-  },
+  "engines": { "node": ">=24" },
   "scripts": {
     "start": "node src/server.mjs",
     "check": "node --check src/store.mjs && node --check src/ollama.mjs && node --check src/api-stuff-parser.mjs && node --check src/server.mjs && node --check electron/main.cjs && node --check electron/preload.cjs && node --check scripts/check-packaging.mjs",
@@ -27,9 +25,7 @@
     "productName": "Arkfire Model Foundry",
     "artifactName": "Arkfire-Model-Foundry-Setup-${version}-${arch}.${ext}",
     "copyright": "Hearthweave",
-    "directories": {
-      "output": "dist-electron"
-    },
+    "directories": { "output": "dist-electron" },
     "asar": false,
     "files": [
       "arkfire.module.json",
@@ -45,14 +41,8 @@
     ],
     "win": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
-          "target": "zip",
-          "arch": ["x64"]
-        }
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "zip", "arch": ["x64"] }
       ]
     },
     "nsis": {
