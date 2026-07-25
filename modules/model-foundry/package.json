@@ -1,7 +1,7 @@
 {
   "name": "@arkfire/model-foundry",
   "productName": "Arkfire Model Foundry",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "node src/server.mjs",
-    "check": "node --check src/store.mjs && node --check src/ollama.mjs && node --check src/server.mjs && node --check electron/main.cjs && node --check scripts/check-packaging.mjs",
+    "check": "node --check src/store.mjs && node --check src/ollama.mjs && node --check src/api-stuff-parser.mjs && node --check src/server.mjs && node --check electron/main.cjs && node --check electron/preload.cjs && node --check scripts/check-packaging.mjs",
     "test": "node --test test/*.test.mjs",
     "check:packaging": "node scripts/check-packaging.mjs",
     "electron:dev": "electron .",
@@ -39,7 +39,8 @@
       "package.json",
       "!dist-electron",
       "!data/**",
-      "!.env"
+      "!.env",
+      "!**/API STUFF.txt"
     ],
     "win": {
       "target": [
