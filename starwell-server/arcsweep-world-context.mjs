@@ -1,99 +1,91 @@
 // arcsweep-world-context.mjs
-// Loads the reviewed Arcsweep world-anchor seed for Boxfire.
+// Loads Boxfire's thin Arcsweep lookup index.
 //
-// Notion remains the world/canon authority. Runa holds the current World
-// Reception audio profiles. This loader gives Box a concise, provenance-rich
-// context packet without merging either source into Box's identity seed.
+// Notion is the living database and canon authority. This module deliberately
+// does not copy world content into GitHub. It gives Box stable page IDs, routes,
+// and Runa implementation paths so Box can resolve the real records in Notion.
 
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const MANIFEST_PATH = resolve(__dirname, 'data/arcsweep-world-anchors.v0.1.json');
+const INDEX_PATH = resolve(__dirname, 'data/arcsweep-world-anchors.v0.1.json');
 
-let _manifest = null;
+let _index = null;
 let _packet = null;
 
-async function _loadManifest() {
-  if (_manifest !== null) return _manifest;
+async function _loadIndex() {
+  if (_index !== null) return _index;
 
   try {
-    const raw = await readFile(MANIFEST_PATH, 'utf8');
+    const raw = await readFile(INDEX_PATH, 'utf8');
     const parsed = JSON.parse(raw);
 
-    if (!parsed || !Array.isArray(parsed.worlds)) {
-      throw new Error('Arcsweep world-anchor manifest has no worlds array');
+    if (!parsed?.notion_registry?.url || !Array.isArray(parsed.worlds)) {
+      throw new Error('Arcsweep index is missing the Notion registry or worlds array');
     }
 
-    _manifest = parsed;
+    _index = parsed;
   } catch (error) {
-    console.warn(`[Arcsweep] World-anchor seed unavailable: ${error.message}`);
-    _manifest = null;
+    console.warn(`[Arcsweep] World-anchor index unavailable: ${error.message}`);
+    _index = null;
   }
 
-  return _manifest;
+  return _index;
 }
 
 function _formatWorld(world) {
-  const identity = world.identity ?? {};
-  const arcsweep = world.arcsweep_seed ?? {};
-  const openQuestions = Array.isArray(arcsweep.open_questions)
-    ? arcsweep.open_questions.join(' | ')
-    : 'none recorded';
-
   return [
-    `### ${world.name} [${world.slug}]`,
-    `Status: ${world.status ?? 'unknown'}`,
-    `Notion authority: ${world.notion_url ?? 'missing'}`,
-    `Runa reception profile: ${world.runa_profile ?? 'missing'}`,
-    `Route: ${world.route ?? 'missing'}`,
-    `Tone: ${identity.tone ?? 'unresolved'}`,
-    `Shape: ${identity.shape ?? 'unresolved'}`,
-    `Arrival: ${identity.arrival_signature ?? 'unresolved'}`,
-    `Return: ${identity.return_signature ?? 'unresolved'}`,
-    `Companion rule: ${arcsweep.companion_interface?.notes ?? 'unresolved; do not infer'}`,
-    `Open questions: ${openQuestions}`,
+    `- ${world.name} [${world.slug}]`,
+    `  Notion: ${world.notion_url ?? 'missing'}`,
+    `  Page ID: ${world.notion_page_id ?? 'missing'}`,
+    `  Runa: ${world.runa_profile ?? 'missing'}`,
+    `  Route: ${world.route ?? 'missing'}`,
+    `  Status: ${world.status ?? 'unknown'}`,
   ].join('\n');
 }
 
-export async function getArcsweepWorldAnchorManifest() {
-  return _loadManifest();
+export async function getArcsweepWorldAnchorIndex() {
+  return _loadIndex();
 }
 
 export async function getArcsweepWorldAnchorPacket() {
   if (_packet !== null) return _packet;
 
-  const manifest = await _loadManifest();
-  if (!manifest) return null;
+  const index = await _loadIndex();
+  if (!index) return null;
 
-  const authority = manifest.authority ?? {};
-  const returnContract = manifest.shared_inheritance?.return_contract ?? {};
-  const handoff = manifest.boxfire_handoff ?? {};
+  const registry = index.notion_registry;
+  const sourceLaw = index.source_law ?? {};
+  const handoff = index.boxfire_handoff ?? {};
+  const currentReality = index.shared_references?.current_reality_anchor;
 
   const header = [
-    '# Arcsweep World Anchor Seed',
-    `Manifest: ${manifest.id ?? 'unknown'} v${manifest.version ?? 'unknown'}`,
-    `Authority: ${authority.primary ?? 'Notion authority not recorded'}`,
-    `Technical profiles: ${authority.technical_profiles ?? 'Runa profile authority not recorded'}`,
-    `Ingest law: ${authority.ingest_rule ?? 'Preserve provenance and do not rewrite canon silently.'}`,
+    '# Arcsweep World Anchor Index',
+    `Notion registry: ${registry.title}`,
+    `Registry URL: ${registry.url}`,
+    `Registry page ID: ${registry.page_id}`,
     '',
-    '## Shared return contract',
-    `Automatic start allowed: ${returnContract.automatic_start_allowed === true ? 'yes' : 'no'}`,
-    `Feather / Icarus: ${returnContract.feather_or_icarus ?? 'pause and request consent'}`,
-    `Stop & Close: ${returnContract.stop_and_close ?? 'stop and close every active layer'}`,
-    `Notch: ${returnContract.notch ?? 'restore orientation'}`,
-    `Plain pass: ${returnContract.plain_pass ?? 'remove mythic framing only'}`,
+    '## Source law',
+    `Notion: ${sourceLaw.notion ?? 'living database and canon authority'}`,
+    `Runa: ${sourceLaw.runa ?? 'World Reception implementation'}`,
+    `Hearthfire: ${sourceLaw.hearthfire ?? 'runtime adapter and identifiers only'}`,
+    `Rule: ${sourceLaw.rule ?? 'Resolve Notion before changing a world record.'}`,
+    '',
+    '## Shared reference',
+    `Current Reality Anchor: ${currentReality?.url ?? 'missing'}`,
+    `Copy policy: ${currentReality?.copy_policy ?? 'reference-only'}`,
     '',
     '## Boxfire instruction',
-    handoff.instruction ?? 'Verify source authority before changing any world record.',
+    handoff.instruction ?? 'Use Notion as the source of truth.',
   ].join('\n');
 
-  const worlds = manifest.worlds.map(_formatWorld).join('\n\n');
+  const worlds = index.worlds.map(_formatWorld).join('\n');
   const gates = Array.isArray(handoff.qa_gates)
     ? `\n\n## QA gates\n${handoff.qa_gates.map(gate => `- ${gate}`).join('\n')}`
     : '';
 
-  _packet = `${header}\n\n## Registered worlds\n${worlds}${gates}`;
+  _packet = `${header}\n\n## Registered world lookups\n${worlds}${gates}`;
   return _packet;
 }
