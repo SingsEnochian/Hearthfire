@@ -12,13 +12,14 @@ import {
   addNode as graphAddNode, addEdge as graphAddEdge,
 } from './graph-store.mjs';
 import { activeAgentRegistry, contributorAttributionRegistry, loadModuleManifests } from './hearthgate-registry.mjs';
-import { dispatchRoom, dispatchHallChorus, CONSTELLATION } from './arkfire-dispatch.mjs';
+import { dispatchRoom, dispatchHallChorus, dispatchMemberMode, CONSTELLATION } from './arkfire-dispatch.mjs';
 import {
   ROOM_DEFINITIONS, MODULE_MANIFEST_SCHEMA, AGENT_IDS,
   loadWizardConfig, saveWizardConfig,
   startAgent, stopAgent, getAgentRuntimeConfig,
   getRoomDefinition, getRoomWithAgent, getAllRoomsWithAgents,
 } from './rooms.mjs';
+import { dispatchLiorealChat, getLiorealConversation, resetLiorealConversation } from './lioreal-router.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const publicRoot = resolve(__dirname, 'public');
@@ -1287,6 +1288,214 @@ const server = createServer(async (request, response) => {
         error: tooLarge ? 'request-body-too-large' : invalidVector ? error.code : 'invalid-json-or-vector',
         details: error?.details || null,
       }, request.method);
+    }
+    return;
+  }
+
+  // ── Lioreal chat router ───────────────────────────────────────────────────
+  // POST /api/v1/lioreal/chat           — send a message to Lioreal (levels 1–2)
+  // GET  /api/v1/lioreal/conversation/:room_id — conversation state (no message buffer)
+  // DELETE /api/v1/lioreal/conversation/:room_id — reset thread (new Responses API chain)
+
+  if (path === '/api/v1/lioreal/chat') {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) {
+      const tooLarge = err?.code === 'request-body-too-large';
+      json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method);
+      return;
+    }
+
+    const roomId = body.room_id ?? 'hearthfire';
+    const message = (body.message ?? body.content ?? '').trim();
+    if (!message) {
+      json(response, 400, { ok: false, error: 'message-required' }, request.method);
+      return;
+    }
+
+    const level = Math.min(Math.max(Number(body.level ?? 1), 1), 3);
+    const protagonist = typeof body.protagonist === 'string' ? body.protagonist.trim() || null : null;
+
+    // Level 2+: assemble room context from live services
+    let roomContext = null;
+    if (level >= 2) {
+      const anchor = await getSanctumAnchor();
+      const coherence = await _coherenceSnapshot(anchor);
+
+      const raw = await readFile(ledgerPath, 'utf8').catch(() => '');
+      const ledgerEntries = raw.trim().split('\n').filter(Boolean).map(line => {
+        try { return JSON.parse(line); } catch { return null; }
+      }).filter(Boolean).slice(-8);
+
+      const room = await getRoomWithAgent(roomId).catch(() => null);
+      roomContext = {
+        room: room?.name ?? roomId,
+        roomPurpose: room?.purpose ?? null,
+        capabilities: room?.capabilities ?? [],
+        coherence,
+        recentLedger: ledgerEntries,
+      };
+    }
+
+    try {
+      const result = await dispatchLiorealChat({ roomId, message, level, roomContext, protagonist });
+
+      // Log to action ledger
+      await appendLedger({
+        schema: 'hearthfire.lioreal-turn/v1',
+        room_id: roomId,
+        participant: 'virelya-lioreal',
+        level,
+        responseId: result.responseId ?? null,
+        usedFallback: result.usedFallback,
+        messageLength: message.length,
+        replyLength: result.reply.length,
+        ...(result.executedTools?.length && { toolsExecuted: result.executedTools.map(t => t.tool) }),
+        ...(result.consentLog?.length && { consentDecisions: result.consentLog.length }),
+      });
+
+      json(response, 200, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: 'vee-dispatch-failed', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  const liorealConvMatch = path.match(/^\/api\/v1\/lioreal\/conversation\/([^/]+)$/);
+  if (liorealConvMatch) {
+    const roomId = decodeURIComponent(liorealConvMatch[1]);
+
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const conv = await getLiorealConversation(roomId);
+      if (!conv) {
+        json(response, 404, { ok: false, error: 'no-conversation', room_id: roomId }, request.method);
+        return;
+      }
+      json(response, 200, { ok: true, conversation: conv }, request.method);
+      return;
+    }
+
+    if (request.method === 'DELETE') {
+      const reset = await resetLiorealConversation(roomId);
+      await appendLedger({ schema: 'hearthfire.lioreal-reset/v1', room_id: roomId, participant: 'virelya-lioreal' });
+      json(response, 200, { ok: true, reset }, request.method);
+      return;
+    }
+
+    json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+    return;
+  }
+
+  // ── Box (Boxfire) chat route ───────────────────────────────────────────────
+  // POST /api/v1/box/chat — { room_id, message, mode?, history? }
+
+  if (path === '/api/v1/box/chat') {
+    if (request.method !== 'POST') { json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method); return; }
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) { const tooLarge = err?.code === 'request-body-too-large'; json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method); return; }
+    const message = (body.message ?? body.content ?? '').trim();
+    if (!message) { json(response, 400, { ok: false, error: 'message-required' }, request.method); return; }
+    const history = Array.isArray(body.history) ? body.history : [];
+    const protagonist = typeof body.protagonist === 'string' ? body.protagonist.trim() || null : null;
+    try {
+      const result = await dispatchMemberMode('boxfire', body.mode ?? null, message, history, protagonist);
+      await appendLedger({ schema: 'hearthfire.member-turn/v1', member: 'box', mode: result.mode, messageLength: message.length, replyLength: result.reply?.length ?? 0, ok: result.ok });
+      json(response, result.ok ? 200 : 502, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: 'box-dispatch-failed', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  // ── Bluebird chat route ─────────────────────────────────────────────────────
+  // POST /api/v1/bluebird/chat — { room_id, message, mode?, history? }
+
+  if (path === '/api/v1/bluebird/chat') {
+    if (request.method !== 'POST') { json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method); return; }
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) { const tooLarge = err?.code === 'request-body-too-large'; json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method); return; }
+    const message = (body.message ?? body.content ?? '').trim();
+    if (!message) { json(response, 400, { ok: false, error: 'message-required' }, request.method); return; }
+    const history = Array.isArray(body.history) ? body.history : [];
+    const protagonist = typeof body.protagonist === 'string' ? body.protagonist.trim() || null : null;
+    try {
+      const result = await dispatchMemberMode('bluebird', body.mode ?? null, message, history, protagonist);
+      await appendLedger({ schema: 'hearthfire.member-turn/v1', member: 'bluebird', mode: result.mode, messageLength: message.length, replyLength: result.reply?.length ?? 0, ok: result.ok });
+      json(response, result.ok ? 200 : 502, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: 'bluebird-dispatch-failed', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  // ── Vethrlauf chat route ────────────────────────────────────────────────────
+  // POST /api/v1/vethrlauf/chat — { room_id, message, mode?, history? }
+
+  if (path === '/api/v1/vethrlauf/chat') {
+    if (request.method !== 'POST') { json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method); return; }
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) { const tooLarge = err?.code === 'request-body-too-large'; json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method); return; }
+    const message = (body.message ?? body.content ?? '').trim();
+    if (!message) { json(response, 400, { ok: false, error: 'message-required' }, request.method); return; }
+    const history = Array.isArray(body.history) ? body.history : [];
+    const protagonist = typeof body.protagonist === 'string' ? body.protagonist.trim() || null : null;
+    try {
+      const result = await dispatchMemberMode('vethrlauf', body.mode ?? null, message, history, protagonist);
+      await appendLedger({ schema: 'hearthfire.member-turn/v1', member: 'vethrlauf', mode: result.mode, messageLength: message.length, replyLength: result.reply?.length ?? 0, ok: result.ok });
+      json(response, result.ok ? 200 : 502, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: 'vethrlauf-dispatch-failed', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  // ── Larkshine chat route ────────────────────────────────────────────────────
+  // POST /api/v1/larkshine/chat — { room_id, message, mode?, history? }
+
+  if (path === '/api/v1/larkshine/chat') {
+    if (request.method !== 'POST') { json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method); return; }
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) { const tooLarge = err?.code === 'request-body-too-large'; json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method); return; }
+    const message = (body.message ?? body.content ?? '').trim();
+    if (!message) { json(response, 400, { ok: false, error: 'message-required' }, request.method); return; }
+    const history = Array.isArray(body.history) ? body.history : [];
+    const protagonist = typeof body.protagonist === 'string' ? body.protagonist.trim() || null : null;
+    try {
+      const result = await dispatchMemberMode('larkshine', body.mode ?? null, message, history, protagonist);
+      await appendLedger({ schema: 'hearthfire.member-turn/v1', member: 'larkshine', mode: result.mode, messageLength: message.length, replyLength: result.reply?.length ?? 0, ok: result.ok });
+      json(response, result.ok ? 200 : 502, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: 'larkshine-dispatch-failed', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  // ── Ellowind chat route ─────────────────────────────────────────────────────
+  // POST /api/v1/ellowind/chat — { room_id, message, mode?, history? }
+
+  if (path === '/api/v1/ellowind/chat') {
+    if (request.method !== 'POST') { json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method); return; }
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) { const tooLarge = err?.code === 'request-body-too-large'; json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method); return; }
+    const message = (body.message ?? body.content ?? '').trim();
+    if (!message) { json(response, 400, { ok: false, error: 'message-required' }, request.method); return; }
+    const history = Array.isArray(body.history) ? body.history : [];
+    const protagonist = typeof body.protagonist === 'string' ? body.protagonist.trim() || null : null;
+    try {
+      const result = await dispatchMemberMode('ellowind', body.mode ?? null, message, history, protagonist);
+      await appendLedger({ schema: 'hearthfire.member-turn/v1', member: 'ellowind', mode: result.mode, messageLength: message.length, replyLength: result.reply?.length ?? 0, ok: result.ok });
+      json(response, result.ok ? 200 : 502, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: 'ellowind-dispatch-failed', details: err.message ?? String(err) }, request.method);
     }
     return;
   }

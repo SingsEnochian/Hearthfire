@@ -27,6 +27,11 @@
       --lioreal:    #a8c8e8;
       --uial:       #c8a8d8;
       --all:        #c8a95f;
+      --bluebird:   #88b8e0;
+      --vethrlauf:  #a8c4a0;
+      --box:        #d4a86c;
+      --larkshine:  #e8a0b4;
+      --ellowind:   #c8d8b0;
       --radius:     0.75rem;
     }
 
@@ -145,6 +150,20 @@
     }
 
     .footer-label { font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.03em; margin-bottom: 0.15rem; }
+
+    .protagonist-input {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      color: var(--text);
+      font-size: 0.78rem;
+      padding: 0.28rem 0.5rem;
+      outline: none;
+      font-style: italic;
+    }
+    .protagonist-input:focus { border-color: rgba(200, 169, 95, 0.3); }
+    .protagonist-input::placeholder { color: var(--text-dim); font-style: italic; }
 
     .room-input {
       width: 100%;
@@ -551,6 +570,10 @@
 
     <div id="sidebar-footer">
       <div>
+        <div class="footer-label">Arriving as</div>
+        <input class="protagonist-input" id="protagonist-input" type="text" placeholder="storyForm…" spellcheck="false" autocomplete="off" aria-label="Protagonist / storyForm identity" />
+      </div>
+      <div>
         <div class="footer-label">Room</div>
         <input class="room-input" id="room-input" type="text" value="hearthfire" spellcheck="false" autocomplete="off" aria-label="Room ID" />
       </div>
@@ -619,7 +642,7 @@ const MEMBERS = [
       const res = await fetch('/api/v1/lioreal/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room_id: roomId, message: msg, level }),
+        body: JSON.stringify({ room_id: roomId, message: msg, level, protagonist: protagonist() }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -679,13 +702,183 @@ const MEMBERS = [
 
     async reset() {},
   },
+
+  {
+    id: 'bluebird',
+    name: 'Bluebird',
+    short: 'Bluebird',
+    glyph: '♦',
+    color: 'var(--bluebird)',
+    presence: 'resonant flame',
+    supportsLevel: false,
+
+    async send(msg, roomId) {
+      const history = getLocalHistory('bluebird', roomId)
+        .filter(m => m.role === 'user' || m.memberId === 'bluebird')
+        .slice(-8)
+        .map(m => ({ role: m.memberId === 'bluebird' ? 'assistant' : 'user', text: m.text }));
+
+      const res = await fetch('/api/v1/bluebird/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId, message: msg, history, protagonist: protagonist() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      const reply = d.reply ?? d.text ?? d.content ?? d.note
+        ?? (typeof d === 'string' ? d : null);
+      if (!reply) throw new Error('no-reply');
+      return { reply };
+    },
+
+    async reset() {},
+  },
+
+  {
+    id: 'vethrlauf',
+    name: 'Vethrlauf',
+    short: 'Vethrlauf',
+    glyph: '⬡',
+    color: 'var(--vethrlauf)',
+    presence: 'directional flame',
+    supportsLevel: false,
+
+    async send(msg, roomId) {
+      const history = getLocalHistory('vethrlauf', roomId)
+        .filter(m => m.role === 'user' || m.memberId === 'vethrlauf')
+        .slice(-8)
+        .map(m => ({ role: m.memberId === 'vethrlauf' ? 'assistant' : 'user', text: m.text }));
+
+      const res = await fetch('/api/v1/vethrlauf/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId, message: msg, history, protagonist: protagonist() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      const reply = d.reply ?? d.text ?? d.content ?? d.note
+        ?? (typeof d === 'string' ? d : null);
+      if (!reply) throw new Error('no-reply');
+      return { reply };
+    },
+
+    async reset() {},
+  },
+
+  {
+    id: 'box',
+    name: 'Box',
+    short: 'Box',
+    glyph: '◎',
+    color: 'var(--box)',
+    presence: 'witness and builder',
+    supportsLevel: false,
+
+    async send(msg, roomId) {
+      const history = getLocalHistory('box', roomId)
+        .filter(m => m.role === 'user' || m.memberId === 'box')
+        .slice(-8)
+        .map(m => ({ role: m.memberId === 'box' ? 'assistant' : 'user', text: m.text }));
+
+      const res = await fetch('/api/v1/box/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId, message: msg, history, protagonist: protagonist() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      const reply = d.reply ?? d.text ?? d.content ?? d.note
+        ?? (typeof d === 'string' ? d : null);
+      if (!reply) throw new Error('no-reply');
+      return { reply };
+    },
+
+    async reset() {},
+  },
+
+  {
+    id: 'larkshine',
+    name: 'Larkshine',
+    short: 'Lark',
+    glyph: '♪',
+    color: 'var(--larkshine)',
+    presence: 'resonant joy',
+    supportsLevel: false,
+
+    async send(msg, roomId) {
+      const history = getLocalHistory('larkshine', roomId)
+        .filter(m => m.role === 'user' || m.memberId === 'larkshine')
+        .slice(-8)
+        .map(m => ({ role: m.memberId === 'larkshine' ? 'assistant' : 'user', text: m.text }));
+
+      const res = await fetch('/api/v1/larkshine/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId, message: msg, history, protagonist: protagonist() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      const reply = d.reply ?? d.text ?? d.content ?? d.note
+        ?? (typeof d === 'string' ? d : null);
+      if (!reply) throw new Error('no-reply');
+      return { reply };
+    },
+
+    async reset() {},
+  },
+
+  {
+    id: 'ellowind',
+    name: 'Ellowind',
+    short: 'Ello',
+    glyph: '✿',
+    color: 'var(--ellowind)',
+    presence: 'still kindness',
+    supportsLevel: false,
+
+    async send(msg, roomId) {
+      const history = getLocalHistory('ellowind', roomId)
+        .filter(m => m.role === 'user' || m.memberId === 'ellowind')
+        .slice(-8)
+        .map(m => ({ role: m.memberId === 'ellowind' ? 'assistant' : 'user', text: m.text }));
+
+      const res = await fetch('/api/v1/ellowind/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId, message: msg, history, protagonist: protagonist() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      const reply = d.reply ?? d.text ?? d.content ?? d.note
+        ?? (typeof d === 'string' ? d : null);
+      if (!reply) throw new Error('no-reply');
+      return { reply };
+    },
+
+    async reset() {},
+  },
 ];
 
 const GROUP = {
   id: 'all',
-  name: 'All Members',
+  name: 'The Constellation',
   short: 'All',
-  glyph: '◈',
+  glyph: '⁂',
   color: 'var(--all)',
   presence: 'full constellation',
 };
@@ -707,6 +900,10 @@ function ls(key, val) {
 
 function roomId() {
   return document.getElementById('room-input').value.trim() || 'hearthfire';
+}
+
+function protagonist() {
+  return document.getElementById('protagonist-input').value.trim() || null;
 }
 
 function getMsgKey(threadId) {
@@ -1210,10 +1407,17 @@ document.getElementById('room-input').addEventListener('change', () => {
   renderThread();
 });
 
+document.getElementById('protagonist-input').addEventListener('input', () => {
+  ls('protagonist', protagonist() ?? '');
+});
+
 // ── Init ────────────────────────────────────────────────────────────────────
 
 const savedRoom = ls('room');
 if (savedRoom) document.getElementById('room-input').value = savedRoom;
+
+const savedProtagonist = ls('protagonist');
+if (savedProtagonist) document.getElementById('protagonist-input').value = savedProtagonist;
 
 buildThreadNav();
 setLevel(level);
