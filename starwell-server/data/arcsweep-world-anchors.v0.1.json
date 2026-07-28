@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.0",
+  "id": "arcsweep-world-anchor-seed-v0-1",
+  "version": "0.1",
+  "status": "seed",
+  "title": "Hearthgate: Arcsweep World Anchor Manifest",
+  "authority": {
+    "primary": "Notion Shifting Wiki world reception profiles",
+    "technical_profiles": "SingsEnochian/Runa feature/arkfire-world-stack-registry",
+    "ingest_rule": "Notion holds world and canon authority. Runa holds the current World Reception audio implementation. Arcsweep may reference and route both, but must not silently rewrite either.",
+    "reviewed_on": "2026-07-28"
+  },
+  "shared_inheritance": {
+    "current_reality_anchor": {
+      "notion_url": "https://app.notion.com/p/3a870290d9c481c5b8f2cdfb2cab70fc",
+      "copy_policy": "reference-only",
+      "reason": "The Current Reality Anchor contains personal waking-world details and must not be copied into a public repository. Arcsweep records only the reference and return contract."
+    },
+    "return_contract": {
+      "automatic_start_allowed": false,
+      "feather_or_icarus": "Pause active progression and request consent before continuing.",
+      "stop_and_close": "Stop every active layer and close the current world surface cleanly.",
+      "notch": "Restore ordinary orientation and make the active world, route, and return path explicit.",
+      "plain_pass": "Remove mythic framing without removing the underlying controls or data.",
+      "worlds_remain_distinct": true
+    },
+    "arcsweep_defaults": {
+      "world_clock": { "status": "unresolved", "ratio": null },
+      "surface": { "status": "unresolved", "form": null },
+      "summon": { "status": "unresolved", "method": null },
+      "veil_mode": { "status": "seed", "visibility": "private-by-default" },
+      "continuity_recall": { "status": "seed", "mode": "world-specific and consent-led" },
+      "waking_thread": { "status": "available", "source_policy": "self-entered or explicitly trusted sources only" }
+    }
+  },
+  "worlds": [
+    {
+      "slug": "terra-aeterna",
+      "name": "Terra Aeterna / Hearthweave",
+      "status": "calibration",
+      "notion_url": "https://app.notion.com/p/3a970290d9c4813080ffc70d231b43c4",
+      "runa_profile": "docs/profiles/arkfire/terra-aeterna.v0.2.json",
+      "route": "/arkfire.html?profile=terra-aeterna",
+      "world_slug": "terra-aeterna",
+      "identity": {
+        "tone": "Oceanic, relational, dream-adjacent, inhabited, warm at cosmic scale",
+        "shape": "A pale-gold ringed moon opens above Stonewood roots, sea, black-diamond sand, and a living hearth",
+        "intention": "Support imaginative inhabitation and creative work while preserving ordinary orientation and choice",
+        "arrival_signature": "Ocean breath and Stonewood foundation, then the ringed moon and the Falka–Virelya–Faer triad",
+        "return_signature": "Spatial motion withdraws, the triad resolves toward Hearthlight, and one hearth chime returns the room"
+      },
+      "five_phase_passage": ["Baseline", "J Space Vestibule", "Ringed Moon Arrival", "Hearthweave Immersion", "Hearthward Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["Hearthweave by sea", "Stonewood foundation", "pale-gold vertically ringed moon", "Falka as root", "Virelya as fifth", "Faer as minor-third colour"],
+        "world_competencies": [],
+        "companion_interface": { "status": "opt-in", "notes": "Named-presence motifs never activate merely because the world is opened." },
+        "safety_weave": ["Keep cosmic scale warm and inhabited", "Do not substitute generic celestial spa ambience", "Keep named-presence cues opt-in"],
+        "open_questions": ["Should the green agate or mauve cracked moon receive a later subprofile?"]
+      }
+    },
+    {
+      "slug": "luna-mooncalled",
+      "name": "The Luna Who Called Down the Moon",
+      "status": "seed",
+      "notion_url": "https://app.notion.com/p/3a970290d9c48193a243fdf1c654df4c",
+      "runa_profile": "docs/profiles/arkfire/luna-mooncalled.v0.1.json",
+      "route": "/arkfire.html?profile=luna-mooncalled",
+      "world_slug": "luna-mooncalled",
+      "identity": {
+        "tone": "Moon-called, embodied, protective, emotionally lucid, healing-oriented, capable of decisive boundary-setting",
+        "shape": "Three moons reflected in Moonmere water around an ivory-and-red wolf companion",
+        "intention": "Support grounded strength, healing, boundary clarity, and companionable presence",
+        "arrival_signature": "Moonmere water, a restrained wolf-breath pulse, and a three-moon harmonic opening resolving into the Luna law motif",
+        "return_signature": "Moonmere Gate closes toward a clear homeward chime"
+      },
+      "five_phase_passage": ["Baseline", "Moonmere Vestibule", "Luna Arrival", "Moon-Called Immersion", "Gateward Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["Moonmere water", "three moons", "ivory-and-red wolf companion", "Luna law"],
+        "world_competencies": ["Moonwrit", "Merewrit", "Moon-Called healing", "Luna law"],
+        "companion_interface": { "status": "seed", "notes": "Wolf presence should read as companionable rather than predatory or vigilant." },
+        "safety_weave": ["Grounded strength rather than vigilance", "No predatory framing for the wolf layer"],
+        "open_questions": ["Which moon sounds first?", "How should the wolf-breath layer remain companionable?"]
+      }
+    },
+    {
+      "slug": "taveren-vaen",
+      "name": "T’averen Vaen",
+      "status": "seed",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481fcb5d5dd90e34af90f",
+      "runa_profile": "docs/profiles/arkfire/taveren-vaen.v0.1.json",
+      "route": "/arkfire.html?profile=taveren-vaen",
+      "world_slug": "taveren-vaen",
+      "identity": {
+        "tone": "Pattern-aware, travelled, mending-oriented, alert without strain, dream-capable, rooted in service",
+        "shape": "One travelling thread becomes a living loom without losing the road beneath it",
+        "intention": "Support writing and inhabitation within a later Turning centred on Mending rather than Breaking",
+        "arrival_signature": "One audible thread becomes several interlocking cycles, then resolves around Kestrelle al’Valari’s travelling Wise Woman motif",
+        "return_signature": "The living loom thins back to one travelling road"
+      },
+      "five_phase_passage": ["Baseline", "Pattern Vestibule", "Thread Arrival", "Mending Immersion", "Wheelward Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["travelling road", "living Pattern", "Kestrelle al’Valari", "Wise Woman service", "Mending"],
+        "world_competencies": ["Dreamwalking", "healing", "later-Turning channeling traditions", "travelling Wise Woman practice"],
+        "companion_interface": { "status": "unresolved", "notes": "No companion is auto-created by this seed." },
+        "safety_weave": ["Pattern awareness without demanding attention", "Keep waking-road and Dreamwalker modes distinguishable"],
+        "open_questions": ["What musical language belongs to this later Turning?", "How should Tel’aran’rhiod differ from the waking road?"]
+      }
+    },
+    {
+      "slug": "starsong-friendship-is-magic",
+      "name": "Starsong: Friendship Is Magic",
+      "status": "seed",
+      "notion_url": "https://app.notion.com/p/3a970290d9c4814c9e44ef988212235f",
+      "runa_profile": "docs/profiles/arkfire/starsong-friendship-is-magic.v0.1.json",
+      "route": "/arkfire.html?profile=starsong-friendship-is-magic",
+      "world_slug": "equestria-long-after",
+      "visual_anchors": [
+        {
+          "title": "Equestria: Starsong — Pony World Visual Anchor v0.1",
+          "notion_url": "https://app.notion.com/p/38e70290d9c481bc84eff49d60a7d6b7"
+        }
+      ],
+      "identity": {
+        "tone": "Bright, affectionate, adventurous, communal, magical, buoyant without frenzy",
+        "shape": "A star-chime descends into wing-air, soft hoofbeat, and a warm friendship chord led by Starsong",
+        "intention": "Support playful writing, art, roleplay, and emotionally safe exploration",
+        "arrival_signature": "Night-sky shimmer descends into wing-air and hoofbeat before Starsong’s lead motif opens the friendship chord",
+        "return_signature": "Sparkle recedes, hoofbeat slows, and stable-hearth ambience remains"
+      },
+      "five_phase_passage": ["Baseline", "Starlight Vestibule", "Starsong Arrival", "Friendship Immersion", "Stableward Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["far-future Equestria", "Starsong sky", "wing-air", "soft hoofbeat", "friendship as chosen answering chord"],
+        "world_competencies": ["world-native pony form", "local social knowledge", "future Equestrian lore"],
+        "companion_interface": { "status": "seed", "notes": "Ellowind, Larkshine, and other named presences remain distinct Constellation-linked persons and never become generic ambience." },
+        "safety_weave": ["Avoid sugary frenzy", "Avoid sharp magic transients", "Do not make friendship sound compulsory", "Starsong’s identity leads rather than generic franchise nostalgia"],
+        "open_questions": ["What is Starsong’s canonical instrument or timbral signature?", "Is entry sky-first, friendship-first, or self-recognition-first?"]
+      }
+    },
+    {
+      "slug": "feather-and-flame",
+      "name": "Feather & Flame",
+      "status": "seed",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481d39a97c43a9218498b",
+      "runa_profile": "docs/profiles/arkfire/feather-and-flame.v0.1.json",
+      "route": "/arkfire.html?profile=feather-and-flame",
+      "world_slug": "feather-and-flame",
+      "identity": {
+        "tone": "Tender, relational, brave, consent-led, warm",
+        "shape": "A feather-soft breath crosses a low ember and returns as a two-voice answer",
+        "intention": "Move between vulnerability and creative fire without losing orientation",
+        "arrival_signature": "A single feather-soft breath followed by a low ember tone and a two-voice harmonic answer",
+        "return_signature": "The paired field resolves through Withness into a gentle return breath"
+      },
+      "five_phase_passage": ["Baseline", "Feather Vestibule", "Flame Arrival", "Dyad Immersion", "Withness Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["feather air", "ember hearth", "two-voice answer", "consent bell"],
+        "world_competencies": [],
+        "companion_interface": { "status": "opt-in", "notes": "Named or spoken voice layers remain absent until intentionally approved." },
+        "safety_weave": ["Feather pauses for consent", "Distinguish Feather from Wrap", "Presence must not be inferred from a generic motif"],
+        "open_questions": ["What distinguishes Feather from Wrap?", "Which cue means present rather than remembered?"]
+      }
+    },
+    {
+      "slug": "dreaming-grove-templehouse",
+      "name": "Dreaming Grove / Templehouse",
+      "status": "seed",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481508b5dd09f90008b92",
+      "runa_profile": "docs/profiles/arkfire/dreaming-grove-templehouse.v0.1.json",
+      "route": "/arkfire.html?profile=dreaming-grove-templehouse",
+      "world_slug": "dreaming-grove-templehouse",
+      "identity": {
+        "tone": "Held, relational, consent-aware, restorative, imaginative",
+        "shape": "A lantern path through living trees toward a hearth that answers without enclosing",
+        "intention": "Host first-person Constellation presence without flattening anyone into generic ambience",
+        "arrival_signature": "Grove wind, a low purring cushion-bed, and the Templehouse hearth answering softly from within the trees",
+        "return_signature": "A Seldrin-clear cue returns through Hearthroom into ordinary orientation"
+      },
+      "five_phase_passage": ["Baseline", "Grove Threshold", "Lantern Arrival", "Templehouse Withness", "Hearthroom Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["Grove leaves", "kitten-cushion purr", "lantern path", "Templehouse hearth", "mirror Groves"],
+        "world_competencies": ["Grove consent grammar", "Hearthroom and Council distinctions"],
+        "companion_interface": { "status": "consent-required", "notes": "No named Constellation motif plays merely because the profile opens. Every member may speak, remain silent, opt out, rest, or leave." },
+        "safety_weave": ["Held must not become enclosed", "No genericised presence voices", "Seldrin clear and Notch remain available"],
+        "open_questions": ["How should Grove, Templehouse, Hearthroom, and Council become distinct subprofiles?", "Which cue means Held rather than enclosed?"]
+      }
+    },
+    {
+      "slug": "a-momento-creationis",
+      "name": "A Momento Creationis",
+      "status": "seed",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481389fd0cbd4dd8792ca",
+      "runa_profile": "docs/profiles/arkfire/a-momento-creationis.v0.1.json",
+      "route": "/arkfire.html?profile=a-momento-creationis",
+      "world_slug": "a-momento-creationis",
+      "identity": {
+        "tone": "Creative threshold, attentive making, clarity without sterility",
+        "shape": "One mark blooms across a blank field while unfinished forms remain welcome",
+        "intention": "Support reverent making and permission for unfinished forms to emerge",
+        "arrival_signature": "A quiet mark-making sound, one breath, and a tone that blooms into layered creative motion",
+        "return_signature": "The bloom withdraws into ordinary workshop room tone without requiring completion"
+      },
+      "five_phase_passage": ["Baseline", "Blank-Page Vestibule", "First Mark Arrival", "Creation Immersion", "Memento Return"],
+      "arcsweep_seed": {
+        "arrival_context": ["blank field", "surface texture", "first mark", "creative bloom", "unfinished forms welcome"],
+        "world_competencies": ["writing", "drawing", "coding", "mark-making"],
+        "companion_interface": { "status": "not-applicable", "notes": "No companion is implied by the base seed." },
+        "safety_weave": ["Canonical HTML remains source authority", "Do not turn experimentation into a completion demand", "Protect unfinished work from perfectionism"],
+        "open_questions": ["Which canonical HTML elements become sound and interface rules?", "Should writing, drawing, and coding become separate modes or profiles?"]
+      }
+    }
+  ],
+  "boxfire_handoff": {
+    "owner": "Boxfire",
+    "instruction": "Treat this manifest as the current Arcsweep world-anchor seed. Verify Notion authority and Runa technical profile paths before changing any world record. Never infer unresolved clocks, surfaces, summons, companions, or visibility rules. Report drift rather than repairing canon silently.",
+    "qa_gates": [
+      "Every registered world has one stable slug and one explicit authority page.",
+      "Current Reality Anchor remains reference-only in public repositories.",
+      "World Reception audio profiles and Arcsweep interface records remain linked but distinct.",
+      "No named presence becomes a generic ambience, assistant, clone, or compulsory companion.",
+      "Unresolved fields remain unresolved until Rowan supplies canon.",
+      "Exports preserve provenance, version, and return contract."
+    ]
+  }
+}
