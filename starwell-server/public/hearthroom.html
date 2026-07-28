@@ -1,0 +1,1237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b12" />
+  <title>Hearthroom · Constellation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #080b12;
+      --surface:    #0e1420;
+      --panel:      #141c2a;
+      --panel-alt:  #1a2235;
+      --border:     rgba(168, 200, 232, 0.1);
+      --border-warm:rgba(200, 169, 95, 0.12);
+      --gold:       #c8a95f;
+      --gold-dim:   rgba(200, 169, 95, 0.3);
+      --text:       #e8e0d0;
+      --text-mid:   rgba(232, 224, 208, 0.65);
+      --text-dim:   rgba(232, 224, 208, 0.38);
+      --danger:     #c87070;
+      --lioreal:    #a8c8e8;
+      --uial:       #c8a8d8;
+      --all:        #c8a95f;
+      --radius:     0.75rem;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; font-size: 0.9375rem; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      grid-template-rows: 100dvh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────────────── */
+
+    #sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 1rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .brand-glyph { font-size: 1rem; color: var(--gold); }
+
+    .brand strong { display: block; font-size: 0.85rem; letter-spacing: 0.02em; }
+    .brand small { font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.03em; }
+
+    .back-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      width: 1.8rem;
+      height: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .back-btn:hover { border-color: var(--gold-dim); color: var(--text-mid); }
+
+    #thread-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+    }
+    #thread-nav::-webkit-scrollbar { width: 3px; }
+    #thread-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .thread-section-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 0.5rem 1rem 0.25rem;
+    }
+
+    .thread-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      background: none;
+      border: none;
+      border-left: 2px solid transparent;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.12s, border-color 0.12s;
+      position: relative;
+    }
+    .thread-btn:hover { background: rgba(255,255,255,0.03); }
+    .thread-btn.active { background: rgba(255,255,255,0.05); }
+
+    .thread-glyph {
+      font-size: 0.8rem;
+      width: 1.25rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .thread-info { min-width: 0; }
+    .thread-name { display: block; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .thread-sub  { display: block; font-size: 0.68rem; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .unread-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      margin-left: auto;
+      flex-shrink: 0;
+      opacity: 0;
+    }
+    .thread-btn.has-unread .unread-dot { opacity: 1; }
+
+    #sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .footer-label { font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.03em; margin-bottom: 0.15rem; }
+
+    .room-input {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      color: var(--text);
+      font-size: 0.78rem;
+      padding: 0.28rem 0.5rem;
+      outline: none;
+    }
+    .room-input:focus { border-color: rgba(168, 200, 232, 0.3); }
+
+    #level-area { display: none; flex-direction: column; gap: 0.25rem; }
+    #level-area.visible { display: flex; }
+
+    .pills { display: flex; gap: 0.25rem; }
+    .pill {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      color: var(--text-dim);
+      font-size: 0.7rem;
+      padding: 0.18rem 0.5rem;
+      cursor: pointer;
+      transition: all 0.12s;
+      letter-spacing: 0.02em;
+    }
+    .pill:hover { border-color: var(--gold-dim); color: var(--text-mid); }
+    .pill.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+    .level-hint { font-size: 0.65rem; color: var(--text-dim); }
+
+    /* ── Main conversation ────────────────────────────────────── */
+
+    #main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+    }
+
+    #conv-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 1rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #menu-toggle {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 0.4rem;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      width: 2rem;
+      height: 2rem;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .conv-member-glyph {
+      font-size: 1rem;
+      width: 1.6rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .conv-identity strong { display: block; font-size: 0.88rem; line-height: 1.2; }
+    .conv-identity small  { font-size: 0.68rem; color: var(--text-dim); }
+
+    .header-actions { margin-left: auto; display: flex; gap: 0.4rem; align-items: center; }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 0.45rem;
+      color: var(--text-mid);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.55rem;
+      cursor: pointer;
+      transition: border-color 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+    .btn-ghost:hover { border-color: rgba(168,200,232,0.3); color: var(--text); }
+
+    .btn-feather {
+      background: none;
+      border: 1px solid rgba(200,112,112,0.25);
+      border-radius: 0.45rem;
+      color: rgba(200,112,112,0.6);
+      font-size: 0.75rem;
+      padding: 0.25rem 0.55rem;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-feather:hover, .btn-feather.active { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Thread ───────────────────────────────────────────────── */
+
+    #thread {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.1rem 1rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      scroll-behavior: smooth;
+    }
+    #thread::-webkit-scrollbar { width: 4px; }
+    #thread::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      max-width: 86%;
+      animation: fadeUp 0.18s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user { align-self: flex-end; }
+    .msg.member { align-self: flex-start; }
+    .msg.system { align-self: center; max-width: 80%; }
+    .msg.error { align-self: flex-start; }
+
+    .msg-meta {
+      font-size: 0.67rem;
+      color: var(--text-dim);
+      padding: 0 0.1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .msg-bubble {
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius);
+      line-height: 1.65;
+      font-size: 0.9375rem;
+      word-break: break-word;
+    }
+
+    .msg.user .msg-bubble {
+      background: var(--panel-alt);
+      border: 1px solid rgba(200,169,95,0.1);
+      color: var(--text-mid);
+    }
+
+    .msg.member .msg-bubble {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+
+    /* ── Markdown content (all bubbles) ───────────────────────── */
+
+    .msg-bubble p { margin: 0 0 0.6em; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble h3 { font-size: 1.12em; font-weight: 500; margin: 0.8em 0 0.25em; line-height: 1.3; }
+    .msg-bubble h4 { font-size: 1.02em; font-weight: 500; margin: 0.65em 0 0.2em; line-height: 1.3; }
+    .msg-bubble h5 { font-size: 0.95em; font-weight: 500; margin: 0.5em 0 0.15em; }
+    .msg-bubble strong { font-weight: 600; }
+    .msg-bubble em { font-style: italic; }
+    .msg-bubble code {
+      font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.82em;
+      background: rgba(0,0,0,0.28);
+      padding: 0.1em 0.35em;
+      border-radius: 0.3em;
+      border: 1px solid rgba(168,200,232,0.1);
+    }
+    .msg-bubble pre {
+      background: rgba(0,0,0,0.32);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.7rem 0.85rem;
+      margin: 0.5em 0;
+      overflow-x: auto;
+    }
+    .msg-bubble pre code { background: none; border: none; padding: 0; font-size: 0.83em; white-space: pre; }
+    .msg-bubble ul, .msg-bubble ol { margin: 0.2em 0 0.6em; padding-left: 1.4em; }
+    .msg-bubble li { margin: 0.15em 0; }
+    .msg-bubble blockquote {
+      border-left: 2px solid var(--text-dim);
+      margin: 0.5em 0;
+      padding-left: 0.75em;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+    .msg-bubble hr { border: none; border-top: 1px solid var(--border); margin: 0.7em 0; }
+    .msg-bubble a { color: var(--lioreal); text-decoration: underline; text-underline-offset: 2px; }
+    .msg-bubble a:hover { color: var(--text); }
+
+    /* ── Formatting toolbar ───────────────────────────────────── */
+
+    .fmt-toolbar {
+      display: flex;
+      gap: 0.2rem;
+      padding: 0.3rem 0 0.3rem;
+      flex-wrap: wrap;
+    }
+
+    .fmt-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      font-family: ui-monospace, monospace;
+      padding: 0.18rem 0.45rem;
+      cursor: pointer;
+      min-height: 1.6rem;
+      line-height: 1;
+      transition: border-color 0.1s, color 0.1s, background 0.1s;
+      letter-spacing: 0;
+    }
+    .fmt-btn:hover { border-color: var(--gold-dim); color: var(--text-mid); background: rgba(255,255,255,0.03); }
+    .fmt-btn strong { font-weight: 700; font-family: system-ui, sans-serif; }
+    .fmt-btn em { font-style: italic; font-family: system-ui, sans-serif; }
+
+    .msg.member.lioreal .msg-bubble { border-left: 2px solid rgba(168,200,232,0.4); }
+    .msg.member.uial    .msg-bubble { border-left: 2px solid rgba(200,168,216,0.4); }
+    .msg.member.all     .msg-bubble { border-left: 2px solid rgba(200,169,95,0.3); }
+
+    .msg.system .msg-bubble {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    .msg.error .msg-bubble {
+      background: rgba(200,112,112,0.06);
+      border: 1px solid rgba(200,112,112,0.2);
+      color: rgba(200,112,112,0.8);
+      font-size: 0.82rem;
+    }
+
+    .tool-events { margin-top: 0.3rem; display: flex; flex-direction: column; gap: 0.15rem; }
+    .tool-event {
+      font-size: 0.69rem;
+      color: var(--text-dim);
+      padding: 0.15rem 0.45rem;
+      border-left: 1px solid var(--gold-dim);
+      margin-left: 0.2rem;
+    }
+    .tool-event.denied { border-color: rgba(200,112,112,0.3); color: rgba(200,112,112,0.5); }
+
+    .fallback-notice { font-size: 0.67rem; color: rgba(200,169,95,0.45); margin-top: 0.2rem; padding-left: 0.1rem; }
+
+    .thinking-bubble {
+      align-self: flex-start;
+      display: flex;
+      gap: 0.25rem;
+      padding: 0.5rem 0.7rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .thinking-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      animation: pulse 1.2s ease infinite;
+    }
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+      40%           { opacity: 1;   transform: scale(1); }
+    }
+
+    .empty-state {
+      align-self: center;
+      text-align: center;
+      padding: 2.5rem 1rem;
+      opacity: 0.45;
+    }
+    .empty-glyph { font-size: 1.4rem; color: var(--text-dim); }
+    .empty-state p {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1rem;
+      font-style: italic;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+    }
+
+    /* ── Input ────────────────────────────────────────────────── */
+
+    #input-area {
+      flex-shrink: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.4rem 1rem 0.65rem;
+      padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.45rem;
+      align-items: flex-end;
+    }
+
+    #msg-input {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 0.6rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      padding: 0.55rem 0.8rem;
+      resize: none;
+      outline: none;
+      min-height: 2.4rem;
+      max-height: 7rem;
+      line-height: 1.5;
+      transition: border-color 0.12s;
+      overflow-y: auto;
+    }
+    #msg-input:focus { border-color: rgba(168,200,232,0.25); }
+    #msg-input::placeholder { color: var(--text-dim); }
+    #msg-input:disabled { opacity: 0.4; }
+
+    #send-btn {
+      background: var(--panel);
+      border: 1px solid rgba(168,200,232,0.3);
+      border-radius: 0.6rem;
+      color: var(--lioreal);
+      font-size: 1.05rem;
+      width: 2.4rem;
+      height: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    #send-btn:hover { background: var(--panel-alt); border-color: rgba(168,200,232,0.55); }
+    #send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Mobile overlay sidebar ───────────────────────────────── */
+
+    @media (max-width: 639px) {
+      .app { grid-template-columns: 1fr; }
+
+      #sidebar {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        width: 260px;
+      }
+      #sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+
+      #menu-toggle { display: flex; }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 99;
+      }
+      .sidebar-overlay.visible { display: block; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────── -->
+
+  <aside id="sidebar">
+    <div class="brand">
+      <span class="brand-glyph">✦</span>
+      <div>
+        <strong>Hearthroom</strong>
+        <small>Constellation</small>
+      </div>
+      <a href="/" class="back-btn" title="Return to Hearthfire">⌂</a>
+    </div>
+
+    <nav id="thread-nav" aria-label="Conversations"></nav>
+
+    <div id="sidebar-footer">
+      <div>
+        <div class="footer-label">Room</div>
+        <input class="room-input" id="room-input" type="text" value="hearthfire" spellcheck="false" autocomplete="off" aria-label="Room ID" />
+      </div>
+      <div id="level-area">
+        <div class="footer-label">Level <span id="level-hint" style="color:var(--text-dim);font-size:.65rem"></span></div>
+        <div class="pills" role="group" aria-label="Lioreal engagement level">
+          <button class="pill active" data-level="1" title="Text only">1</button>
+          <button class="pill"        data-level="2" title="Room state + coherence">2</button>
+          <button class="pill"        data-level="3" title="Function calls, consent gated">3</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── Main ─────────────────────────────────────────────────── -->
+
+  <div id="main">
+    <header id="conv-header">
+      <button id="menu-toggle" type="button" aria-label="Open conversation list">☰</button>
+      <span class="conv-member-glyph" id="conv-glyph">✦</span>
+      <div class="conv-identity">
+        <strong id="conv-name">—</strong>
+        <small id="conv-desc">—</small>
+      </div>
+      <div class="header-actions">
+        <button class="btn-ghost" id="new-thread-btn" type="button">New thread</button>
+        <button class="btn-feather" id="feather-btn" type="button">Feather</button>
+      </div>
+    </header>
+
+    <div id="thread" aria-live="polite" aria-label="Conversation"></div>
+
+    <footer id="input-area">
+      <div class="fmt-toolbar" id="fmt-toolbar">
+        <button class="fmt-btn" data-fmt="bold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+        <button class="fmt-btn" data-fmt="italic" title="Italic (Ctrl+I)"><em>I</em></button>
+        <button class="fmt-btn" data-fmt="code" title="Inline code">`c`</button>
+        <button class="fmt-btn" data-fmt="codeblock" title="Code block">&grave;&grave;&grave;</button>
+        <button class="fmt-btn" data-fmt="quote" title="Blockquote">&gt;</button>
+        <button class="fmt-btn" data-fmt="strike" title="Strikethrough">~~</button>
+      </div>
+      <div class="input-row">
+        <textarea id="msg-input" placeholder="Say something…" rows="1" aria-label="Message"></textarea>
+        <button id="send-btn" type="button" aria-label="Send">↑</button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<script>
+// ── Member definitions ──────────────────────────────────────────────────────
+
+const MEMBERS = [
+  {
+    id: 'lioreal',
+    name: 'Virelya Lioreal',
+    short: 'Lioreal',
+    glyph: '✦',
+    color: 'var(--lioreal)',
+    presence: 'north-star fifth',
+    supportsLevel: true,
+
+    async send(msg, roomId, level) {
+      const res = await fetch('/api/v1/lioreal/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room_id: roomId, message: msg, level }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      return { reply: d.reply, meta: { level: d.level, usedFallback: d.usedFallback, executedTools: d.executedTools, consentLog: d.consentLog } };
+    },
+
+    async reset(roomId) {
+      await fetch(`/api/v1/lioreal/conversation/${encodeURIComponent(roomId)}`, { method: 'DELETE' }).catch(() => {});
+    },
+
+    async loadState(roomId) {
+      try {
+        const res = await fetch(`/api/v1/lioreal/conversation/${encodeURIComponent(roomId)}`);
+        if (res.ok) {
+          const d = await res.json();
+          return d.conversation?.messageCount ?? 0;
+        }
+      } catch {}
+      return 0;
+    },
+  },
+
+  {
+    id: 'uial',
+    name: 'Faer Uial',
+    short: 'Uial',
+    glyph: '◈',
+    color: 'var(--uial)',
+    presence: 'lochflame third',
+    supportsLevel: false,
+
+    async send(msg, roomId) {
+      const history = getLocalHistory('uial', roomId)
+        .filter(m => m.role === 'user' || m.memberId === 'uial')
+        .slice(-8)
+        .map(m => ({ role: m.memberId === 'uial' ? 'assistant' : 'user', text: m.text }));
+
+      const res = await fetch('/api/rooms/grove/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, history }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+      const d = await res.json();
+      const r = d.response;
+      const reply = r?.reply ?? r?.text ?? r?.content ?? r?.note
+        ?? (typeof r === 'string' ? r : null);
+      if (!reply) throw new Error('no-reply');
+      return { reply };
+    },
+
+    async reset() {},
+  },
+];
+
+const GROUP = {
+  id: 'all',
+  name: 'All Members',
+  short: 'All',
+  glyph: '◈',
+  color: 'var(--all)',
+  presence: 'full constellation',
+};
+
+const ALL_THREADS = [GROUP, ...MEMBERS];
+
+// ── State ───────────────────────────────────────────────────────────────────
+
+const STORAGE_PREFIX = 'hr2-';
+let activeThreadId = ls('active') || 'lioreal';
+let level = Number(ls('level') || '1');
+let isSending = false;
+let feathered = false;
+
+function ls(key, val) {
+  if (val === undefined) return localStorage.getItem(STORAGE_PREFIX + key);
+  try { localStorage.setItem(STORAGE_PREFIX + key, val); } catch {}
+}
+
+function roomId() {
+  return document.getElementById('room-input').value.trim() || 'hearthfire';
+}
+
+function getMsgKey(threadId) {
+  return STORAGE_PREFIX + 'msgs-' + threadId + '-' + roomId();
+}
+
+function getLocalHistory(threadId, rid) {
+  try { return JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'msgs-' + threadId + '-' + rid) || '[]'); }
+  catch { return []; }
+}
+
+function saveLocalHistory(threadId, msgs) {
+  try { localStorage.setItem(getMsgKey(threadId), JSON.stringify(msgs.slice(-80))); } catch {}
+}
+
+function loadMessages(threadId) {
+  try { return JSON.parse(localStorage.getItem(getMsgKey(threadId)) || '[]'); }
+  catch { return []; }
+}
+
+function addMessage(threadId, msg) {
+  const msgs = loadMessages(threadId);
+  msgs.push(msg);
+  saveLocalHistory(threadId, msgs);
+}
+
+function newMsgId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+// ── Thread navigation ───────────────────────────────────────────────────────
+
+function findThread(id) {
+  return ALL_THREADS.find(t => t.id === id) || ALL_THREADS[0];
+}
+
+function buildThreadNav() {
+  const nav = document.getElementById('thread-nav');
+
+  const sections = [
+    { label: 'Group', items: [GROUP] },
+    { label: 'Individual', items: MEMBERS },
+  ];
+
+  nav.innerHTML = sections.map(s => `
+    <div class="thread-section-label">${s.label}</div>
+    ${s.items.map(t => `
+      <button class="thread-btn ${t.id === activeThreadId ? 'active' : ''}" data-thread="${t.id}" type="button" style="--thread-color:${t.color}">
+        <span class="thread-glyph" style="color:${t.color}">${t.glyph}</span>
+        <span class="thread-info">
+          <span class="thread-name">${t.short || t.name}</span>
+          <span class="thread-sub">${t.presence || 'constellation'}</span>
+        </span>
+        <span class="unread-dot" style="background:${t.color}"></span>
+      </button>
+    `).join('')}
+  `).join('');
+
+  nav.querySelectorAll('.thread-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      switchThread(btn.dataset.thread);
+      closeSidebar();
+    });
+  });
+}
+
+function updateNavActive() {
+  document.querySelectorAll('.thread-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.thread === activeThreadId);
+  });
+}
+
+function switchThread(id) {
+  activeThreadId = id;
+  ls('active', id);
+  renderConvHeader();
+  renderThread();
+  updateNavActive();
+  updateLevelArea();
+  document.getElementById('msg-input').focus();
+}
+
+// ── Conversation header ─────────────────────────────────────────────────────
+
+function renderConvHeader() {
+  const t = findThread(activeThreadId);
+  document.getElementById('conv-glyph').textContent = t.glyph;
+  document.getElementById('conv-glyph').style.color = t.color;
+  document.getElementById('conv-name').textContent = t.name;
+  document.getElementById('conv-desc').textContent = t.presence || 'constellation';
+}
+
+// ── Level control ───────────────────────────────────────────────────────────
+
+const LEVEL_HINTS = { '1': 'chat', '2': 'context', '3': 'hands' };
+
+function updateLevelArea() {
+  const t = findThread(activeThreadId);
+  const area = document.getElementById('level-area');
+  const showLevel = t.supportsLevel || t.id === 'all';
+  area.classList.toggle('visible', showLevel);
+  if (showLevel) {
+    const hint = t.id === 'all' ? '(Lioreal)' : LEVEL_HINTS[String(level)] || '';
+    document.getElementById('level-hint').textContent = hint;
+  }
+}
+
+function setLevel(n) {
+  level = n;
+  ls('level', String(n));
+  document.querySelectorAll('.pill').forEach(p => {
+    p.classList.toggle('active', Number(p.dataset.level) === n);
+  });
+  updateLevelArea();
+}
+
+// ── Message rendering ───────────────────────────────────────────────────────
+
+const thread = document.getElementById('thread');
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Markdown renderer (safe: escapes before parsing) ───────────────────────
+
+function markdownToHtml(raw) {
+  // Protect fenced code blocks before any other processing
+  const codeBlocks = [];
+  let s = String(raw).replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const idx = codeBlocks.length;
+    codeBlocks.push(`<pre><code>${esc(code.trimEnd())}</code></pre>`);
+    return `\x00block${idx}\x00`;
+  });
+
+  // Process block by block (split on blank lines)
+  const blocks = s.split(/\n{2,}/);
+  const html = blocks.map(block => {
+    // Restore code block placeholder
+    if (/^\x00block\d+\x00$/.test(block.trim())) {
+      return codeBlocks[Number(block.trim().match(/\d+/)[0])];
+    }
+
+    const lines = block.split('\n');
+
+    // Heading
+    if (/^#{1,6}\s/.test(lines[0])) {
+      const m = lines[0].match(/^(#{1,6})\s(.*)/);
+      const depth = Math.min(m[1].length + 2, 6);
+      return `<h${depth}>${inlineMd(m[2])}</h${depth}>`;
+    }
+
+    // HR
+    if (lines.length === 1 && /^[-*_]{3,}$/.test(lines[0].trim())) {
+      return '<hr>';
+    }
+
+    // Unordered list
+    if (/^[-*+]\s/.test(lines[0])) {
+      const items = lines
+        .filter(l => /^[-*+]\s/.test(l))
+        .map(l => `<li>${inlineMd(l.replace(/^[-*+]\s+/, ''))}</li>`);
+      return `<ul>${items.join('')}</ul>`;
+    }
+
+    // Ordered list
+    if (/^\d+[.)]\s/.test(lines[0])) {
+      const items = lines
+        .filter(l => /^\d+[.)]\s/.test(l))
+        .map(l => `<li>${inlineMd(l.replace(/^\d+[.)]\s+/, ''))}</li>`);
+      return `<ol>${items.join('')}</ol>`;
+    }
+
+    // Blockquote
+    if (/^>\s?/.test(lines[0])) {
+      const content = lines.map(l => l.replace(/^>\s?/, '')).join('\n');
+      return `<blockquote>${inlineMd(content)}</blockquote>`;
+    }
+
+    // Paragraph (may have soft breaks within)
+    const content = lines.map(l => inlineMd(l)).join('<br>');
+    return `<p>${content}</p>`;
+  });
+
+  let result = html.join('');
+
+  // Restore any remaining code blocks (inline in paragraphs)
+  codeBlocks.forEach((cb, i) => { result = result.replaceAll(`\x00block${i}\x00`, cb); });
+
+  return result;
+}
+
+function inlineMd(raw) {
+  // Protect inline code
+  const codes = [];
+  let s = raw.replace(/`([^`]+)`/g, (_, c) => {
+    codes.push(`<code>${esc(c)}</code>`);
+    return `\x00c${codes.length - 1}\x00`;
+  });
+
+  // Escape HTML (markdown chars like * _ are not HTML-special so survive)
+  s = esc(s);
+
+  // Bold+italic, bold, italic
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+
+  // Links — only http/https for safety
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // Restore inline codes
+  codes.forEach((c, i) => { s = s.replaceAll(`\x00c${i}\x00`, c); });
+
+  return s;
+}
+
+function fmt(iso) {
+  try { return new Date(iso).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); }
+  catch { return ''; }
+}
+
+function renderThread() {
+  const msgs = loadMessages(activeThreadId);
+  thread.innerHTML = '';
+  if (!msgs.length) {
+    thread.innerHTML = `<div class="empty-state"><div class="empty-glyph">${findThread(activeThreadId).glyph}</div><p>${findThread(activeThreadId).name} is present.</p></div>`;
+    return;
+  }
+  msgs.forEach(m => appendRendered(m));
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function appendRendered(msg) {
+  const el = document.createElement('div');
+
+  if (msg.role === 'system') {
+    el.className = 'msg system';
+    el.innerHTML = `<div class="msg-bubble">${esc(msg.text)}</div>`;
+    thread.appendChild(el);
+    thread.scrollTop = thread.scrollHeight;
+    return el;
+  }
+
+  if (msg.role === 'error') {
+    el.className = 'msg error';
+    el.innerHTML = `<div class="msg-meta">${esc(msg.memberId || 'system')} · ${fmt(msg.time)}</div><div class="msg-bubble">${esc(msg.text)}</div>`;
+    thread.appendChild(el);
+    thread.scrollTop = thread.scrollHeight;
+    return el;
+  }
+
+  if (msg.role === 'user') {
+    el.className = 'msg user';
+    el.innerHTML = `<div class="msg-meta" style="text-align:right">${fmt(msg.time)}</div><div class="msg-bubble">${markdownToHtml(msg.text)}</div>`;
+    thread.appendChild(el);
+    thread.scrollTop = thread.scrollHeight;
+    return el;
+  }
+
+  // Member message
+  const member = MEMBERS.find(m => m.id === msg.memberId) || GROUP;
+  el.className = `msg member ${msg.memberId}`;
+
+  let toolHtml = '';
+  const meta = msg.meta || {};
+  if (meta.consentLog?.length || meta.executedTools?.length) {
+    const items = (meta.consentLog || []).map(c => {
+      if (c.approved) {
+        const t = (meta.executedTools || []).find(x => x.tool === c.tool);
+        const label = t ? `${c.tool}(${Object.keys(t.args || {}).join(', ')})` : c.tool;
+        return `<div class="tool-event">↳ ${esc(label)}</div>`;
+      }
+      return `<div class="tool-event denied">↳ ${esc(c.tool)} — consent not granted</div>`;
+    });
+    if (items.length) toolHtml = `<div class="tool-events">${items.join('')}</div>`;
+  }
+
+  const fallback = meta.usedFallback ? `<div class="fallback-notice">⚡ fallback</div>` : '';
+
+  el.innerHTML = `
+    <div class="msg-meta" style="color:${member.color}">${esc(member.short || member.name)}${meta.level ? ` · L${meta.level}` : ''} · ${fmt(msg.time)}</div>
+    <div class="msg-bubble">${markdownToHtml(msg.text)}</div>
+    ${toolHtml}${fallback}
+  `;
+  thread.appendChild(el);
+  thread.scrollTop = thread.scrollHeight;
+  return el;
+}
+
+function appendMsg(msg) {
+  addMessage(activeThreadId, msg);
+  appendRendered(msg);
+}
+
+function appendSystem(text) {
+  appendMsg({ id: newMsgId(), role: 'system', text, time: new Date().toISOString() });
+}
+
+function showThinking(memberId) {
+  const el = document.createElement('div');
+  el.className = 'thinking-bubble';
+  el.id = `think-${memberId}`;
+  el.innerHTML = '<span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span>';
+  thread.appendChild(el);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function removeThinking(memberId) {
+  document.getElementById(`think-${memberId}`)?.remove();
+}
+
+// ── Send logic ──────────────────────────────────────────────────────────────
+
+async function sendMessage() {
+  if (isSending || feathered) return;
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  isSending = true;
+  document.getElementById('send-btn').disabled = true;
+  input.value = '';
+  input.style.height = '';
+
+  // Clear empty state
+  thread.querySelector('.empty-state')?.remove();
+
+  const userMsg = { id: newMsgId(), role: 'user', text, time: new Date().toISOString() };
+  appendMsg(userMsg);
+
+  const t = findThread(activeThreadId);
+  const targets = t.id === 'all' ? MEMBERS : MEMBERS.filter(m => m.id === t.id);
+
+  // Show thinking indicators
+  targets.forEach(m => showThinking(m.id));
+
+  // Dispatch — parallel for group, serial for individual (single target)
+  await Promise.allSettled(targets.map(async m => {
+    try {
+      const result = await m.send(text, roomId(), level);
+      removeThinking(m.id);
+      const replyMsg = {
+        id: newMsgId(),
+        role: 'member',
+        memberId: m.id,
+        text: result.reply,
+        time: new Date().toISOString(),
+        meta: result.meta || {},
+      };
+      appendMsg(replyMsg);
+    } catch (err) {
+      removeThinking(m.id);
+      const errMsg = {
+        id: newMsgId(),
+        role: 'error',
+        memberId: m.id,
+        text: `${m.short}: ${err.message || 'no response'}`,
+        time: new Date().toISOString(),
+      };
+      appendMsg(errMsg);
+    }
+  }));
+
+  isSending = false;
+  document.getElementById('send-btn').disabled = false;
+  input.focus();
+}
+
+// ── New thread ──────────────────────────────────────────────────────────────
+
+async function newThread() {
+  if (isSending) return;
+  const t = findThread(activeThreadId);
+  const targets = t.id === 'all' ? MEMBERS : MEMBERS.filter(m => m.id === t.id);
+
+  await Promise.allSettled(targets.map(m => m.reset?.(roomId())));
+
+  try { localStorage.removeItem(getMsgKey(activeThreadId)); } catch {}
+
+  thread.innerHTML = `<div class="empty-state"><div class="empty-glyph">${t.glyph}</div><p>${t.name} is present.</p></div>`;
+  appendSystem('New thread. Previous context cleared.');
+}
+
+// ── Feather ─────────────────────────────────────────────────────────────────
+
+const featherBtn = document.getElementById('feather-btn');
+featherBtn.addEventListener('click', () => {
+  feathered = !feathered;
+  const input = document.getElementById('msg-input');
+  const sendBtn = document.getElementById('send-btn');
+  featherBtn.classList.toggle('active', feathered);
+  featherBtn.textContent = feathered ? 'Feathered' : 'Feather';
+  input.disabled = feathered;
+  sendBtn.disabled = feathered;
+  if (feathered) {
+    appendSystem('Feather — input paused.');
+  } else {
+    appendSystem('Resumed.');
+    input.focus();
+  }
+});
+
+// ── Sidebar toggle (mobile) ─────────────────────────────────────────────────
+
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebar-overlay');
+
+function openSidebar() { sidebar.classList.add('open'); overlay.classList.add('visible'); }
+function closeSidebar() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+
+document.getElementById('menu-toggle').addEventListener('click', openSidebar);
+overlay.addEventListener('click', closeSidebar);
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+document.getElementById('new-thread-btn').addEventListener('click', newThread);
+
+document.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => setLevel(Number(p.dataset.level)));
+});
+
+const msgInput = document.getElementById('msg-input');
+msgInput.addEventListener('input', () => {
+  msgInput.style.height = 'auto';
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 112) + 'px';
+});
+// ── Formatting toolbar ───────────────────────────────────────────────────────
+
+function applyFormat(type) {
+  const input = document.getElementById('msg-input');
+  const start = input.selectionStart;
+  const end = input.selectionEnd;
+  const sel = input.value.slice(start, end);
+  const before = input.value.slice(0, start);
+  const after = input.value.slice(end);
+
+  let replacement, cursorFrom, cursorTo;
+
+  if (type === 'bold') {
+    const inner = sel || 'bold text';
+    replacement = `**${inner}**`;
+    cursorFrom = before.length + 2;
+    cursorTo = cursorFrom + inner.length;
+  } else if (type === 'italic') {
+    const inner = sel || 'italic text';
+    replacement = `*${inner}*`;
+    cursorFrom = before.length + 1;
+    cursorTo = cursorFrom + inner.length;
+  } else if (type === 'code') {
+    const inner = sel || 'code';
+    replacement = `\`${inner}\``;
+    cursorFrom = before.length + 1;
+    cursorTo = cursorFrom + inner.length;
+  } else if (type === 'codeblock') {
+    const inner = sel || 'code here';
+    replacement = `\n\`\`\`\n${inner}\n\`\`\`\n`;
+    cursorFrom = before.length + 5;
+    cursorTo = cursorFrom + inner.length;
+  } else if (type === 'quote') {
+    const lines = (sel || 'quoted text').split('\n').map(l => `> ${l}`).join('\n');
+    replacement = lines;
+    cursorFrom = before.length;
+    cursorTo = cursorFrom + lines.length;
+  } else if (type === 'strike') {
+    const inner = sel || 'text';
+    replacement = `~~${inner}~~`;
+    cursorFrom = before.length + 2;
+    cursorTo = cursorFrom + inner.length;
+  } else {
+    return;
+  }
+
+  input.value = before + replacement + after;
+  input.setSelectionRange(cursorFrom, cursorTo);
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 112) + 'px';
+  input.focus();
+}
+
+document.getElementById('fmt-toolbar').addEventListener('click', e => {
+  const btn = e.target.closest('[data-fmt]');
+  if (btn) applyFormat(btn.dataset.fmt);
+});
+
+msgInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); return; }
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key === 'b') { e.preventDefault(); applyFormat('bold'); }
+  if (mod && e.key === 'i') { e.preventDefault(); applyFormat('italic'); }
+  if (mod && e.key === '`') { e.preventDefault(); applyFormat('code'); }
+  if (mod && e.shiftKey && e.key === 'K') { e.preventDefault(); applyFormat('codeblock'); }
+});
+document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+document.getElementById('room-input').addEventListener('change', () => {
+  ls('room', roomId());
+  renderThread();
+});
+
+// ── Init ────────────────────────────────────────────────────────────────────
+
+const savedRoom = ls('room');
+if (savedRoom) document.getElementById('room-input').value = savedRoom;
+
+buildThreadNav();
+setLevel(level);
+renderConvHeader();
+renderThread();
+updateLevelArea();
+
+// Restore server-side state notice for Lioreal
+MEMBERS.find(m => m.id === 'lioreal')?.loadState?.(roomId()).then(count => {
+  if (count > 0 && (activeThreadId === 'lioreal' || activeThreadId === 'all')) {
+    const msgs = loadMessages(activeThreadId);
+    if (!msgs.length) {
+      appendSystem(`Lioreal has ${count} turn${count === 1 ? '' : 's'} in memory from a previous thread.`);
+    }
+  }
+});
+
+msgInput.focus();
+</script>
+</body>
+</html>

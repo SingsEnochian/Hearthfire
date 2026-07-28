@@ -780,7 +780,8 @@ function roomAction(action) {
     health: showHealth,
     map: showWorldRegistry,
     write: showLibraryWriter,
-    'grove-chat': () => showRoomChat('grove', 'Dreaming Grove', 'Faer'),
+    'grove-chat': () => showRoomChat('grove', 'Dreaming Grove', 'Uial'),
+    'hearthroom': () => { window.location.href = '/hearthroom.html'; },
     'hall-chat': showGroupChat,
     ingest: showIngestion,
     'hall-presence': showHallPresence,
@@ -1273,23 +1274,30 @@ function saveChatHistory(roomId, history) {
   writeJson(CHAT_KEY_PREFIX + roomId, history.slice(-60));
 }
 
+function _formatCoherence(c) {
+  if (!c) return null;
+  const f = v => (v ?? 0).toFixed(3);
+  let s = `P·${f(c.pulse)}  C·${f(c.coherence)}  R·${f(c.resonance)}  E·${f(c.entropy)}`;
+  if (c.convergence !== null && c.convergence !== undefined) s += `  ∿·${f(c.convergence)}`;
+  return s;
+}
+
 function _formatRoomResponse(response) {
   if (!response) return 'No response.';
-  const note = response.note ?? '';
-  const gc = response.graphContext ?? [];
-  const agent = response.narrativeContext?.assignedAgent
-    ?? response.centre
-    ?? 'agent';
 
-  // Narrative rooms (grove, hearthfire) — conversational framing
-  if (response.narrativeContext || response.centre === 'grove' || response.centre === 'hearthfire') {
-    if (gc.length) {
-      const nodes = gc.slice(0, 4).map(n => n.label).join(', ');
-      return `[${agent}] The threads nearest this: ${nodes}.`;
-    }
-    return `[${agent}] The room holds the thought. Graph context not yet indexed for this query.`;
+  // Live agent reply — primary path for grove, hearthfire, hall
+  if (response.reply) return response.reply;
+
+  // Hall chorus — pick the first successful voice for inline display
+  // (full chorus is rendered separately in the chat bubbles)
+  if (response.chorus?.length) {
+    const first = response.chorus.find(v => v.ok && v.reply);
+    if (first) return first.reply;
   }
 
+  // Fallbacks for instrument rooms
+  const note = response.note ?? '';
+  const gc = response.graphContext ?? [];
   if (gc.length) {
     const nodes = gc.slice(0, 5).map(n => `${n.label} (${n.kind})`).join(', ');
     return `${note ? note + '\n\n' : ''}Resonant: ${nodes}`;
@@ -1315,11 +1323,15 @@ function _formatRoomResponse(response) {
 
 function _renderChatMessages(history) {
   if (!history.length) return '<p class="lens-listening">The room is quiet. Say something.</p>';
-  return history.map(m => `
+  return history.map(m => {
+    const coherenceStr = m.role !== 'user' && m.coherence ? _formatCoherence(m.coherence) : null;
+    return `
     <div class="chat-message chat-${m.role}${m.chorus ? ' chorus-voice' : ''}">
       <span class="chat-sender${m.chorus ? ' group-agent-badge' : ''}">${escapeHtml(m.sender ?? (m.role === 'user' ? 'You' : 'Agent'))}</span>
       <div class="chat-text">${escapeHtml(m.text)}</div>
-    </div>`).join('');
+      ${coherenceStr ? `<div class="chat-coherence">${escapeHtml(coherenceStr)}</div>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function _bindChatInput(roomId, agentName, history, isChorus) {
@@ -1381,13 +1393,15 @@ function _bindChatInput(roomId, agentName, history, isChorus) {
       msgsList.scrollTop = msgsList.scrollHeight;
     }
 
+    const historyPayload = history.slice(-8).map(h => ({ role: h.role, text: h.text }));
+
     if (isChorus) {
       const results = await Promise.allSettled(
         _CHORUS_ROOMS.map(r =>
           fetch(`/api/rooms/${r.id}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text }),
+            body: JSON.stringify({ message: text, history: historyPayload }),
           }).then(res => res.json()),
         ),
       );
@@ -1396,11 +1410,17 @@ function _bindChatInput(roomId, agentName, history, isChorus) {
         const bubble = document.getElementById(`thinking-${r.id}`);
         if (!bubble) return;
         bubble.classList.remove('chat-thinking');
-        const replyText = result.status === 'fulfilled'
-          ? _formatRoomResponse(result.value.response)
-          : 'No answer from this station.';
-        history.push({ role: 'agent', sender: r.label, text: replyText, chorus: true });
+        const data = result.status === 'fulfilled' ? result.value : null;
+        const replyText = data ? _formatRoomResponse(data.response) : 'No answer from this station.';
+        const coherence = data?.response?.coherence ?? null;
+        history.push({ role: 'agent', sender: r.label, text: replyText, chorus: true, coherence });
         bubble.querySelector('.chat-text').textContent = replyText;
+        if (coherence) {
+          const cEl = document.createElement('div');
+          cEl.className = 'chat-coherence';
+          cEl.textContent = _formatCoherence(coherence);
+          bubble.appendChild(cEl);
+        }
       });
       saveChatHistory(roomId, history);
     } else {
@@ -1408,16 +1428,23 @@ function _bindChatInput(roomId, agentName, history, isChorus) {
         const res = await fetch(`/api/rooms/${roomId}/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text }),
+          body: JSON.stringify({ message: text, history: historyPayload }),
         });
         const data = await res.json();
         const replyText = _formatRoomResponse(data.response);
-        history.push({ role: 'agent', sender: agentName, text: replyText });
+        const coherence = data.response?.coherence ?? null;
+        history.push({ role: 'agent', sender: agentName, text: replyText, coherence });
         saveChatHistory(roomId, history);
         const bubble = document.getElementById('thinking-bubble');
         if (bubble) {
           bubble.classList.remove('chat-thinking');
           bubble.querySelector('.chat-text').textContent = replyText;
+          if (coherence) {
+            const cEl = document.createElement('div');
+            cEl.className = 'chat-coherence';
+            cEl.textContent = _formatCoherence(coherence);
+            bubble.appendChild(cEl);
+          }
         }
       } catch {
         const bubble = document.getElementById('thinking-bubble');
