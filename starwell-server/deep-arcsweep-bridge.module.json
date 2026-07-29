@@ -1,0 +1,43 @@
+{
+  "$schema": "hearthgate.module/v1",
+  "id": "deep-arcsweep-bridge",
+  "name": "DEEP × Arcsweep Science Spine Bridge",
+  "version": "0.1.0",
+  "standalone": true,
+  "status": "functional-draft",
+  "hierarchy": {
+    "sky": "Universal Horizon",
+    "note": "This bridge operates beneath Universal Horizon. Hearthfire, Flameclyffe, Arcsweep, and Yggdrasil remain distinct systems connected through an optional, reversible adapter."
+  },
+  "description": "Binds DEEP visual state, PREMAQ/environment observations, mathematical derivations, graph context, and an Arcsweep Notion world anchor into one provenance-preserving packet. Optionally supplies the packet to Yggdrasil as named operational context without altering identity or upgrading interpretation into measurement.",
+  "standaloneEntrypoint": "./deep-arcsweep-bridge.mjs",
+  "standaloneInterface": "HTTP — GET /health, GET /worlds, GET /latest, POST /bind, POST /yggdrasil",
+  "localDataDir": "./data/",
+  "healthCheck": "GET http://127.0.0.1:4182/health",
+  "testCommand": "node --test test/deep-arcsweep-bridge.test.mjs",
+  "contracts": [
+    "schemas/deep-arcsweep-bridge.schema.json",
+    "deep-spine-contract.mjs",
+    "arcsweep-world-context.mjs",
+    "yggdrasil-deep-context.mjs"
+  ],
+  "sourceLaw": {
+    "notion": "Living world canon authority",
+    "flameclyffe": "DEEP mathematical, observer, and sensory source implementation",
+    "hearthfire": "Standalone bridge runtime and append-only packet ledger",
+    "yggdrasil": "Interpreter, router, witness, and world-structure reader; never source rewriter"
+  },
+  "epistemicRegisters": ["OBSERVATION", "PHYSICS_MODEL", "MATHEMATICAL_DERIVATION", "VISUAL_SYNTHESIS", "INTERPRETATION"],
+  "persistence": {
+    "latest": "data/deep-arcsweep.latest.json",
+    "ledger": "data/deep-arcsweep-ledger.jsonl",
+    "appendOnly": true,
+    "runtimeDataCommitted": false
+  },
+  "disconnectBehaviour": "DEEP, Arcsweep, Yggdrasil, and Hearthfire continue independently. Hosts report the bridge offline rather than impersonating a live connection.",
+  "attribution": {
+    "mathSpine": "Vee / Flameclyffe DEEP Observer Math Spine",
+    "runtimeArchitecture": "Hearthfire Arkfire modular contract",
+    "steward": "Rowan"
+  }
+}

@@ -6,16 +6,22 @@ on:
       - main
     paths:
       - 'starwell-server/**'
+      - 'scripts/verify-node-runtime.mjs'
       - 'package.json'
       - '.nvmrc'
+      - '.node-version'
+      - '.npmrc'
       - '.github/workflows/starwell-server.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'starwell-server/**'
+      - 'scripts/verify-node-runtime.mjs'
       - 'package.json'
       - '.nvmrc'
+      - '.node-version'
+      - '.npmrc'
       - '.github/workflows/starwell-server.yml'
   workflow_dispatch:
 
@@ -35,23 +41,20 @@ jobs:
       - name: Checkout Hearthfire
         uses: actions/checkout@v5
 
-      - name: Resolve current Node
+      - name: Resolve pinned Node
         uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
-          check-latest: true
+          check-latest: false
 
       - name: Show runtime
         run: node --version
 
-      - name: Check server syntax
-        run: node --check starwell-server/server.mjs
+      - name: Verify Node runtime contract
+        run: npm run node:verify
 
-      - name: Check Concordance Engine syntax
-        run: node --check starwell-server/public/concordance-engine.js
+      - name: Check STARWELL and bridge syntax
+        run: npm run starwell:check
 
-      - name: Check client syntax
-        run: node --check starwell-server/public/starwell.js
-
-      - name: Test place and REI Mythience contracts
-        run: node --test starwell-server/test/*.test.mjs
+      - name: Test place, REI Mythience, and bridge contracts
+        run: npm run starwell:test

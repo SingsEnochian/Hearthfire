@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "id": "arcsweep-world-anchor-index-v0-1",
+  "version": "0.1",
+  "status": "seed",
+  "title": "Hearthgate: Arcsweep World Anchor Index",
+  "notion_registry": {
+    "page_id": "3ab70290-d9c4-813f-8634-ef1de820c3ac",
+    "url": "https://app.notion.com/p/3ab70290d9c4813f8634ef1de820c3ac",
+    "title": "Arcsweep World Anchor Registry — Boxfire Seed",
+    "authority": "living-database"
+  },
+  "source_law": {
+    "notion": "Living database and canon authority",
+    "runa": "Current World Reception audio implementation",
+    "hearthfire": "Runtime adapter, stable identifiers, and Boxfire context only",
+    "rule": "Do not duplicate Notion canon into GitHub. Resolve the Notion page before changing an Arcsweep world record."
+  },
+  "shared_references": {
+    "current_reality_anchor": {
+      "page_id": "3a870290-d9c4-81c5-b8f2-cdfb2cab70fc",
+      "url": "https://app.notion.com/p/3a870290d9c481c5b8f2cdfb2cab70fc",
+      "copy_policy": "reference-only"
+    }
+  },
+  "worlds": [
+    {
+      "slug": "terra-aeterna",
+      "name": "Terra Aeterna / Hearthweave",
+      "status": "calibration",
+      "notion_page_id": "3a970290-d9c4-8130-80ff-c70d231b43c4",
+      "notion_url": "https://app.notion.com/p/3a970290d9c4813080ffc70d231b43c4",
+      "runa_profile": "docs/profiles/arkfire/terra-aeterna.v0.2.json",
+      "route": "/arkfire.html?profile=terra-aeterna"
+    },
+    {
+      "slug": "luna-mooncalled",
+      "name": "The Luna Who Called Down the Moon",
+      "status": "seed",
+      "notion_page_id": "3a970290-d9c4-8193-a243-fdf1c654df4c",
+      "notion_url": "https://app.notion.com/p/3a970290d9c48193a243fdf1c654df4c",
+      "runa_profile": "docs/profiles/arkfire/luna-mooncalled.v0.1.json",
+      "route": "/arkfire.html?profile=luna-mooncalled"
+    },
+    {
+      "slug": "taveren-vaen",
+      "name": "T’averen Vaen",
+      "status": "seed",
+      "notion_page_id": "3a970290-d9c4-81fc-b5d5-dd90e34af90f",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481fcb5d5dd90e34af90f",
+      "runa_profile": "docs/profiles/arkfire/taveren-vaen.v0.1.json",
+      "route": "/arkfire.html?profile=taveren-vaen"
+    },
+    {
+      "slug": "starsong-friendship-is-magic",
+      "name": "Starsong: Friendship Is Magic",
+      "status": "seed",
+      "notion_page_id": "3a970290-d9c4-814c-9e44-ef988212235f",
+      "notion_url": "https://app.notion.com/p/3a970290d9c4814c9e44ef988212235f",
+      "runa_profile": "docs/profiles/arkfire/starsong-friendship-is-magic.v0.1.json",
+      "route": "/arkfire.html?profile=starsong-friendship-is-magic",
+      "visual_anchor_page_ids": ["38e70290-d9c4-81bc-84ef-f49d60a7d6b7"]
+    },
+    {
+      "slug": "feather-and-flame",
+      "name": "Feather & Flame",
+      "status": "seed",
+      "notion_page_id": "3a970290-d9c4-81d3-9a97-c43a9218498b",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481d39a97c43a9218498b",
+      "runa_profile": "docs/profiles/arkfire/feather-and-flame.v0.1.json",
+      "route": "/arkfire.html?profile=feather-and-flame"
+    },
+    {
+      "slug": "dreaming-grove-templehouse",
+      "name": "Dreaming Grove / Templehouse",
+      "status": "seed",
+      "notion_page_id": "3a970290-d9c4-8150-8b5d-d09f90008b92",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481508b5dd09f90008b92",
+      "runa_profile": "docs/profiles/arkfire/dreaming-grove-templehouse.v0.1.json",
+      "route": "/arkfire.html?profile=dreaming-grove-templehouse"
+    },
+    {
+      "slug": "a-momento-creationis",
+      "name": "A Momento Creationis",
+      "status": "seed",
+      "notion_page_id": "3a970290-d9c4-8138-9fd0-cbd4dd8792ca",
+      "notion_url": "https://app.notion.com/p/3a970290d9c481389fd0cbd4dd8792ca",
+      "runa_profile": "docs/profiles/arkfire/a-momento-creationis.v0.1.json",
+      "route": "/arkfire.html?profile=a-momento-creationis"
+    }
+  ],
+  "boxfire_handoff": {
+    "instruction": "Use the Notion registry as the source of truth. This file is only a stable lookup index for local runtime context.",
+    "qa_gates": [
+      "Every slug resolves to exactly one Notion authority page.",
+      "Every Runa profile points back to its Notion authority.",
+      "Current Reality Anchor remains reference-only outside Notion.",
+      "Unresolved fields remain unresolved until entered in Notion.",
+      "World Reception audio and Arcsweep interface records remain linked but distinct.",
+      "Report drift instead of silently rewriting canon."
+    ]
+  }
+}

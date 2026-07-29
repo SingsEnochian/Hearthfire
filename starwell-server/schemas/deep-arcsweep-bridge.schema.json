@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hearthfire.local/schemas/deep-arcsweep-bridge.schema.json",
+  "title": "DEEP Arcsweep Science Spine Packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "packetId", "sampledAt", "worldAnchor", "deep", "scienceSpine", "arcsweep", "yggdrasil", "provenance", "consentScope", "privacyScope", "boundaries", "checksum"],
+  "properties": {
+    "schema": { "const": "hearthfire.deep-arcsweep-bridge/v1" },
+    "packetId": { "type": "string", "minLength": 1 },
+    "sampledAt": { "type": "string", "format": "date-time" },
+    "intent": { "type": ["string", "null"] },
+    "worldAnchor": {
+      "type": "object",
+      "required": ["slug", "name", "notionUrl", "authority"],
+      "properties": {
+        "slug": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string" },
+        "notionPageId": { "type": ["string", "null"] },
+        "notionUrl": { "type": "string", "format": "uri" },
+        "route": { "type": ["string", "null"] },
+        "runaProfile": { "type": ["string", "null"] },
+        "authority": { "const": "notion-living-canon" }
+      }
+    },
+    "deep": { "type": "object" },
+    "scienceSpine": { "type": "object" },
+    "graphContext": { "type": "array" },
+    "arcsweep": { "type": "object" },
+    "yggdrasil": { "type": "object" },
+    "provenance": { "type": "object" },
+    "consentScope": { "type": ["string", "object"] },
+    "privacyScope": { "type": "string" },
+    "boundaries": { "type": "array", "items": { "type": "string" } },
+    "checksum": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}
