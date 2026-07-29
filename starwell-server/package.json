@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=24"
+    "node": ">=24.11.1 <25"
   },
   "scripts": {
-    "start": "node server.mjs",
-    "dev": "node --watch server.mjs",
-    "deep:bridge": "node deep-arcsweep-bridge.mjs",
+    "node:verify": "node ../scripts/verify-node-runtime.mjs",
+    "start": "npm run node:verify && node server.mjs",
+    "dev": "npm run node:verify && node --watch server.mjs",
+    "deep:bridge": "npm run node:verify && node deep-arcsweep-bridge.mjs",
     "deep:check": "node --check deep-arcsweep-bridge.mjs && node --check deep-spine-contract.mjs && node --check yggdrasil-deep-context.mjs",
-    "check": "node --check server.mjs && node --check public/concordance-engine.js && node --check public/starwell.js && npm run deep:check",
-    "test": "node --test test/*.test.mjs"
+    "check": "npm run node:verify && node --check server.mjs && node --check public/concordance-engine.js && node --check public/starwell.js && npm run deep:check",
+    "test": "npm run node:verify && node --test test/*.test.mjs"
   }
 }
