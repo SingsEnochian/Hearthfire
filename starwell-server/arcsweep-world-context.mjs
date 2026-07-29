@@ -1,9 +1,10 @@
 // arcsweep-world-context.mjs
-// Loads Boxfire's thin Arcsweep lookup index.
+// Loads the thin Arcsweep lookup index used by Boxfire and bridge modules.
 //
 // Notion is the living database and canon authority. This module deliberately
-// does not copy world content into GitHub. It gives Box stable page IDs, routes,
-// and Runa implementation paths so Box can resolve the real records in Notion.
+// does not copy world content into GitHub. It gives local systems stable page
+// IDs, routes, and Runa implementation paths so they can resolve the real
+// records in Notion.
 
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
@@ -35,6 +36,14 @@ async function _loadIndex() {
   return _index;
 }
 
+function _normaliseKey(value) {
+  return String(value ?? '')
+    .trim()
+    .toLocaleLowerCase('en-US')
+    .replace(/[’']/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 function _formatWorld(world) {
   return [
     `- ${world.name} [${world.slug}]`,
@@ -48,6 +57,38 @@ function _formatWorld(world) {
 
 export async function getArcsweepWorldAnchorIndex() {
   return _loadIndex();
+}
+
+export async function resolveArcsweepWorldAnchor(key) {
+  const index = await _loadIndex();
+  if (!index || key == null) return null;
+
+  const raw = String(key).trim();
+  const normalised = _normaliseKey(raw);
+  return index.worlds.find((world) => {
+    const candidates = [
+      world.slug,
+      world.name,
+      world.notion_page_id,
+      world.notion_url,
+      world.route,
+    ].filter(Boolean);
+    return candidates.some((candidate) => String(candidate) === raw || _normaliseKey(candidate) === normalised);
+  }) ?? null;
+}
+
+export async function getArcsweepWorldAnchorSummary(key) {
+  const world = await resolveArcsweepWorldAnchor(key);
+  if (!world) return null;
+  return {
+    slug: world.slug,
+    name: world.name,
+    status: world.status ?? 'unknown',
+    notionPageId: world.notion_page_id ?? null,
+    notionUrl: world.notion_url ?? null,
+    runaProfile: world.runa_profile ?? null,
+    route: world.route ?? null,
+  };
 }
 
 export async function getArcsweepWorldAnchorPacket() {
