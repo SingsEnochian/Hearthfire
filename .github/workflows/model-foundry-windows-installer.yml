@@ -5,6 +5,9 @@ on:
   pull_request:
     paths:
       - "modules/model-foundry/**"
+      - ".nvmrc"
+      - ".node-version"
+      - ".npmrc"
       - ".github/workflows/model-foundry-windows-installer.yml"
   push:
     branches:
@@ -13,6 +16,9 @@ on:
       - "model-foundry-v*"
     paths:
       - "modules/model-foundry/**"
+      - ".nvmrc"
+      - ".node-version"
+      - ".npmrc"
       - ".github/workflows/model-foundry-windows-installer.yml"
 
 permissions:
@@ -38,12 +44,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Resolve pinned Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version-file: .nvmrc
+          check-latest: false
           cache: npm
           cache-dependency-path: modules/model-foundry/package.json
+
+      - name: Verify Node runtime contract
+        run: npm run node:verify
 
       - name: Install packaging dependencies
         run: npm install --package-lock=false --no-audit --no-fund
@@ -117,6 +127,7 @@ jobs:
 
           - Installer: ``$($installers[0].Name)``
           - Portable: ``$($portable[0].Name)``
+          - Node runtime: pinned by repository `.nvmrc`
           - Standalone tests: passed
           - API Stuff intake: native file picker + OS-backed encrypted credential store
           - Registry/export secret leakage: prohibited by tests and packaging preflight
