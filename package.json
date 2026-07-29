@@ -3,13 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24.11.1 <25"
+  },
   "workspaces": [
     "packages/*",
     "starwell-server"
   ],
   "scripts": {
-    "check": "tsc --noEmit",
-    "test": "node --test",
+    "node:verify": "node scripts/verify-node-runtime.mjs",
+    "check": "npm run node:verify && tsc --noEmit",
+    "test": "npm run node:verify && node --test",
     "starwell:start": "npm --workspace @hearthfire/starwell-server start",
     "starwell:dev": "npm --workspace @hearthfire/starwell-server dev",
     "starwell:check": "npm --workspace @hearthfire/starwell-server check",
