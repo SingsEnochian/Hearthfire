@@ -6,6 +6,7 @@ import {
   normaliseDeepVisual,
   validateDeepArcsweepPacket,
 } from '../deep-spine-contract.mjs';
+import { buildYggdrasilBridgeMessage } from '../deep-arcsweep-bridge.mjs';
 import { formatYggdrasilDeepContext } from '../yggdrasil-deep-context.mjs';
 
 const worldAnchor = {
@@ -58,4 +59,13 @@ test('formats a named operational packet for Yggdrasil', () => {
   assert.match(context, /Operational Context: DEEP × Arcsweep Science Spine/);
   assert.match(context, /Do not turn mathematical derivation into physical proof/);
   assert.match(context, /Notion authority/);
+});
+
+test('passes the named packet and Steward request together without merging registers', () => {
+  const packet = buildDeepArcsweepPacket({ worldAnchor, deep: { P: 0.5, C: 0.5, R: 0.5, E: 0.5, M: 0.5, A: 0.5 } });
+  const message = buildYggdrasilBridgeMessage(packet, 'Route this to the continuity centre.');
+  assert.match(message, /Operational Context: DEEP × Arcsweep Science Spine/);
+  assert.match(message, /# Steward Request/);
+  assert.match(message, /Route this to the continuity centre/);
+  assert.match(message, /Do not turn visual synthesis into measurement/);
 });
