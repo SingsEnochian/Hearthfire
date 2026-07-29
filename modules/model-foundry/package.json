@@ -6,15 +6,16 @@
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
-  "engines": { "node": ">=24" },
+  "engines": { "node": ">=24.11.1 <25" },
   "scripts": {
-    "start": "node src/server.mjs",
-    "check": "node --check src/store.mjs && node --check src/ollama.mjs && node --check src/api-stuff-parser.mjs && node --check src/server.mjs && node --check electron/main.cjs && node --check electron/preload.cjs && node --check scripts/check-packaging.mjs",
-    "test": "node --test test/*.test.mjs",
-    "check:packaging": "node scripts/check-packaging.mjs",
-    "electron:dev": "electron .",
-    "electron:pack:win": "electron-builder --win dir --x64 --publish never",
-    "electron:build:win": "electron-builder --win nsis zip --x64 --publish never"
+    "node:verify": "node scripts/verify-node-runtime.mjs",
+    "start": "npm run node:verify && node src/server.mjs",
+    "check": "npm run node:verify && node --check src/store.mjs && node --check src/ollama.mjs && node --check src/api-stuff-parser.mjs && node --check src/server.mjs && node --check electron/main.cjs && node --check electron/preload.cjs && node --check scripts/check-packaging.mjs",
+    "test": "npm run node:verify && node --test test/*.test.mjs",
+    "check:packaging": "npm run node:verify && node scripts/check-packaging.mjs",
+    "electron:dev": "npm run node:verify && electron .",
+    "electron:pack:win": "npm run node:verify && electron-builder --win dir --x64 --publish never",
+    "electron:build:win": "npm run node:verify && electron-builder --win nsis zip --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^35.7.5",
