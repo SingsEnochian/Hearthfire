@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { buildDeepArcsweepPacket, validateDeepArcsweepPacket } from './deep-spine-contract.mjs';
 import { getArcsweepWorldAnchorIndex, resolveArcsweepWorldAnchor } from './arcsweep-world-context.mjs';
+import { formatYggdrasilDeepContext } from './yggdrasil-deep-context.mjs';
 import { dispatchMemberMode } from './arkfire-dispatch.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -123,6 +124,12 @@ export async function bindDeepToArcsweep(body = {}) {
   };
 }
 
+export function buildYggdrasilBridgeMessage(packet, message) {
+  const operationalContext = formatYggdrasilDeepContext(packet);
+  const userMessage = String(message ?? 'Read and route the current DEEP Arcsweep packet.');
+  return `${operationalContext}\n\n---\n\n# Steward Request\n${userMessage}`;
+}
+
 export function startDeepArcsweepBridgeServer() {
   const server = createServer(async (request, response) => {
     const url = new URL(request.url || '/', `http://${host}:${port}`);
@@ -161,7 +168,10 @@ export function startDeepArcsweepBridgeServer() {
           return;
         }
 
-        const message = String(body.message ?? body.intent ?? 'Read and route the current DEEP Arcsweep packet.');
+        const message = buildYggdrasilBridgeMessage(
+          binding.packet,
+          body.message ?? body.intent ?? 'Read and route the current DEEP Arcsweep packet.',
+        );
         const mode = body.mode ?? 'worldStructure';
         const history = Array.isArray(body.history) ? body.history : [];
         const yggdrasil = await dispatchMemberMode('yggdrasil', mode, message, history);
