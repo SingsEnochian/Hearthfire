@@ -23,7 +23,9 @@
     "bridge:lamination:health": "npm --workspace @hearthfire/bridge-session run lamination:health",
     "bridge:lamination:demo": "npm --workspace @hearthfire/bridge-session run lamination:demo",
     "bridge:lamination:latest": "npm --workspace @hearthfire/bridge-session run lamination:latest",
-    "bridge:lamination:replay": "npm --workspace @hearthfire/bridge-session run lamination:replay"
+    "bridge:lamination:replay": "npm --workspace @hearthfire/bridge-session run lamination:replay",
+    "bridge:review:start": "npm --workspace @hearthfire/bridge-session run review:start",
+    "bridge:review:health": "npm --workspace @hearthfire/bridge-session run review:health"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

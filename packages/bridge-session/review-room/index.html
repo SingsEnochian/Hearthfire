@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b10" />
+  <meta name="description" content="Local-first review room for Hearthweave bridge laminations." />
+  <title>Lamination Review Room · Hearthweave</title>
+  <link rel="stylesheet" href="./review-room.css" />
+</head>
+<body>
+  <main class="room-shell">
+    <header class="threshold-header">
+      <div class="mark" aria-hidden="true">◈</div>
+      <div>
+        <p>HEARTHWEAVE · CLEAN RETURN</p>
+        <h1>Lamination Review Room</h1>
+      </div>
+      <div class="health" id="health-state">Listening…</div>
+    </header>
+
+    <section class="arrival-card" id="arrival-card" aria-live="polite">
+      <div>
+        <p class="eyebrow">Latest durable crossing</p>
+        <h2 id="world-title">No laminate loaded</h2>
+        <p id="crossing-note">The room is checking the local data directory.</p>
+      </div>
+      <dl class="crossing-facts">
+        <div><dt>Session</dt><dd id="session-id">—</dd></div>
+        <div><dt>Returned</dt><dd id="return-state">—</dd></div>
+        <div><dt>Created</dt><dd id="created-at">—</dd></div>
+        <div><dt>Items</dt><dd id="item-count">—</dd></div>
+      </dl>
+    </section>
+
+    <section class="boundary-note">
+      <strong>The original receipt remains immutable.</strong>
+      <span>This room writes a separate review ledger and a reviewed-latest layer. New external observations cannot be invented here; they must arrive through a sourced Hearthside packet.</span>
+    </section>
+
+    <form id="review-form" hidden>
+      <div class="reviewer-row">
+        <label>
+          <span>Reviewer</span>
+          <input id="reviewer" name="reviewer" value="Rowan" autocomplete="name" />
+        </label>
+        <button type="button" class="quiet-button" id="reload-button">Reload original</button>
+      </div>
+
+      <section class="layer-grid" id="layer-grid" aria-label="Lamination layers"></section>
+
+      <section class="notes-card">
+        <label for="review-notes">Notes held with this layer</label>
+        <textarea id="review-notes" rows="4" placeholder="Context, boundaries, or what should happen next…"></textarea>
+      </section>
+
+      <footer class="laying-table">
+        <div class="summary-line" id="review-summary">Nothing has been laid yet.</div>
+        <button type="submit" class="lay-button" id="lay-button">
+          <span>Commit reviewed receipt</span>
+          <strong>Lay This Layer</strong>
+        </button>
+      </footer>
+    </form>
+
+    <section class="empty-state" id="empty-state" hidden>
+      <h2>No durable laminate found</h2>
+      <p>Run a clean crossing with the same <code>--data</code> directory, then reload this room.</p>
+    </section>
+
+    <p class="status-line" id="status-line" aria-live="polite"></p>
+  </main>
+
+  <template id="layer-template">
+    <article class="layer-panel">
+      <header>
+        <div>
+          <p class="layer-number"></p>
+          <h2 class="layer-title"></h2>
+        </div>
+        <button type="button" class="add-item-button">+ Add item</button>
+      </header>
+      <p class="layer-question"></p>
+      <div class="item-list"></div>
+    </article>
+  </template>
+
+  <script type="module" src="./review-room.js"></script>
+</body>
+</html>
