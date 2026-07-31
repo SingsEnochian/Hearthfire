@@ -4,7 +4,8 @@ export function isAllowedLoopbackOrigin(origin) {
   if (typeof origin !== 'string' || origin.trim() === '') return false;
   try {
     const url = new URL(origin);
-    return ['http:', 'https:'].includes(url.protocol) && LOOPBACK_HOSTS.has(url.hostname);
+    const hostname = url.hostname.replace(/^\[|\]$/g, '');
+    return ['http:', 'https:'].includes(url.protocol) && LOOPBACK_HOSTS.has(hostname);
   } catch {
     return false;
   }
