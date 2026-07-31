@@ -1,6 +1,6 @@
 {
   "name": "@hearthfire/bridge-session",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -9,12 +9,14 @@
   "exports": {
     ".": "./src/bridge-session.mjs",
     "./lamination": "./src/bridge-lamination.mjs",
-    "./review": "./src/lamination-review.mjs"
+    "./review": "./src/lamination-review.mjs",
+    "./continuity": "./src/continuity-exporter.mjs"
   },
   "bin": {
     "hearthweave-bridge": "./cli.mjs",
     "hearthweave-laminate": "./lamination-cli.mjs",
-    "hearthweave-review-room": "./review-room-server.mjs"
+    "hearthweave-review-room": "./review-room-server.mjs",
+    "hearthweave-continuity": "./continuity-cli.mjs"
   },
   "scripts": {
     "start": "node cli.mjs serve",
@@ -27,7 +29,11 @@
     "lamination:replay": "node lamination-cli.mjs replay",
     "review:start": "node review-room-server.mjs serve",
     "review:health": "node review-room-server.mjs health",
-    "check": "node --check src/bridge-session.mjs && node --check src/lamination-engine.mjs && node --check src/bridge-lamination.mjs && node --check src/lamination-review.mjs && node --check cli.mjs && node --check lamination-cli.mjs && node --check review-room-server.mjs && node --check review-room/review-room.js",
+    "continuity:health": "node continuity-cli.mjs health",
+    "continuity:export": "node continuity-cli.mjs export",
+    "continuity:latest": "node continuity-cli.mjs latest",
+    "continuity:replay": "node continuity-cli.mjs replay",
+    "check": "node --check src/bridge-session.mjs && node --check src/lamination-engine.mjs && node --check src/bridge-lamination.mjs && node --check src/lamination-review.mjs && node --check src/continuity-exporter.mjs && node --check cli.mjs && node --check lamination-cli.mjs && node --check continuity-cli.mjs && node --check review-room-server.mjs && node --check review-room/review-room.js",
     "test": "node --test test/*.test.mjs"
   }
 }
