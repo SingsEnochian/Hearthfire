@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   vertical-slice:
-    name: Node 24 crossing, review, and continuity
+    name: Node 24 crossing, review, continuity, and loopback handoff
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -42,13 +42,14 @@ jobs:
           node --check packages/bridge-session/src/bridge-lamination.mjs
           node --check packages/bridge-session/src/lamination-review.mjs
           node --check packages/bridge-session/src/continuity-exporter.mjs
+          node --check packages/bridge-session/src/loopback-cors.mjs
           node --check packages/bridge-session/cli.mjs
           node --check packages/bridge-session/lamination-cli.mjs
           node --check packages/bridge-session/continuity-cli.mjs
           node --check packages/bridge-session/review-room-server.mjs
           node --check packages/bridge-session/review-room/review-room.js
 
-      - name: Run bridge, lamination, review, and continuity tests
+      - name: Run bridge, lamination, review, continuity, and CORS tests
         run: node --test packages/bridge-session/test/*.test.mjs
 
       - name: Run standalone bridge health check
@@ -69,7 +70,7 @@ jobs:
       - name: Run standalone Review Room health check
         run: node packages/bridge-session/review-room-server.mjs health --data "$RUNNER_TEMP/lamination-demo"
 
-      - name: Smoke-test review and accepted-continuity HTTP surfaces
+      - name: Smoke-test review, continuity, and loopback handoff
         run: |
           node packages/bridge-session/review-room-server.mjs serve --data "$RUNNER_TEMP/lamination-demo" --port 4319 &
           REVIEW_PID=$!
@@ -119,6 +120,19 @@ jobs:
 
           curl --fail --silent http://127.0.0.1:4319/api/continuity/latest
           curl --fail --silent http://127.0.0.1:4319/api/continuity
+
+          curl --fail --silent \
+            --dump-header "$RUNNER_TEMP/cors-headers.txt" \
+            -H 'Origin: http://127.0.0.1:5173' \
+            http://127.0.0.1:4319/api/continuity/latest > "$RUNNER_TEMP/cors-packet.json"
+          grep -qi '^access-control-allow-origin: http://127.0.0.1:5173' "$RUNNER_TEMP/cors-headers.txt"
+          grep -qi '^vary: Origin' "$RUNNER_TEMP/cors-headers.txt"
+
+          curl --fail --silent --output /dev/null \
+            --request OPTIONS \
+            -H 'Origin: http://localhost:4173' \
+            -H 'Access-Control-Request-Method: GET' \
+            http://127.0.0.1:4319/api/continuity/latest
 
       - name: Read standalone continuity export
         run: |
