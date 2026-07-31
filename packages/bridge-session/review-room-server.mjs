@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ContinuityExporter } from './src/continuity-exporter.mjs';
 import { LaminationReviewStore } from './src/lamination-review.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -89,15 +90,32 @@ async function serveStatic(request, response) {
 function errorStatus(error) {
   if (error?.code === 'request-body-too-large') return 413;
   if (error instanceof SyntaxError) return 400;
-  if (error?.code === 'lamination-not-found') return 404;
-  if (error?.code === 'stale-lamination-review') return 409;
-  if (String(error?.code ?? '').includes('review') || String(error?.code ?? '').includes('lamination')) return 422;
+  if (['lamination-not-found', 'reviewed-lamination-not-found'].includes(error?.code)) return 404;
+  if (['stale-lamination-review', 'stale-continuity-export'].includes(error?.code)) return 409;
+  if (
+    String(error?.code ?? '').includes('review')
+    || String(error?.code ?? '').includes('lamination')
+    || String(error?.code ?? '').includes('continuity')
+  ) return 422;
   return 500;
 }
 
+async function combinedHealth(store, exporter) {
+  const review = await store.health();
+  const continuity = await exporter.health();
+  return {
+    ...review,
+    continuity_packet_count: continuity.continuity_packet_count,
+    latest_continuity_packet_id: continuity.latest_continuity_packet_id,
+    continuity_packet_latest_path: continuity.packet_latest_path,
+  };
+}
+
 async function runHealth(options) {
-  const store = new LaminationReviewStore({ dataDirectory: resolve(String(options.data ?? './data')) });
-  process.stdout.write(`${JSON.stringify(await store.health(), null, 2)}\n`);
+  const dataDirectory = resolve(String(options.data ?? './data'));
+  const store = new LaminationReviewStore({ dataDirectory });
+  const exporter = new ContinuityExporter({ dataDirectory });
+  process.stdout.write(`${JSON.stringify(await combinedHealth(store, exporter), null, 2)}\n`);
 }
 
 async function runServer(options) {
@@ -105,6 +123,7 @@ async function runServer(options) {
   const host = String(options.host ?? process.env.HOST ?? '127.0.0.1');
   const dataDirectory = resolve(String(options.data ?? './data'));
   const store = new LaminationReviewStore({ dataDirectory });
+  const exporter = new ContinuityExporter({ dataDirectory });
 
   const server = createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', `http://${host}:${port}`);
@@ -115,7 +134,7 @@ async function runServer(options) {
         json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
         return;
       }
-      json(response, 200, await store.health(), request.method);
+      json(response, 200, await combinedHealth(store, exporter), request.method);
       return;
     }
 
@@ -170,6 +189,43 @@ async function runServer(options) {
       return;
     }
 
+    if (path === '/api/continuity/latest') {
+      if (!['GET', 'HEAD'].includes(request.method ?? '')) {
+        json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+        return;
+      }
+      json(response, 200, await exporter.latest(), request.method);
+      return;
+    }
+
+    if (path === '/api/continuity') {
+      if (!['GET', 'HEAD'].includes(request.method ?? '')) {
+        json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+        return;
+      }
+      json(response, 200, await exporter.replay(), request.method);
+      return;
+    }
+
+    if (path === '/api/continuity/export') {
+      if (request.method !== 'POST') {
+        json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+        return;
+      }
+      try {
+        const body = await readRequestJson(request);
+        const result = await exporter.exportAccepted(body);
+        json(response, result.created ? 201 : 200, { ok: true, ...result }, request.method);
+      } catch (error) {
+        json(response, errorStatus(error), {
+          ok: false,
+          error: error?.code ?? error?.name ?? 'continuity-export-error',
+          message: error?.message ?? String(error),
+        }, request.method);
+      }
+      return;
+    }
+
     if (!['GET', 'HEAD'].includes(request.method ?? '')) {
       json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
       return;
@@ -188,6 +244,9 @@ async function runServer(options) {
       latest_lamination: '/api/lamination/latest',
       latest_review: '/api/review/latest',
       reviewed_latest: '/api/reviewed/latest',
+      continuity_latest: '/api/continuity/latest',
+      continuity_replay: '/api/continuity',
+      continuity_export: '/api/continuity/export',
     }, null, 2)}\n`);
   });
 
