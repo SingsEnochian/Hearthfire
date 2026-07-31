@@ -1,0 +1,50 @@
+name: Bridge Session
+
+on:
+  pull_request:
+    paths:
+      - 'packages/bridge-session/**'
+      - 'package.json'
+      - '.github/workflows/bridge-session.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/bridge-session/**'
+      - 'package.json'
+      - '.github/workflows/bridge-session.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  vertical-slice:
+    name: Node 24 vertical slice
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Report runtime
+        run: node --version
+
+      - name: Syntax check
+        run: |
+          node --check packages/bridge-session/src/bridge-session.mjs
+          node --check packages/bridge-session/cli.mjs
+
+      - name: Run bridge-session tests
+        run: node --test packages/bridge-session/test/*.test.mjs
+
+      - name: Run standalone health check
+        run: node packages/bridge-session/cli.mjs health --data "$RUNNER_TEMP/bridge-health"
+
+      - name: Run first complete crossing
+        run: node packages/bridge-session/cli.mjs demo --world terra-aeterna --data "$RUNNER_TEMP/bridge-demo"
