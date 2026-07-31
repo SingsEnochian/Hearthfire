@@ -9,7 +9,7 @@ It does not claim physical travel to another universe. It creates and preserves 
 ## Proven route
 
 ```text
-OPEN -> LOAD -> ORIENT -> ARRIVE -> EXCHANGE -> RETURN -> CLOSED -> LAMINATE -> REVIEW
+OPEN -> LOAD -> ORIENT -> ARRIVE -> EXCHANGE -> RETURN -> CLOSED -> LAMINATE -> REVIEW -> CARRY
 ```
 
 The demonstration uses `terra-aeterna` as its target slug and completes one packet in each direction before returning cleanly.
@@ -34,7 +34,7 @@ Every item carries a status, epistemic register, and source packet list. Targets
 
 ## Lamination Review Room
 
-The v0.3 package adds a standalone browser room on port `4319` by default. It loads the latest durable laminate from a selected data directory and lets Rowan:
+The standalone browser room runs on port `4319` by default. It loads the latest durable laminate from a selected data directory and lets Rowan:
 
 - edit the wording of every original item
 - mark each item Candidate, Accept, Hold, or Reject
@@ -44,6 +44,20 @@ The v0.3 package adds a standalone browser room on port `4319` by default. It lo
 - produce a derived reviewed-latest laminate without rewriting the original receipt
 
 New Review Room items cannot originate `external-observation` claims. External evidence must enter through a sourced Hearthside packet before review.
+
+## Accepted Continuity Exporter
+
+After a layer is reviewed, **Carry Accepted Continuity** becomes available as a separate explicit action. The exporter:
+
+- includes only `accepted` items
+- leaves Candidate, Hold, and Reject items behind while preserving their counts
+- keeps source item IDs, source packet IDs, review ID, session, world, anchors, reviewer, and register
+- routes each item as world, relationship, creative, interpretive, system, or observational continuity
+- writes an append-only packet ledger and a latest packet
+- treats repeated export of the same reviewed layer as idempotent
+- records `canon_commit: false`
+
+A continuity packet is portable reviewed context. It is not an automatic canon mutation. Arcsweep, the Knowledge Graph, Notion, and Supabase will receive it later through optional adapters.
 
 ## Run standalone
 
@@ -62,6 +76,11 @@ npm run bridge:lamination:start
 
 npm run bridge:review:health -- --data ./data/terra-crossing
 npm run bridge:review:start -- --data ./data/terra-crossing
+
+npm run bridge:continuity:health -- --data ./data/terra-crossing
+npm run bridge:continuity:export -- --data ./data/terra-crossing
+npm run bridge:continuity:latest -- --data ./data/terra-crossing
+npm run bridge:continuity:replay -- --data ./data/terra-crossing
 ```
 
 Or from this directory:
@@ -79,6 +98,11 @@ node lamination-cli.mjs serve --port 4318
 
 node review-room-server.mjs health --data ./data/terra-crossing
 node review-room-server.mjs serve --data ./data/terra-crossing --port 4319
+
+node continuity-cli.mjs health --data ./data/terra-crossing
+node continuity-cli.mjs export --data ./data/terra-crossing
+node continuity-cli.mjs latest --data ./data/terra-crossing
+node continuity-cli.mjs replay --data ./data/terra-crossing
 ```
 
 Open the Review Room at:
@@ -100,13 +124,16 @@ Lamination service:
 - `GET /lamination/latest`
 - `GET /laminations`
 
-Review Room service:
+Review and Continuity Room service:
 
 - `GET /health`
 - `GET /api/lamination/latest`
 - `GET /api/review/latest`
 - `GET /api/reviewed/latest`
 - `POST /api/reviews`
+- `GET /api/continuity/latest`
+- `GET /api/continuity`
+- `POST /api/continuity/export`
 
 ## Two shores
 
@@ -126,7 +153,7 @@ Every packet identifies its direction, source presence, target presence, world, 
 
 Targetside may send narrative state, interpretation, or system-state receipts. Targetside may not originate an `external-observation` claim. External observations must enter from Hearthside through an identified source adapter.
 
-The Lamination Engine and Review Room apply the same boundary after return. Neither may turn target-world narrative or an unsourced review note into external evidence.
+The Lamination Engine, Review Room, and Continuity Exporter apply the same boundary after return. None may turn target-world narrative or an unsourced review note into external evidence.
 
 ## Data
 
@@ -151,13 +178,20 @@ The Review Room writes:
 ./data/bridge-lamination.reviewed.latest.json
 ```
 
-The original lamination remains unchanged. Review receipts are append-only, and the reviewed-latest file is a derived carrying copy.
+The Continuity Exporter writes:
+
+```text
+./data/bridge-continuity-packets.jsonl
+./data/bridge-continuity.latest.json
+```
+
+The original lamination remains unchanged. Review receipts and continuity packets are append-only; latest files are derived carrying copies.
 
 ## Next horizontal expansion
 
-1. Mount the standalone Review Room behind a Hearthgate door through an optional adapter.
-2. Add an explicit continuity exporter for accepted review items.
-3. Add an optional Arcsweep world-resolution adapter.
+1. Add an optional Arcsweep continuity-packet adapter.
+2. Add an optional Knowledge Graph continuity adapter.
+3. Mount the standalone Review Room behind a Hearthgate door through an optional adapter.
 4. Add an optional STARWELL host/status adapter.
 5. Add an optional DEEP external-observation adapter.
 6. Add optional Notion and Supabase exporters.
