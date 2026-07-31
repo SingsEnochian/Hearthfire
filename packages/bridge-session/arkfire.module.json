@@ -2,11 +2,11 @@
   "schemaVersion": "arkfire.module/v1",
   "moduleId": "arkfire.bridge-session",
   "canonicalName": "Hearthweave Bridge Session",
-  "version": "0.3.0",
-  "status": "IMPLEMENTED_REVIEW_ROOM_SLICE",
+  "version": "0.4.0",
+  "status": "IMPLEMENTED_CONTINUITY_EXPORT_SLICE",
   "owner": "Rowan",
   "maintainers": ["Vee"],
-  "description": "Standalone consent-aware runtime for crossing, clean return, durable lamination, deliberate human review, and replayable receipts.",
+  "description": "Standalone consent-aware runtime for crossing, clean return, durable lamination, deliberate human review, and explicit accepted-continuity export.",
   "standalone": true,
   "standaloneEntrypoints": {
     "cli": "node cli.mjs",
@@ -15,16 +15,17 @@
     "laminationCli": "node lamination-cli.mjs",
     "laminationService": "node lamination-cli.mjs serve",
     "laminatedDemo": "node lamination-cli.mjs demo --world terra-aeterna",
-    "reviewRoom": "node review-room-server.mjs serve --data ./data"
+    "reviewRoom": "node review-room-server.mjs serve --data ./data",
+    "continuityCli": "node continuity-cli.mjs"
   },
   "standaloneInterface": [
     "CLI",
     "HTTP health/status",
     "local JSONL receipt store",
-    "browser review room"
+    "browser review and continuity room"
   ],
   "standaloneDataDirectory": "./data",
-  "standaloneHealthCheck": "node cli.mjs health && node lamination-cli.mjs health && node review-room-server.mjs health",
+  "standaloneHealthCheck": "node cli.mjs health && node lamination-cli.mjs health && node review-room-server.mjs health && node continuity-cli.mjs health",
   "standaloneTestCommand": "node --test test/*.test.mjs",
   "hostAdapters": [],
   "capabilities": [
@@ -43,13 +44,18 @@
     "interactive-lamination-review",
     "accept-hold-reject-decisions",
     "immutable-review-ledger",
-    "reviewed-latest-derivation"
+    "reviewed-latest-derivation",
+    "explicit-accepted-continuity-export",
+    "continuity-route-classification",
+    "idempotent-continuity-packets",
+    "continuity-without-automatic-canon-commit"
   ],
   "dataContracts": [
     "schema/bridge-session.schema.json",
     "schema/bridge-packet.schema.json",
     "schema/bridge-lamination.schema.json",
-    "schema/bridge-lamination-review.schema.json"
+    "schema/bridge-lamination-review.schema.json",
+    "schema/continuity-packet.schema.json"
   ],
   "dataOwnership": [
     "bridge session ledger",
@@ -58,7 +64,9 @@
     "latest bridge lamination",
     "lamination review ledger",
     "latest lamination review",
-    "reviewed latest lamination"
+    "reviewed latest lamination",
+    "continuity packet ledger",
+    "latest continuity packet"
   ],
   "storageLocations": [
     "./data/bridge-session-ledger.jsonl",
@@ -66,16 +74,18 @@
     "./data/bridge-lamination.latest.json",
     "./data/bridge-lamination-reviews.jsonl",
     "./data/bridge-lamination-review.latest.json",
-    "./data/bridge-lamination.reviewed.latest.json"
+    "./data/bridge-lamination.reviewed.latest.json",
+    "./data/bridge-continuity-packets.jsonl",
+    "./data/bridge-continuity.latest.json"
   ],
   "optionalIntegrations": [
     "Hearthgate Review Room door adapter",
-    "Continuity accepted-item exporter",
-    "Arcsweep world loader",
+    "Arcsweep continuity packet adapter",
+    "Knowledge Graph continuity adapter",
     "STARWELL host adapter",
     "DEEP observational adapter",
     "Notion canon authority resolver",
-    "Supabase bridge event exporter"
+    "Supabase continuity exporter"
   ],
   "permissions": ["local ledger read/write", "loopback HTTP browser access"],
   "consentRequirements": [
@@ -84,7 +94,10 @@
     "Notch performs explicit return",
     "Lamination occurs only after CLOSED with an explicit clean-return receipt",
     "Original lamination receipts remain immutable during review",
-    "New Review Room items cannot originate external-observation claims"
+    "New Review Room items cannot originate external-observation claims",
+    "Continuity export requires an explicit user action after review",
+    "Only accepted review items enter a continuity packet",
+    "Continuity export does not commit canon automatically"
   ],
   "networkRequirements": [],
   "deviceRequirements": ["modern browser for the Review Room interface"],
@@ -96,7 +109,10 @@
     "GET /api/lamination/latest",
     "GET /api/review/latest",
     "GET /api/reviewed/latest",
-    "POST /api/reviews"
+    "POST /api/reviews",
+    "GET /api/continuity/latest",
+    "GET /api/continuity",
+    "POST /api/continuity/export"
   ],
   "rooms": ["Lamination Review Room"],
   "commands": [
@@ -109,10 +125,14 @@
     "lamination replay",
     "lamination serve",
     "review health",
-    "review serve"
+    "review serve",
+    "continuity health",
+    "continuity export",
+    "continuity latest",
+    "continuity replay"
   ],
   "configurationSchema": null,
-  "migrationVersion": "0.3.0",
+  "migrationVersion": "0.4.0",
   "lifecycle": {
     "install": "npm install",
     "launchStandalone": "npm run start",
@@ -123,16 +143,18 @@
     "uninstallStandalone": "remove package after exporting ./data",
     "restore": "restore ./data and restart"
   },
-  "importProcedure": "Place valid bridge and lamination ledgers in ./data before launch. The Review Room requires bridge-lamination.latest.json in its selected data directory.",
-  "exportProcedure": "Copy all bridge-session, lamination, and lamination-review JSONL and latest JSON files from ./data.",
+  "importProcedure": "Place valid bridge and lamination ledgers in ./data before launch. Review requires bridge-lamination.latest.json; continuity export requires bridge-lamination.reviewed.latest.json.",
+  "exportProcedure": "Copy all bridge-session, lamination, review, and continuity JSONL and latest JSON files from ./data.",
   "healthChecks": [
     "Bridge process starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
     "Lamination process starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
     "Review Room starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
+    "Continuity exporter starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
     "GET /health reports standalone state honestly",
     "Return anchor status is visible",
     "Lamination receipt count and paths are visible",
-    "Review Room reports whether a laminate is available and how many reviews exist"
+    "Review Room reports whether a laminate is available and how many reviews exist",
+    "Continuity health reports reviewed-source availability and packet count"
   ],
   "acceptanceTests": [
     "One full OPEN to CLOSED vertical slice",
@@ -151,18 +173,26 @@
     "A review writes an append-only review receipt and reviewed-latest derivative",
     "Stale lamination reviews are rejected",
     "New Review Room items cannot invent external observations",
-    "The browser room and its health/latest routes open over loopback HTTP"
+    "Only accepted items appear in continuity packets",
+    "Held, rejected, and candidate items remain excluded but counted",
+    "Continuity packets preserve source item, packet, review, session, world, and anchor provenance",
+    "Repeated export of the same reviewed layer is idempotent",
+    "A stale review id blocks continuity export",
+    "A continuity packet explicitly records canon_commit false",
+    "The browser room and all review and continuity routes open over loopback HTTP"
   ],
   "provenance": [
     "Hearthfire issue #9",
     "2026-07-30 Rowan/Vee vertical-slice decision",
     "2026-07-30 Rowan/Vee Lamination Engine decision",
-    "2026-07-31 Rowan/Vee Lamination Review Room decision"
+    "2026-07-31 Rowan/Vee Lamination Review Room decision",
+    "2026-07-31 Rowan explicit continuity-carry decision"
   ],
   "knownLimitations": [
-    "v0.3 uses a manual world/canon resolver",
+    "v0.4 uses a manual world/canon resolver",
     "The Review Room is standalone and not yet mounted behind a Hearthgate door",
-    "Accepted review items do not yet export automatically into Continuity, Notion, or Supabase",
+    "Continuity packets are portable local records and are not yet ingested by Arcsweep, the Knowledge Graph, Notion, or Supabase",
+    "Continuity export deliberately does not commit canon automatically",
     "Host adapters remain optional and reversible"
   ]
 }

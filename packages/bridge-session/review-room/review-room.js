@@ -15,6 +15,9 @@ const notes = document.getElementById('review-notes');
 const reloadButton = document.getElementById('reload-button');
 const layButton = document.getElementById('lay-button');
 const reviewSummary = document.getElementById('review-summary');
+const continuityCard = document.getElementById('continuity-card');
+const continuityState = document.getElementById('continuity-state');
+const carryButton = document.getElementById('carry-button');
 
 const layerConfig = [
   { key: 'changed', number: 'Layer I', title: 'What changed?', question: 'Name what is genuinely different after the crossing.' },
@@ -39,6 +42,8 @@ const additionRegisters = [
 ];
 
 let lamination = null;
+let reviewedLamination = null;
+let continuityPacket = null;
 
 function setStatus(message, kind = '') {
   statusLine.textContent = message;
@@ -185,6 +190,37 @@ function updateSummary() {
   reviewSummary.textContent = `${nodes.length} item${nodes.length === 1 ? '' : 's'} · ${counts.accepted} accepted · ${counts.held} held · ${counts.rejected} rejected · ${counts.candidate} candidate`;
 }
 
+function renderCarryState() {
+  continuityCard.dataset.state = '';
+  carryButton.disabled = true;
+
+  if (!reviewedLamination || reviewedLamination.lamination_id !== lamination?.lamination_id) {
+    continuityState.textContent = 'Lay a reviewed layer first. Accepted items can then become a portable continuity packet without becoming automatic canon.';
+    carryButton.querySelector('strong').textContent = 'Carry Accepted Continuity';
+    return;
+  }
+
+  const acceptedCount = reviewedLamination.summary?.accepted_count ?? 0;
+  const reviewId = reviewedLamination.review?.review_id;
+
+  if (continuityPacket?.review_id === reviewId) {
+    continuityCard.dataset.state = 'carried';
+    continuityState.textContent = `${continuityPacket.summary?.accepted_count ?? acceptedCount} accepted item${acceptedCount === 1 ? '' : 's'} already carried in packet ${continuityPacket.continuity_packet_id}. This is reviewed continuity, not an automatic canon commit.`;
+    carryButton.querySelector('strong').textContent = 'Continuity Carried';
+    return;
+  }
+
+  if (acceptedCount < 1) {
+    continuityState.textContent = 'This reviewed layer contains no accepted items. Hold, reject, or candidate material remains in review and will not be exported.';
+    carryButton.querySelector('strong').textContent = 'Nothing Accepted';
+    return;
+  }
+
+  continuityState.textContent = `${acceptedCount} accepted item${acceptedCount === 1 ? '' : 's'} ready. Held, rejected, and candidate items remain behind. The packet is continuity-only and does not write canon by itself.`;
+  carryButton.querySelector('strong').textContent = 'Carry Accepted Continuity';
+  carryButton.disabled = false;
+}
+
 function showLamination(value) {
   lamination = value;
   worldTitle.textContent = String(value.world_slug ?? 'Unnamed world').replaceAll('-', ' ');
@@ -197,10 +233,13 @@ function showLamination(value) {
   emptyState.hidden = true;
   notes.value = '';
   renderLayers();
+  renderCarryState();
 }
 
 function showEmpty() {
   lamination = null;
+  reviewedLamination = null;
+  continuityPacket = null;
   reviewForm.hidden = true;
   emptyState.hidden = false;
   worldTitle.textContent = 'No laminate loaded';
@@ -211,6 +250,27 @@ function showEmpty() {
   itemCount.textContent = '—';
 }
 
+async function loadCarryState() {
+  reviewedLamination = null;
+  continuityPacket = null;
+
+  try {
+    const [reviewedResponse, continuityResponse] = await Promise.all([
+      fetch('/api/reviewed/latest', { headers: { Accept: 'application/json' } }),
+      fetch('/api/continuity/latest', { headers: { Accept: 'application/json' } }),
+    ]);
+
+    if (reviewedResponse.ok) reviewedLamination = await reviewedResponse.json();
+    if (continuityResponse.ok) continuityPacket = await continuityResponse.json();
+  } catch {
+    reviewedLamination = null;
+    continuityPacket = null;
+  }
+
+  if (reviewedLamination?.review?.reviewer) reviewer.value = reviewedLamination.review.reviewer;
+  renderCarryState();
+}
+
 async function loadRoom() {
   setStatus('Reading the latest durable receipt…');
   healthState.textContent = 'Listening…';
@@ -219,9 +279,11 @@ async function loadRoom() {
   try {
     const healthResponse = await fetch('/health', { headers: { Accept: 'application/json' } });
     const health = await healthResponse.json();
-    healthState.textContent = health.lamination_available
-      ? `${health.review_count} review${health.review_count === 1 ? '' : 's'} held locally`
-      : 'No laminate in this directory';
+    if (health.lamination_available) {
+      healthState.textContent = `${health.review_count} review${health.review_count === 1 ? '' : 's'} · ${health.continuity_packet_count ?? 0} continuity packet${health.continuity_packet_count === 1 ? '' : 's'}`;
+    } else {
+      healthState.textContent = 'No laminate in this directory';
+    }
     healthState.className = `health ${health.lamination_available ? 'ready' : 'attention'}`;
   } catch {
     healthState.textContent = 'Local service unavailable';
@@ -237,6 +299,7 @@ async function loadRoom() {
     }
     if (!response.ok) throw new Error('latest-lamination-unavailable');
     showLamination(await response.json());
+    await loadCarryState();
     setStatus('Original laminate loaded. Nothing has been changed yet.');
   } catch (error) {
     showEmpty();
@@ -286,6 +349,7 @@ reviewForm.addEventListener('submit', async (event) => {
     if (!body.reviewer) throw new Error('Name the reviewer before laying the layer.');
 
     layButton.disabled = true;
+    carryButton.disabled = true;
     setStatus('Writing the review ledger and reviewed-latest layer…');
 
     const response = await fetch('/api/reviews', {
@@ -296,17 +360,56 @@ reviewForm.addEventListener('submit', async (event) => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.message ?? result.error ?? 'review-save-failed');
 
-    const summary = result.reviewed_lamination.summary;
+    reviewedLamination = result.reviewed_lamination;
+    continuityPacket = null;
+    const summary = reviewedLamination.summary;
     setStatus(
       `Layer laid. ${summary.accepted_count} accepted, ${summary.held_count} held, ${summary.rejected_count} rejected, ${summary.candidate_count} still candidate.`,
       'success',
     );
     healthState.textContent = 'Reviewed layer persisted';
     healthState.className = 'health ready';
+    renderCarryState();
   } catch (error) {
     setStatus(error.message, 'error');
   } finally {
     layButton.disabled = false;
+  }
+});
+
+carryButton.addEventListener('click', async () => {
+  if (!reviewedLamination?.review?.review_id) return;
+
+  try {
+    const exportedBy = reviewer.value.trim() || reviewedLamination.review.reviewer;
+    if (!exportedBy) throw new Error('Name who is carrying continuity before export.');
+
+    carryButton.disabled = true;
+    setStatus('Building the portable accepted-continuity packet…');
+
+    const response = await fetch('/api/continuity/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        review_id: reviewedLamination.review.review_id,
+        exported_by: exportedBy,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message ?? result.error ?? 'continuity-export-failed');
+
+    continuityPacket = result.packet;
+    const verb = result.created ? 'Continuity carried' : 'Continuity was already carried';
+    setStatus(
+      `${verb}. ${continuityPacket.summary.accepted_count} accepted item${continuityPacket.summary.accepted_count === 1 ? '' : 's'} are portable; nothing was committed to canon automatically.`,
+      'success',
+    );
+    healthState.textContent = 'Accepted continuity packet persisted';
+    healthState.className = 'health ready';
+    renderCarryState();
+  } catch (error) {
+    setStatus(error.message, 'error');
+    renderCarryState();
   }
 });
 

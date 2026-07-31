@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hearthweave.local/schemas/continuity-packet-v0.1.json",
+  "title": "Hearthweave Continuity Packet v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "continuity_packet_id",
+    "exported_at",
+    "exported_by",
+    "world_slug",
+    "session_id",
+    "lamination_id",
+    "review_id",
+    "reviewer",
+    "reviewed_at",
+    "authority",
+    "anchors",
+    "accepted_items",
+    "summary",
+    "notes",
+    "source_fingerprint",
+    "transport",
+    "provenance"
+  ],
+  "properties": {
+    "schema": { "const": "hearthweave.continuity-packet/v0.1" },
+    "continuity_packet_id": { "type": "string", "minLength": 1 },
+    "exported_at": { "type": "string", "format": "date-time" },
+    "exported_by": { "type": "string", "minLength": 1 },
+    "world_slug": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "lamination_id": { "type": "string", "minLength": 1 },
+    "review_id": { "type": "string", "minLength": 1 },
+    "reviewer": { "type": ["string", "null"] },
+    "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "scope", "canon_commit"],
+      "properties": {
+        "state": { "const": "human-reviewed" },
+        "scope": { "const": "continuity-only" },
+        "canon_commit": { "const": false }
+      }
+    },
+    "anchors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canon_authority", "reality_anchor"],
+      "properties": {
+        "canon_authority": { "type": ["string", "null"] },
+        "reality_anchor": { "type": ["string", "null"] }
+      }
+    },
+    "accepted_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "continuity_item_id",
+          "source_item_id",
+          "world_slug",
+          "layer",
+          "text",
+          "epistemic_register",
+          "route",
+          "status",
+          "source_packet_ids",
+          "authority_scope",
+          "canon_commit"
+        ],
+        "properties": {
+          "continuity_item_id": { "type": "string", "minLength": 1 },
+          "source_item_id": { "type": "string", "minLength": 1 },
+          "world_slug": { "type": "string", "minLength": 1 },
+          "layer": { "enum": ["changed", "remained_true", "became_clearer", "gained"] },
+          "text": { "type": "string", "minLength": 1 },
+          "epistemic_register": {
+            "enum": [
+              "external-observation",
+              "target-world-narrative",
+              "interpretation",
+              "system-state",
+              "creative-insight",
+              "relationship-state"
+            ]
+          },
+          "route": {
+            "enum": [
+              "observational-continuity",
+              "world-continuity",
+              "interpretive-continuity",
+              "system-continuity",
+              "creative-continuity",
+              "relationship-continuity"
+            ]
+          },
+          "status": { "const": "accepted" },
+          "source_packet_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "authority_scope": { "const": "reviewed-continuity" },
+          "canon_commit": { "const": false }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["accepted_count", "candidate_count", "held_count", "rejected_count", "route_counts"],
+      "properties": {
+        "accepted_count": { "type": "integer", "minimum": 1 },
+        "candidate_count": { "type": "integer", "minimum": 0 },
+        "held_count": { "type": "integer", "minimum": 0 },
+        "rejected_count": { "type": "integer", "minimum": 0 },
+        "route_counts": { "type": "object" }
+      }
+    },
+    "notes": { "type": ["string", "null"] },
+    "source_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "adapters_applied"],
+      "properties": {
+        "state": { "const": "portable-local" },
+        "adapters_applied": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module_id", "source_schema", "source_review_id", "source_lamination_id", "source_reviewed_path"],
+      "properties": {
+        "module_id": { "const": "arkfire.continuity-exporter" },
+        "source_schema": { "type": ["string", "null"] },
+        "source_review_id": { "type": "string", "minLength": 1 },
+        "source_lamination_id": { "type": "string", "minLength": 1 },
+        "source_reviewed_path": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
