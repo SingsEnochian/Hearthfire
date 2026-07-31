@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hearthweave.local/schemas/bridge-packet-v0.1.json",
+  "title": "Hearthweave Bridge Packet v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "packet_id",
+    "session_id",
+    "direction",
+    "source_presence",
+    "target_presence",
+    "world_slug",
+    "sent_at",
+    "consent_state",
+    "return_anchor",
+    "presentation_mode",
+    "channel",
+    "epistemic_register",
+    "payload",
+    "provenance"
+  ],
+  "properties": {
+    "schema": { "const": "hearthweave.bridge-packet/v0.1" },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "direction": { "enum": ["hearthside-to-targetside", "targetside-to-hearthside"] },
+    "source_presence": { "type": "string", "minLength": 1 },
+    "target_presence": { "type": "string", "minLength": 1 },
+    "world_slug": { "type": "string", "minLength": 1 },
+    "sent_at": { "type": "string", "format": "date-time" },
+    "consent_state": { "const": "open" },
+    "return_anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active", "cue"],
+      "properties": {
+        "active": { "const": true },
+        "cue": { "const": "Notch" }
+      }
+    },
+    "presentation_mode": { "enum": ["mythic", "plain"] },
+    "channel": { "type": "string", "minLength": 1 },
+    "epistemic_register": {
+      "enum": ["external-observation", "target-world-narrative", "interpretation", "system-state"]
+    },
+    "payload": {},
+    "provenance": {
+      "type": "object",
+      "required": ["canon_authority", "reality_anchor"],
+      "properties": {
+        "canon_authority": { "type": "string", "minLength": 1 },
+        "reality_anchor": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
