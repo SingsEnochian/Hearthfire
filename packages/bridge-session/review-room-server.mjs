@@ -6,6 +6,7 @@ import { extname, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ContinuityExporter } from './src/continuity-exporter.mjs';
 import { LaminationReviewStore } from './src/lamination-review.mjs';
+import { applyLoopbackCors } from './src/loopback-cors.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const publicRoot = resolve(here, 'review-room');
@@ -108,6 +109,7 @@ async function combinedHealth(store, exporter) {
     continuity_packet_count: continuity.continuity_packet_count,
     latest_continuity_packet_id: continuity.latest_continuity_packet_id,
     continuity_packet_latest_path: continuity.packet_latest_path,
+    loopback_cors: true,
   };
 }
 
@@ -126,6 +128,17 @@ async function runServer(options) {
   const exporter = new ContinuityExporter({ dataDirectory });
 
   const server = createServer(async (request, response) => {
+    const corsApplied = applyLoopbackCors(request, response);
+    if (request.method === 'OPTIONS') {
+      if (!corsApplied) {
+        json(response, 403, { ok: false, error: 'loopback-origin-required' }, request.method);
+      } else {
+        response.writeHead(204, { 'cache-control': 'no-store' });
+        response.end();
+      }
+      return;
+    }
+
     const url = new URL(request.url ?? '/', `http://${host}:${port}`);
     const path = url.pathname;
 
@@ -247,6 +260,7 @@ async function runServer(options) {
       continuity_latest: '/api/continuity/latest',
       continuity_replay: '/api/continuity',
       continuity_export: '/api/continuity/export',
+      loopback_cors: 'localhost, 127.0.0.1, ::1 only',
     }, null, 2)}\n`);
   });
 
