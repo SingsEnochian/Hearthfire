@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hearthweave.local/schemas/bridge-lamination-v0.1.json",
+  "title": "Hearthweave Bridge Lamination v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "lamination_id",
+    "session_id",
+    "world_slug",
+    "created_at",
+    "crossing",
+    "anchors",
+    "source_packet_ids",
+    "layers",
+    "summary",
+    "notes",
+    "provenance"
+  ],
+  "properties": {
+    "schema": { "const": "hearthweave.bridge-lamination/v0.1" },
+    "lamination_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "world_slug": { "type": "string", "minLength": 1 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "crossing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "final_state",
+        "consent_state",
+        "return_receipt",
+        "hearthside_status",
+        "targetside_status"
+      ],
+      "properties": {
+        "final_state": { "const": "CLOSED" },
+        "consent_state": { "const": "closed" },
+        "return_receipt": { "const": "clean-return" },
+        "hearthside_status": { "type": ["string", "null"] },
+        "targetside_status": { "type": ["string", "null"] }
+      }
+    },
+    "anchors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canon_authority", "reality_anchor"],
+      "properties": {
+        "canon_authority": { "type": ["string", "null"] },
+        "reality_anchor": { "type": ["string", "null"] }
+      }
+    },
+    "source_packet_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "layers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changed", "remained_true", "became_clearer", "gained"],
+      "properties": {
+        "changed": { "$ref": "#/$defs/layerItems" },
+        "remained_true": { "$ref": "#/$defs/layerItems" },
+        "became_clearer": { "$ref": "#/$defs/layerItems" },
+        "gained": { "$ref": "#/$defs/layerItems" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item_count",
+        "accepted_count",
+        "candidate_count",
+        "held_count",
+        "rejected_count"
+      ],
+      "properties": {
+        "item_count": { "type": "integer", "minimum": 1 },
+        "accepted_count": { "type": "integer", "minimum": 0 },
+        "candidate_count": { "type": "integer", "minimum": 0 },
+        "held_count": { "type": "integer", "minimum": 0 },
+        "rejected_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "notes": {},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module_id", "source", "session_schema"],
+      "properties": {
+        "module_id": { "const": "arkfire.bridge-lamination" },
+        "source": { "const": "bridge-session-clean-return" },
+        "session_schema": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "$defs": {
+    "layerItems": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/layerItem" }
+    },
+    "layerItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item_id",
+        "layer",
+        "text",
+        "epistemic_register",
+        "status",
+        "source_packet_ids"
+      ],
+      "properties": {
+        "item_id": { "type": "string", "minLength": 1 },
+        "layer": {
+          "enum": ["changed", "remained_true", "became_clearer", "gained"]
+        },
+        "text": { "type": "string", "minLength": 1 },
+        "epistemic_register": {
+          "enum": [
+            "external-observation",
+            "target-world-narrative",
+            "interpretation",
+            "system-state",
+            "creative-insight",
+            "relationship-state"
+          ]
+        },
+        "status": { "enum": ["candidate", "accepted", "held", "rejected"] },
+        "source_packet_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}
