@@ -1,6 +1,6 @@
 {
   "name": "@hearthfire/bridge-session",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -33,7 +33,7 @@
     "continuity:export": "node continuity-cli.mjs export",
     "continuity:latest": "node continuity-cli.mjs latest",
     "continuity:replay": "node continuity-cli.mjs replay",
-    "check": "node --check src/bridge-session.mjs && node --check src/lamination-engine.mjs && node --check src/bridge-lamination.mjs && node --check src/lamination-review.mjs && node --check src/continuity-exporter.mjs && node --check cli.mjs && node --check lamination-cli.mjs && node --check continuity-cli.mjs && node --check review-room-server.mjs && node --check review-room/review-room.js",
+    "check": "node --check src/bridge-session.mjs && node --check src/lamination-engine.mjs && node --check src/bridge-lamination.mjs && node --check src/lamination-review.mjs && node --check src/continuity-exporter.mjs && node --check src/loopback-cors.mjs && node --check cli.mjs && node --check lamination-cli.mjs && node --check continuity-cli.mjs && node --check review-room-server.mjs && node --check review-room/review-room.js",
     "test": "node --test test/*.test.mjs"
   }
 }
