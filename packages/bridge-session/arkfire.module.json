@@ -2,11 +2,11 @@
   "schemaVersion": "arkfire.module/v1",
   "moduleId": "arkfire.bridge-session",
   "canonicalName": "Hearthweave Bridge Session",
-  "version": "0.2.0",
-  "status": "IMPLEMENTED_LAMINATION_SLICE",
+  "version": "0.3.0",
+  "status": "IMPLEMENTED_REVIEW_ROOM_SLICE",
   "owner": "Rowan",
   "maintainers": ["Vee"],
-  "description": "Standalone consent-aware runtime for one complete Hearthside to Targetside crossing, exchange, clean return, durable lamination, and replayable receipts.",
+  "description": "Standalone consent-aware runtime for crossing, clean return, durable lamination, deliberate human review, and replayable receipts.",
   "standalone": true,
   "standaloneEntrypoints": {
     "cli": "node cli.mjs",
@@ -14,11 +14,17 @@
     "demo": "node cli.mjs demo --world terra-aeterna",
     "laminationCli": "node lamination-cli.mjs",
     "laminationService": "node lamination-cli.mjs serve",
-    "laminatedDemo": "node lamination-cli.mjs demo --world terra-aeterna"
+    "laminatedDemo": "node lamination-cli.mjs demo --world terra-aeterna",
+    "reviewRoom": "node review-room-server.mjs serve --data ./data"
   },
-  "standaloneInterface": ["CLI", "HTTP health/status", "local JSONL receipt store"],
+  "standaloneInterface": [
+    "CLI",
+    "HTTP health/status",
+    "local JSONL receipt store",
+    "browser review room"
+  ],
   "standaloneDataDirectory": "./data",
-  "standaloneHealthCheck": "node cli.mjs health && node lamination-cli.mjs health",
+  "standaloneHealthCheck": "node cli.mjs health && node lamination-cli.mjs health && node review-room-server.mjs health",
   "standaloneTestCommand": "node --test test/*.test.mjs",
   "hostAdapters": [],
   "capabilities": [
@@ -33,47 +39,66 @@
     "clean-return-lamination",
     "four-layer-crossing-receipts",
     "lamination-latest-snapshot",
-    "external-evidence-source-enforcement"
+    "external-evidence-source-enforcement",
+    "interactive-lamination-review",
+    "accept-hold-reject-decisions",
+    "immutable-review-ledger",
+    "reviewed-latest-derivation"
   ],
   "dataContracts": [
     "schema/bridge-session.schema.json",
     "schema/bridge-packet.schema.json",
-    "schema/bridge-lamination.schema.json"
+    "schema/bridge-lamination.schema.json",
+    "schema/bridge-lamination-review.schema.json"
   ],
   "dataOwnership": [
     "bridge session ledger",
     "bridge session state",
     "bridge lamination ledger",
-    "latest bridge lamination"
+    "latest bridge lamination",
+    "lamination review ledger",
+    "latest lamination review",
+    "reviewed latest lamination"
   ],
   "storageLocations": [
     "./data/bridge-session-ledger.jsonl",
     "./data/bridge-laminations.jsonl",
-    "./data/bridge-lamination.latest.json"
+    "./data/bridge-lamination.latest.json",
+    "./data/bridge-lamination-reviews.jsonl",
+    "./data/bridge-lamination-review.latest.json",
+    "./data/bridge-lamination.reviewed.latest.json"
   ],
   "optionalIntegrations": [
+    "Hearthgate Review Room door adapter",
+    "Continuity accepted-item exporter",
     "Arcsweep world loader",
     "STARWELL host adapter",
     "DEEP observational adapter",
     "Notion canon authority resolver",
     "Supabase bridge event exporter"
   ],
-  "permissions": ["local ledger read/write"],
+  "permissions": ["local ledger read/write", "loopback HTTP browser access"],
   "consentRequirements": [
     "Packets cross only while consent_state is open",
     "Feather or Icarus pauses the bridge",
     "Notch performs explicit return",
-    "Lamination occurs only after CLOSED with an explicit clean-return receipt"
+    "Lamination occurs only after CLOSED with an explicit clean-return receipt",
+    "Original lamination receipts remain immutable during review",
+    "New Review Room items cannot originate external-observation claims"
   ],
   "networkRequirements": [],
-  "deviceRequirements": [],
+  "deviceRequirements": ["modern browser for the Review Room interface"],
   "routes": [
     "GET /health",
     "GET /session",
     "GET /lamination/latest",
-    "GET /laminations"
+    "GET /laminations",
+    "GET /api/lamination/latest",
+    "GET /api/review/latest",
+    "GET /api/reviewed/latest",
+    "POST /api/reviews"
   ],
-  "rooms": [],
+  "rooms": ["Lamination Review Room"],
   "commands": [
     "health",
     "demo",
@@ -82,10 +107,12 @@
     "lamination demo",
     "lamination latest",
     "lamination replay",
-    "lamination serve"
+    "lamination serve",
+    "review health",
+    "review serve"
   ],
   "configurationSchema": null,
-  "migrationVersion": "0.2.0",
+  "migrationVersion": "0.3.0",
   "lifecycle": {
     "install": "npm install",
     "launchStandalone": "npm run start",
@@ -96,14 +123,16 @@
     "uninstallStandalone": "remove package after exporting ./data",
     "restore": "restore ./data and restart"
   },
-  "importProcedure": "Place valid JSONL ledgers in ./data before launch. Latest lamination may be regenerated from the final ledger line.",
-  "exportProcedure": "Copy ./data/bridge-session-ledger.jsonl, ./data/bridge-laminations.jsonl, and ./data/bridge-lamination.latest.json.",
+  "importProcedure": "Place valid bridge and lamination ledgers in ./data before launch. The Review Room requires bridge-lamination.latest.json in its selected data directory.",
+  "exportProcedure": "Copy all bridge-session, lamination, and lamination-review JSONL and latest JSON files from ./data.",
   "healthChecks": [
     "Bridge process starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
     "Lamination process starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
+    "Review Room starts without Hearthfire, Hearthgate, STARWELL, Notion, Supabase, or DEEP",
     "GET /health reports standalone state honestly",
     "Return anchor status is visible",
-    "Lamination receipt count and paths are visible"
+    "Lamination receipt count and paths are visible",
+    "Review Room reports whether a laminate is available and how many reviews exist"
   ],
   "acceptanceTests": [
     "One full OPEN to CLOSED vertical slice",
@@ -116,17 +145,24 @@
     "A non-closed bridge cannot be laminated",
     "A missing clean-return receipt blocks lamination",
     "Targetside narrative cannot be laminated as external observation",
-    "Sourced Hearthside external observations preserve provenance"
+    "Sourced Hearthside external observations preserve provenance",
+    "A review includes one decision for every original laminate item",
+    "A review leaves the original laminate unchanged",
+    "A review writes an append-only review receipt and reviewed-latest derivative",
+    "Stale lamination reviews are rejected",
+    "New Review Room items cannot invent external observations",
+    "The browser room and its health/latest routes open over loopback HTTP"
   ],
   "provenance": [
     "Hearthfire issue #9",
     "2026-07-30 Rowan/Vee vertical-slice decision",
-    "2026-07-30 Rowan/Vee Lamination Engine decision"
+    "2026-07-30 Rowan/Vee Lamination Engine decision",
+    "2026-07-31 Rowan/Vee Lamination Review Room decision"
   ],
   "knownLimitations": [
-    "v0.2 uses a manual world/canon resolver",
-    "v0.2 exposes read-only HTTP health, session, and lamination routes",
-    "Candidate laminate review is represented in data but does not yet have an interactive acceptance UI",
-    "Host adapters are deliberately deferred until the standalone loop passes"
+    "v0.3 uses a manual world/canon resolver",
+    "The Review Room is standalone and not yet mounted behind a Hearthgate door",
+    "Accepted review items do not yet export automatically into Continuity, Notion, or Supabase",
+    "Host adapters remain optional and reversible"
   ]
 }
