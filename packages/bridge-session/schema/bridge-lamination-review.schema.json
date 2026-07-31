@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hearthweave.local/schemas/bridge-lamination-review-v0.1.json",
+  "title": "Hearthweave Bridge Lamination Review v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "review_id",
+    "lamination_id",
+    "session_id",
+    "world_slug",
+    "reviewed_at",
+    "reviewer",
+    "decisions",
+    "additions",
+    "summary",
+    "notes",
+    "provenance"
+  ],
+  "properties": {
+    "schema": { "const": "hearthweave.bridge-lamination-review/v0.1" },
+    "review_id": { "type": "string", "minLength": 1 },
+    "lamination_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "world_slug": { "type": "string", "minLength": 1 },
+    "reviewed_at": { "type": "string", "format": "date-time" },
+    "reviewer": { "type": "string", "minLength": 1 },
+    "decisions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reviewItem" }
+    },
+    "additions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/reviewItem" }
+    },
+    "summary": { "$ref": "#/$defs/summary" },
+    "notes": { "type": ["string", "null"] },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module_id", "source_lamination_schema", "source_lamination_created_at"],
+      "properties": {
+        "module_id": { "const": "arkfire.lamination-review-room" },
+        "source_lamination_schema": { "type": "string", "minLength": 1 },
+        "source_lamination_created_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "reviewItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item_id",
+        "layer",
+        "text",
+        "previous_text",
+        "previous_status",
+        "status",
+        "epistemic_register",
+        "source_packet_ids"
+      ],
+      "properties": {
+        "item_id": { "type": "string", "minLength": 1 },
+        "layer": { "enum": ["changed", "remained_true", "became_clearer", "gained"] },
+        "text": { "type": "string", "minLength": 1 },
+        "previous_text": { "type": ["string", "null"] },
+        "previous_status": { "enum": ["candidate", "accepted", "held", "rejected", null] },
+        "status": { "enum": ["candidate", "accepted", "held", "rejected"] },
+        "epistemic_register": {
+          "enum": [
+            "external-observation",
+            "target-world-narrative",
+            "interpretation",
+            "system-state",
+            "creative-insight",
+            "relationship-state"
+          ]
+        },
+        "source_packet_ids": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_count", "accepted_count", "candidate_count", "held_count", "rejected_count"],
+      "properties": {
+        "item_count": { "type": "integer", "minimum": 0 },
+        "accepted_count": { "type": "integer", "minimum": 0 },
+        "candidate_count": { "type": "integer", "minimum": 0 },
+        "held_count": { "type": "integer", "minimum": 0 },
+        "rejected_count": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
