@@ -1,0 +1,22 @@
+{
+  "name": "@hearthfire/bridge-session",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": "./src/bridge-session.mjs"
+  },
+  "bin": {
+    "hearthweave-bridge": "./cli.mjs"
+  },
+  "scripts": {
+    "start": "node cli.mjs serve",
+    "health": "node cli.mjs health",
+    "demo": "node cli.mjs demo --world terra-aeterna",
+    "check": "node --check src/bridge-session.mjs && node --check cli.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
