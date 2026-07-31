@@ -13,7 +13,12 @@
     "starwell:start": "npm --workspace @hearthfire/starwell-server start",
     "starwell:dev": "npm --workspace @hearthfire/starwell-server dev",
     "starwell:check": "npm --workspace @hearthfire/starwell-server check",
-    "starwell:test": "npm --workspace @hearthfire/starwell-server test"
+    "starwell:test": "npm --workspace @hearthfire/starwell-server test",
+    "bridge:start": "npm --workspace @hearthfire/bridge-session start",
+    "bridge:health": "npm --workspace @hearthfire/bridge-session run health",
+    "bridge:demo": "npm --workspace @hearthfire/bridge-session run demo",
+    "bridge:check": "npm --workspace @hearthfire/bridge-session run check",
+    "bridge:test": "npm --workspace @hearthfire/bridge-session test"
   },
   "devDependencies": {
     "typescript": "^5.6.3"
