@@ -25,7 +25,11 @@
     "bridge:lamination:latest": "npm --workspace @hearthfire/bridge-session run lamination:latest",
     "bridge:lamination:replay": "npm --workspace @hearthfire/bridge-session run lamination:replay",
     "bridge:review:start": "npm --workspace @hearthfire/bridge-session run review:start",
-    "bridge:review:health": "npm --workspace @hearthfire/bridge-session run review:health"
+    "bridge:review:health": "npm --workspace @hearthfire/bridge-session run review:health",
+    "bridge:continuity:health": "npm --workspace @hearthfire/bridge-session run continuity:health",
+    "bridge:continuity:export": "npm --workspace @hearthfire/bridge-session run continuity:export",
+    "bridge:continuity:latest": "npm --workspace @hearthfire/bridge-session run continuity:latest",
+    "bridge:continuity:replay": "npm --workspace @hearthfire/bridge-session run continuity:replay"
   },
   "devDependencies": {
     "typescript": "^5.6.3"
