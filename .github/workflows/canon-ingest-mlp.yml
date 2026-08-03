@@ -1,0 +1,52 @@
+name: MLP canon ingest
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Canon profile mode
+        required: true
+        default: g4-core
+        type: choice
+        options:
+          - g4-core
+          - g4-complete
+          - full-wiki-separated
+      max_pages:
+        description: Maximum pages, 0 for unlimited
+        required: true
+        default: "0"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install module
+        working-directory: modules/canon-ingest-mediawiki
+        run: pip install -e .
+      - name: Test
+        working-directory: modules/canon-ingest-mediawiki
+        run: python -m unittest discover -s tests -v
+      - name: Ingest MLP canon
+        working-directory: modules/canon-ingest-mediawiki
+        run: |
+          hearthfire-canon-ingest \
+            --profile profiles/mlp-fim-g4.json \
+            --mode "${{ inputs.mode }}" \
+            --max-pages "${{ inputs.max_pages }}" \
+            --out ../../artifacts/mlp-fim
+      - name: Upload canon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlp-fim-canon-${{ inputs.mode }}
+          path: artifacts/mlp-fim
+          retention-days: 30
