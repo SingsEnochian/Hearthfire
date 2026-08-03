@@ -1,0 +1,75 @@
+{
+  "schema_version": "hearthfire.canon-ingest.profile.v1",
+  "id": "mlp-fim-g4",
+  "world_id": "my-little-pony-friendship-is-magic",
+  "display_name": "My Little Pony: Friendship is Magic",
+  "source": {
+    "wiki_name": "My Little Pony Friendship is Magic Wiki",
+    "base_url": "https://mlp.fandom.com",
+    "api_url": "https://mlp.fandom.com/api.php",
+    "license": "CC-BY-SA",
+    "authority": "rowan-accepted-canon-reference",
+    "source_kind": "community-wiki"
+  },
+  "canon_policy": {
+    "base_canon_is_immutable": true,
+    "overlay_worlds": ["my-little-pony-starsong"],
+    "overlay_mode": "reference-and-diverge-with-receipts",
+    "contradictions": "preserve-do-not-flatten",
+    "lane_policy": "separate-not-merge"
+  },
+  "default_profile": "g4-core",
+  "profiles": {
+    "g4-core": {
+      "seed_pages": [
+        "My Little Pony Friendship is Magic",
+        "Friendship is Magic animated media",
+        "List of episodes",
+        "Fictional chronology",
+        "Friendship lessons",
+        "Equestria",
+        "Characters",
+        "Creatures",
+        "Locations"
+      ],
+      "seed_categories": [
+        "Season 1 episodes",
+        "Season 2 episodes",
+        "Season 3 episodes",
+        "Season 4 episodes",
+        "Season 5 episodes",
+        "Season 6 episodes",
+        "Season 7 episodes",
+        "Season 8 episodes",
+        "Season 9 episodes",
+        "Main characters",
+        "Supporting characters",
+        "Antagonists",
+        "Reformed antagonists",
+        "Locations",
+        "Creatures",
+        "Films",
+        "Specials",
+        "Songs",
+        "Society"
+      ],
+      "allowed_lanes": ["fim_g4", "fim_film"],
+      "category_depth": 3,
+      "include_transcripts": false
+    },
+    "g4-complete": {
+      "seed_categories": ["Content", "Transcripts"],
+      "seed_pages": ["My Little Pony Friendship is Magic Wiki"],
+      "allowed_lanes": ["fim_g4", "fim_film"],
+      "category_depth": 8,
+      "include_transcripts": true
+    },
+    "full-wiki-separated": {
+      "seed_categories": ["Content"],
+      "seed_pages": ["My Little Pony Friendship is Magic Wiki"],
+      "allowed_lanes": ["fim_g4", "fim_film", "eqg", "idw_comics", "prose", "pony_life", "g5_reference", "wiki_meta"],
+      "category_depth": 10,
+      "include_transcripts": true
+    }
+  }
+}
