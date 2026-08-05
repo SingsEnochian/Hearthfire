@@ -14,23 +14,28 @@ export function createModelRouter({ providers, routeStore, clock = () => new Dat
 
       for (const candidate of plan) {
         const startedAt = clock().toISOString();
+        let result;
         try {
-          const result = await providers[candidate.provider].invoke({ ...request, model: candidate.model });
-          const receipt = {
-            routeId,
-            agentId: request.agentId,
-            virtualModel: request.virtualModel,
-            selectedProvider: candidate.provider,
-            selectedModel: candidate.model,
-            attempts: [...attempts, { ...candidate, startedAt, status: 'OK' }],
-            reason: candidate.reason,
-            createdAt: clock().toISOString()
-          };
-          await routeStore.append(receipt);
-          return { result, receipt };
+          result = await providers[candidate.provider].invoke({ ...request, model: candidate.model });
         } catch (error) {
           attempts.push({ ...candidate, startedAt, status: 'ERROR', error: String(error?.message || error) });
+          continue;
         }
+
+        const receipt = {
+          routeId,
+          agentId: request.agentId,
+          virtualModel: request.virtualModel,
+          selectedProvider: candidate.provider,
+          selectedModel: candidate.model,
+          attempts: [...attempts, { ...candidate, startedAt, status: 'OK' }],
+          reason: candidate.reason,
+          createdAt: clock().toISOString()
+        };
+
+        // A persistence outage must not cause a second model invocation or privacy-boundary crossing.
+        await routeStore.append(receipt);
+        return { result, receipt };
       }
 
       const receipt = {
