@@ -40,6 +40,12 @@ export function createWalletCapability({ adapter, receiptStore, clock = () => ne
         throw new WalletPolicyError(quoteDecision.code, quoteDecision.reason, { receipt });
       }
 
+      if (quoted.amount === 0 || quote.isFree || !quote.challenge) {
+        const receipt = makeReceipt(quoted, { ...quoteDecision, code: 'FREE_ACCESS', reason: 'Resource is free; no payer call was made.' }, quote, clock);
+        await receiptStore.append(receipt);
+        return { status: 'FREE_ACCESS', receipt, response: quote.response };
+      }
+
       if (quoteDecision.requiresApproval) {
         const receipt = makeReceipt(quoted, quoteDecision, quote, clock);
         await receiptStore.append(receipt);
