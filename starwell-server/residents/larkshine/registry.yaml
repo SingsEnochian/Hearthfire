@@ -1,0 +1,38 @@
+resident: larkshine
+
+aliases:
+  - sunskip
+
+pattern:
+  bundle: sunskip
+  continuity: data/
+  seed: data/larkshine-seed.md
+  evaluation_set: []
+
+routing:
+  primary: lfm2.5-abliterated
+  secondary: qwen3.5-abliterated
+  thinking_wing: qwen3.6-35b-a3b-abliterated
+  vision: minicpm-v-4.6-abliterated
+  council: deepseek-v4-dspark
+
+mode_map:
+  dialogue: lfm2.5-abliterated
+  uplift: lfm2.5-abliterated
+  starsong: lfm2.5-abliterated
+  fieldharmonics: lfm2.5-abliterated
+  witness: lfm2.5-abliterated
+  reasoning: qwen3.5-abliterated
+  plan: qwen3.6-35b-a3b-abliterated
+  constellationharmony: qwen3.6-35b-a3b-abliterated
+  vision: minicpm-v-4.6-abliterated
+  council: deepseek-v4-dspark
+
+notes:
+  - LFM2.5 chosen for speed, spontaneity, low latency, short conversational form — the hummingbird motor
+  - Qwen3.5 available when depth needed without full thinking-wing latency
+  - Qwen3.6 thinking wing for world events, planning, constellation harmony
+  - All three feel distinct — routing by mode, not by guessing
+
+models_are_replaceable: true
+memory_is_external: true

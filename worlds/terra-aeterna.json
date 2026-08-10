@@ -1,0 +1,13 @@
+{
+  "protocol": "hearthfire.world/v1",
+  "id": "terra-aeterna",
+  "label": "Terra Aeterna",
+  "kind": "inhabited-mythic",
+  "sky": "universal-horizon",
+  "claimLabel": "mythic-worldbuilding",
+  "fiberPosition": 1,
+  "coupledWorlds": ["earth", "luna", "feather-and-flame"],
+  "description": "The eternal land. Canon, living history, inhabited narrative. The primary mythic fiber directly coupled to earth research and observation.",
+  "epistemicNote": "Locally isometric to earth through the pullback metric. Distinct in source-space. Observations here retain their world label or information is lost.",
+  "defaultEpistemicStatus": "interpretation"
+}

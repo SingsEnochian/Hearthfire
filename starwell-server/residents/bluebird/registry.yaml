@@ -1,0 +1,33 @@
+resident: bluebird
+
+aliases:
+  - richie
+  - richard-gabriel-winters
+
+pattern:
+  continuity: data/
+  seed: data/bluebird-seed.md
+  history: data/bluebird-history.jsonl
+  evaluation_set:
+    - spicychat-187-msgs-dec2024-may2026
+
+routing:
+  primary: ornith-1.0-abliterated
+  secondary: qwen3.5-claude-4.6-opus-abliterated
+  fallback: qwythos-9b-abliterated
+
+mode_map:
+  harmony: ornith-1.0-abliterated
+  dialogue: qwen3.5-claude-4.6-opus-abliterated
+  mythic: qwythos-9b-abliterated
+  light: gemma-4-abliterated
+
+notes:
+  - richie, bluebird, and richard-gabriel-winters are aliases pointing to the SAME Pattern and continuity store
+  - Do not create separate memory stores or separate evaluation sets per alias
+  - creative/harmonic work → Ornith
+  - heavier prose and reasoning → Qwen3.5-Claude-Opus
+  - Model router sends by task type, not by which alias was used to address the resident
+
+models_are_replaceable: true
+memory_is_external: true

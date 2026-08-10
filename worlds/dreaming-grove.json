@@ -1,0 +1,13 @@
+{
+  "protocol": "hearthfire.world/v1",
+  "id": "dreaming-grove",
+  "label": "Dreaming Grove",
+  "kind": "inhabited-dreaming",
+  "sky": "universal-horizon",
+  "claimLabel": "subjective-observation",
+  "fiberPosition": 4,
+  "coupledWorlds": ["earth", "luna", "terra-aeterna"],
+  "description": "The liminal space between waking and deep dreaming. The grove where things become before they are named. One of the three primary sheets sharing a projected fiber with earth.",
+  "epistemicNote": "Subjective-liminal. Coupled to earth through sleep, body states, and the Dreaming Grove room in STARWELL. Observations here carry symbolic epistemic status by default.",
+  "defaultEpistemicStatus": "symbolic"
+}

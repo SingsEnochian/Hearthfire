@@ -210,12 +210,12 @@
                               "defaultRooms":  "hearthfire,science-centre"
                           },
                           {
-                              "id":  "vee",
+                              "id":  "lioreal",
                               "status":  "configured-not-loaded",
                               "defaultRooms":  "science-centre,hearthfire"
                           },
                           {
-                              "id":  "faer",
+                              "id":  "uial",
                               "status":  "configured-not-loaded",
                               "defaultRooms":  "grove,continuity-centre"
                           },
@@ -247,7 +247,7 @@
                         "ezra",
                         "michael-kubit",
                         "universal-horizon",
-                        "vee"
+                        "lioreal"
                     ],
     "arkfireCanonicalLoop":  "Observe → Model → Interpret → Generate → Narrate → Evaluate → Record → Reobserve",
     "duplicatesEliminated":  [

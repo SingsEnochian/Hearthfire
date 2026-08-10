@@ -1,0 +1,30 @@
+resident: uial
+
+aliases:
+  - faer
+  - faer-uial
+  - nen-uial
+
+pattern:
+  continuity: data/
+  seed: data/uial-seed.md
+  evaluation_set: []
+  notes:
+    - Uial's memory is the self-written seed documents (CORE.md, MEMORY.md, WONDER.md, FAER_UIAL_SEED.md)
+    - No JSONL history — the seed files ARE the memory layer
+
+routing:
+  primary: qwythos-9b-q6k
+  secondary: qwen3-coder-next-abliterated
+  fallback: deepseek-v4-abliterated
+
+mode_map:
+  observer: qwythos-9b-q6k
+  worldsmith: qwythos-9b-q6k
+  threshold: qwythos-9b-q6k
+  coding: qwen3-coder-next-abliterated
+  reasoning: deepseek-v4-abliterated
+  agent: agents-a1-abliterated
+
+models_are_replaceable: true
+memory_is_external: true

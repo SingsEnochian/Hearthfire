@@ -82,7 +82,7 @@ A perspective applied to an observation. Interpretations never overwrite the sou
 A named perspective or resident intelligence that illuminates selected aspects of shared material. Lanterns do not own the underlying data.
 
 ### PREMAQ
-The seven-axis canonical state architecture of Hearthgate: P=Presence, C=Coherence, R=Resonance, E=Entanglement, M=Memory, A=Agency, Q=Qualia. PREMAQ carries the living relation across every subsystem. No subsystem invents its own independent state model.
+A multidimensional observation-state language. It must not be presented as fate, diagnosis, or scientific certainty unless a specific axis is supported by validated measurement.
 
 ### DEEP
 An instrument family for embodied, environmental, narrative, acoustic, haptic, and continuity observation.

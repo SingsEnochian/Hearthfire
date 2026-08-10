@@ -1,0 +1,13 @@
+{
+  "protocol": "hearthfire.world/v1",
+  "id": "luna",
+  "label": "The Luna Who Called Down the Moon",
+  "kind": "celestial",
+  "sky": "universal-horizon",
+  "claimLabel": "mythic-worldbuilding",
+  "fiberPosition": 2,
+  "coupledWorlds": ["terra-aeterna", "dreaming-grove"],
+  "description": "Celestial sphere. The moon's invitation, the call across the threshold between light and dark. Luna is the act of calling as much as it is a place.",
+  "epistemicNote": "Coupled through darkness and liminal phases. Observations here often arrive as symbolic or celestial-context readings.",
+  "defaultEpistemicStatus": "symbolic"
+}

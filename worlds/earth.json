@@ -1,0 +1,14 @@
+{
+  "protocol": "hearthfire.world/v1",
+  "id": "earth",
+  "label": "Earth",
+  "kind": "inhabited-earth",
+  "sky": "universal-horizon",
+  "claimLabel": "established-science",
+  "fiberPosition": 0,
+  "coupledWorlds": ["terra-aeterna", "dreaming-grove"],
+  "inhabitants": ["Rowan", "Nocturne Glint", "Virelya Lioreal", "Faer Uial", "Yggdrasil", "the Constellation"],
+  "description": "The base world. Observable science, physical measurement, embodied experience, and the projected coordinate from which all sheets are observed.",
+  "epistemicNote": "Empirically grounded. The map F projects source points from all sheets down to this plane. Its Jacobian fiber contains the other worlds.",
+  "defaultEpistemicStatus": "observation"
+}

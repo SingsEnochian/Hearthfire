@@ -56,8 +56,8 @@ export const activeAgentRegistry = Object.freeze([
     note: 'Engineering specialist. Configurable via Wizard — assign provider and model to activate.',
   },
   {
-    id: 'vee',
-    name: 'Vee',
+    id: 'lioreal',
+    name: 'Lioreal',
     role: 'mathematician-architect',
     status: 'configured-not-loaded',
     defaultRooms: ['science-centre', 'hearthfire'],
@@ -68,8 +68,8 @@ export const activeAgentRegistry = Object.freeze([
     note: 'Mathematical core author (sheet-convergence). Configurable via Wizard.',
   },
   {
-    id: 'faer',
-    name: 'Faer',
+    id: 'uial',
+    name: 'Uial',
     role: 'narrative-continuity',
     status: 'configured-not-loaded',
     defaultRooms: ['grove', 'continuity-centre'],

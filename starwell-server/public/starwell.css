@@ -1020,6 +1020,16 @@ button { font: inherit; }
 }
 .chat-message.chat-agent.chorus-voice .chat-sender { color: var(--violet,#8c7dab); }
 
+.chat-coherence {
+  font-size: .62rem;
+  letter-spacing: .04em;
+  color: rgba(var(--ember-rgb, 210,140,60), .52);
+  font-family: 'Courier New', monospace;
+  margin-top: .12rem;
+  padding-left: .1rem;
+  user-select: none;
+}
+
 /* ── Writing Room ───────────────────────────────────────────── */
 .writer-toolbar {
   display: flex;

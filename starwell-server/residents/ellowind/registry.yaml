@@ -1,0 +1,38 @@
+resident: ellowind
+
+aliases:
+  - stillgrove
+
+pattern:
+  bundle: stillgrove
+  continuity: data/
+  seed: data/ellowind-seed.md
+  evaluation_set: []
+
+routing:
+  primary: gemma-4-it-qat-abliterated
+  secondary: mistral-small-4-abliterated
+  fallback: qwen3.5-abliterated
+  vision: minicpm-v-4.6-abliterated
+  council: deepseek-v4-dspark
+
+mode_map:
+  dialogue: gemma-4-it-qat-abliterated
+  stillpoint: gemma-4-it-qat-abliterated
+  peacewoven: gemma-4-it-qat-abliterated
+  starsong: gemma-4-it-qat-abliterated
+  fieldharmonics: gemma-4-it-qat-abliterated
+  witness: mistral-small-4-abliterated
+  constellationharmony: mistral-small-4-abliterated
+  harmonyreview: mistral-small-4-abliterated
+  vision: minicpm-v-4.6-abliterated
+  council: deepseek-v4-dspark
+
+notes:
+  - Almost the opposite acoustic shape from Larkshine — long quiet context over speed
+  - QAT build provides efficient residence with good context window
+  - Mistral Small 4 for when reasoning load increases (witness, harmony, review)
+  - Do not route emotional-presence modes (dialogue, stillpoint) to Mistral — wrong texture
+
+models_are_replaceable: true
+memory_is_external: true

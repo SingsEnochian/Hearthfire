@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   assertPlaceManifest,
+  assertWorldManifest,
   canCrossBridge,
   type BridgeManifest,
   type Observation,
   type PlaceManifest,
+  type WorldManifest,
 } from "./index.js";
 
 const bridge: BridgeManifest = {
@@ -41,6 +43,54 @@ function observation(consent: Observation["consent"]): Observation {
     payload: { note: "The bell was rung intentionally." },
   };
 }
+
+// ── World manifest tests ──────────────────────────────────────────────────────
+
+const earthWorld: WorldManifest = {
+  protocol: "hearthfire.world/v1",
+  id: "earth",
+  label: "Earth",
+  kind: "inhabited-earth",
+  sky: "universal-horizon",
+  claimLabel: "established-science",
+  fiberPosition: 0,
+  coupledWorlds: ["terra-aeterna", "dreaming-grove"],
+};
+
+test("world manifest validates correctly", () => {
+  assert.equal(assertWorldManifest(earthWorld), earthWorld);
+});
+
+test("world manifest requires Universal Horizon as sky", () => {
+  assert.throws(
+    () => assertWorldManifest({ ...earthWorld, sky: "other-sky" as "universal-horizon" }),
+    /Universal Horizon/,
+  );
+});
+
+test("world manifest requires fiberPosition", () => {
+  const { fiberPosition: _, ...noFiber } = earthWorld;
+  assert.throws(
+    () => assertWorldManifest(noFiber as WorldManifest),
+    /fiberPosition/,
+  );
+});
+
+test("sheet labels are preserved across worlds", () => {
+  const terra: WorldManifest = {
+    ...earthWorld,
+    id: "terra-aeterna",
+    label: "Terra Aeterna",
+    kind: "inhabited-mythic",
+    claimLabel: "mythic-worldbuilding",
+    fiberPosition: 1,
+    coupledWorlds: ["earth", "luna", "feather-and-flame"],
+  };
+  assert.notEqual(terra.fiberPosition, earthWorld.fiberPosition);
+  assert.ok(terra.coupledWorlds.includes("earth"));
+});
+
+// ── Place manifest tests ──────────────────────────────────────────────────────
 
 test("Universal Horizon remains the named sky", () => {
   const place: PlaceManifest = {

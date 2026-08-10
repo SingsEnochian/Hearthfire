@@ -20,6 +20,7 @@ import {
   getRoomDefinition, getRoomWithAgent, getAllRoomsWithAgents,
 } from './rooms.mjs';
 import { dispatchLiorealChat, getLiorealConversation, resetLiorealConversation } from './lioreal-router.mjs';
+import { kernelCrossing } from './hearthgate-kernel.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const publicRoot = resolve(__dirname, 'public');
@@ -252,6 +253,7 @@ const server = createServer(async (request, response) => {
       observerWorkspace: '/api/observer/workspace',
       sanctumAnchor: '/api/sanctum-anchor',
       hearthgateFold: '/api/hearthgate/fold',
+      hearthgateKernelCrossing: '/api/hearthgate/kernel/crossing',
       hearthgateModules: '/api/hearthgate/modules',
       hearthgateRegistry: '/api/hearthgate/registry',
       hearthgateVersion: APP_IDENTITY,
@@ -991,6 +993,71 @@ const server = createServer(async (request, response) => {
       }, request.method);
     } catch (err) {
       json(response, 500, { ok: false, error: 'agent-lifecycle-error', details: err.message }, request.method);
+    }
+    return;
+  }
+
+  // ── Hearthgate: Kernel crossing (text-loom PREMAQ + environment blend) ──────
+  // Proxies to the Python hearthgate-kernel server (port 8000 by default).
+  // Responds with a dual-aspect PREMAQ blending measured (environmental) and
+  // felt (loom/text) shores. Suitable for direct consumption by Flameclyffe instruments.
+
+  if (path === '/api/hearthgate/kernel/crossing') {
+    // CORS — browser instruments on different dev ports need cross-origin access
+    response.setHeader('access-control-allow-origin', '*');
+    response.setHeader('access-control-allow-methods', 'POST, OPTIONS');
+    response.setHeader('access-control-allow-headers', 'content-type');
+
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204);
+      response.end();
+      return;
+    }
+
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+
+    let body;
+    try {
+      body = await readRequestJson(request);
+    } catch (err) {
+      const status = err.code === 'request-body-too-large' ? 413 : 400;
+      json(response, status, { ok: false, error: err.message }, request.method);
+      return;
+    }
+
+    const { text_input, epistemic_modes, origin_house } = body;
+
+    if (typeof text_input !== 'string' || text_input.length === 0) {
+      json(response, 400, { ok: false, error: 'text_input: required non-empty string' }, request.method);
+      return;
+    }
+    if (!Array.isArray(epistemic_modes) || epistemic_modes.length === 0) {
+      json(response, 400, { ok: false, error: 'epistemic_modes: required non-empty array of integers' }, request.method);
+      return;
+    }
+    if (epistemic_modes.length !== text_input.length) {
+      json(response, 400, {
+        ok: false,
+        error: `epistemic_modes length (${epistemic_modes.length}) must match text_input length (${text_input.length})`,
+      }, request.method);
+      return;
+    }
+
+    try {
+      const anchor = await getSanctumAnchor();
+      const result = await kernelCrossing({
+        textInput: text_input,
+        epistemicModes: epistemic_modes,
+        originHouse: origin_house ?? 'House_Nocturne',
+        sanctumAnchor: anchor,
+      });
+      await appendLedger({ type: 'kernel-crossing', receipt_id: result.receipt_id, premaq: result.premaq });
+      json(response, 200, result, request.method);
+    } catch (err) {
+      json(response, 502, { ok: false, error: err.message }, request.method);
     }
     return;
   }

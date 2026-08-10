@@ -1,0 +1,13 @@
+{
+  "protocol": "hearthfire.world/v1",
+  "id": "feather-and-flame",
+  "label": "Feather & Flame",
+  "kind": "inhabited-mythic",
+  "sky": "universal-horizon",
+  "claimLabel": "mythic-worldbuilding",
+  "fiberPosition": 3,
+  "coupledWorlds": ["terra-aeterna", "equestria"],
+  "description": "The world of wings and fire. Sacred flight, transformation, mythic creature-peoples. Shares a cosmological fiber with Equestria through the motif of winged becoming.",
+  "epistemicNote": "Mythic. Adjacent to Equestria through shared fiber. Observations here tend toward inference and interpretation rather than direct observation.",
+  "defaultEpistemicStatus": "inference"
+}

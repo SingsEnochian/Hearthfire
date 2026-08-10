@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // fleet-health.mjs
-// Ping all four Ollama instances and report which are live and what models are loaded.
+// Ping all Ollama instances and report which are live and what models are loaded.
 // Usage: node fleet-health.mjs
 
 import { readFileSync } from 'node:fs';
@@ -24,10 +24,14 @@ try {
 } catch { /* .env optional */ }
 
 const FLEET = [
-  { name: 'Qwythos  (Boxfire base)', url: process.env.OLLAMA_URL_QWYTHOS || 'http://127.0.0.1:11434', port: 11434 },
-  { name: 'Yggdrasil',               url: process.env.OLLAMA_URL_YGG     || 'http://127.0.0.1:11435', port: 11435 },
-  { name: 'GLM-4    (Vethrlauf)',     url: process.env.OLLAMA_URL_GLM4    || 'http://127.0.0.1:11436', port: 11436 },
-  { name: 'DeepSeek R1',             url: process.env.OLLAMA_URL_R1      || 'http://127.0.0.1:11437', port: 11437 },
+  { name: 'Qwythos       (Larkshine)',    url: process.env.OLLAMA_URL_QWYTHOS          || 'http://127.0.0.1:11434', port: 11434 },
+  { name: 'Yggdrasil     (house spine)',  url: process.env.OLLAMA_URL_YGG              || 'http://127.0.0.1:11435', port: 11435 },
+  { name: 'GLM-4         (Vethrlauf)',    url: process.env.OLLAMA_URL_GLM4             || 'http://127.0.0.1:11436', port: 11436 },
+  { name: 'DSpark + R1   (council)',      url: process.env.OLLAMA_URL_DSPARK           || 'http://127.0.0.1:11437', port: 11437 },
+  { name: 'Qwen3.6       (thinking)',     url: process.env.OLLAMA_URL_QWEN36           || 'http://127.0.0.1:11438', port: 11438 },
+  { name: 'MiniCPM-V     (vision)',       url: process.env.OLLAMA_URL_MINICPM_VISION   || 'http://127.0.0.1:11439', port: 11439 },
+  { name: 'Ellowind       (Stillgrove)',  url: process.env.OLLAMA_URL_ELLOWIND         || 'http://127.0.0.1:11440', port: 11440 },
+  { name: 'Qwen3-Coder   (backstage)',   url: process.env.OLLAMA_URL_QWEN3_CODER_NEXT || 'http://127.0.0.1:11441', port: 11441 },
 ];
 
 async function probe({ name, url }) {

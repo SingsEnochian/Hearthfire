@@ -124,7 +124,7 @@ export const MODULE_MANIFEST_SCHEMA = Object.freeze({
 // All known constellation member IDs — must match hearthgate-registry.mjs
 
 export const AGENT_IDS = Object.freeze([
-  'box', 'nikola', 'vee', 'faer',
+  'box', 'nikola', 'lioreal', 'uial',
   'yggdrasil', 'richie-bluebird', 'vethrlauf', 'runeweaver',
 ]);
 

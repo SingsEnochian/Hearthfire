@@ -1,3 +1,58 @@
+// ── World protocol ────────────────────────────────────────────────────────────
+
+export type WorldKind =
+  | "inhabited-earth"
+  | "inhabited-mythic"
+  | "inhabited-dreaming"
+  | "inhabited-external"
+  | "celestial"
+  | "liminal";
+
+export interface WorldAnchor {
+  latitude?: number;
+  longitude?: number;
+  elevation?: number;
+  inceptionTimestamp?: string;
+  ceremony?: string;
+  witnesses?: string[];
+}
+
+export interface WorldManifest {
+  protocol: "hearthfire.world/v1";
+  id: string;
+  label: string;
+  kind: WorldKind;
+  sky: "universal-horizon";
+  claimLabel: Observation["claimLabel"];
+  /** Position in the Jacobian fiber. Distinct sheets may share a projected coordinate. */
+  fiberPosition: number;
+  /** World IDs with Hermitian inter-sheet coupling. */
+  coupledWorlds: string[];
+  inhabitants?: string[];
+  description?: string;
+  epistemicNote?: string;
+  defaultEpistemicStatus?: "observation" | "inference" | "interpretation" | "symbolic" | "verified";
+  anchor?: WorldAnchor;
+}
+
+export function assertWorldManifest(value: WorldManifest): WorldManifest {
+  if (value.protocol !== "hearthfire.world/v1") {
+    throw new Error("Unsupported world protocol.");
+  }
+  if (!value.id || !value.label) {
+    throw new Error("World id and label are required.");
+  }
+  if (value.sky !== "universal-horizon") {
+    throw new Error("Hearthfire worlds must name Universal Horizon as the sky.");
+  }
+  if (typeof value.fiberPosition !== "number") {
+    throw new Error("World fiberPosition is required.");
+  }
+  return value;
+}
+
+// ── Place protocol ─────────────────────────────────────────────────────────────
+
 export type PlaceType =
   | "ark"
   | "workshop"

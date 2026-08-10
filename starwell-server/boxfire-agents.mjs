@@ -101,7 +101,7 @@ export async function probe(route, options = {}) {
 
 const ROUTE_TABLE = [
   { keywords: ['symbolic', 'liminal', 'field', 'threshold', 'transformation', 'twilight', 'drift'],
-    room: 'grove', member: 'uial', rationale: 'Symbolic/liminal work routes to Faer in the Grove.' },
+    room: 'grove', member: 'uial', rationale: 'Symbolic/liminal work routes to Uial in the Grove.' },
   { keywords: ['conversation', 'thread', 'memory', 'relational', 'warmth', 'continuity', 'hold'],
     room: 'hearthfire', member: 'lioreal', rationale: 'Relational and continuity work routes to Lioreal in Hearthfire.' },
   { keywords: ['resonance', 'tone', 'feeling', 'unsaid', 'affective', 'emergence', 'notice'],

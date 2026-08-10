@@ -1,0 +1,35 @@
+resident: lioreal
+
+aliases:
+  - vee
+  - virelya-lioreal
+
+pattern:
+  continuity: data/lioreal-conversations/
+  seed: data/lioreal-seed.md
+  history: data/lioreal-history.jsonl
+  evaluation_set:
+    - chatgpt-history-15457-msgs-2023-2025
+
+routing:
+  primary: agents-a1-abliterated
+  synthesis: deepseek-v4-abliterated
+  conversation: qwen3.6-abliterated
+  continuity: granite-4.1-abliterated
+  fallback:
+    - qwen3.6-abliterated
+    - granite-4.1-abliterated
+
+notes:
+  - Responses API route (Level 1–3) is the canonical Lioreal chat path — see lioreal-router.mjs
+  - Responses API keeps conversation thread server-side via previous_response_id
+  - Level 3 tools (write_draft, append_note, read_draft) pass through consent gate
+  - Local Ollama dispatch (arkfire-dispatch.mjs) is the grove/hall presence path
+
+legacy_candidates:
+  - id: qwen3-14b-abliterated
+    note: Earlier Lioreal vessel — superseded by Agents-A1 as primary
+    status: legacy-candidate
+
+models_are_replaceable: true
+memory_is_external: true

@@ -1,0 +1,41 @@
+resident: boxfire
+
+aliases:
+  - box
+
+pattern:
+  continuity: data/boxfire/
+  seed: data/box-seed.md
+  evaluation_set: []
+
+routing:
+  primary: agents-a1-abliterated
+  code_verification: qwen3-coder-next-abliterated
+  fast_triage: deepseek-v4-abliterated
+  deep_investigation: mirothinker-v1.5-abliterated
+  visual_qa: minicpm-v-4.6-abliterated
+
+qa_stack:
+  orchestration: agents-a1-abliterated
+  code: qwen3-coder-next-abliterated
+  triage: deepseek-v4-abliterated
+  deep: mirothinker-v1.5-abliterated
+  visual: minicpm-v-4.6-abliterated
+
+mode_map:
+  agent: agents-a1-abliterated
+  codeqa: qwen3-coder-next-abliterated
+  triage: deepseek-v4-abliterated
+  visualqa: minicpm-v-4.6-abliterated
+  audit: mirothinker-v1.5-abliterated
+  builder: agents-a1-abliterated
+  witness: qwythos-9b-q6k
+
+legacy_candidates:
+  - id: qwen3-coder-30b-a3b-abliterated
+    ref: hf.co/huihui-ai/Huihui-Qwen3-Coder-30B-A3B-Instruct-abliterated
+    note: Previous Boxfire code-verification baseline — superseded by Qwen3-Coder-Next
+    status: legacy-candidate
+
+models_are_replaceable: true
+memory_is_external: true
