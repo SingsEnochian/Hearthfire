@@ -1,0 +1,23 @@
+{
+  "schema": "hearthfire.module.v1",
+  "id": "canon-ingest-mediawiki",
+  "name": "Canon Ingest: MediaWiki/Fandom",
+  "version": "0.1.0",
+  "kind": "standalone-module",
+  "runtime": "python>=3.11",
+  "entrypoint": "hearthfire-canon-ingest",
+  "primary_workflow": "crawl, normalize, classify, provenance-seal, and export wiki canon",
+  "standalone": true,
+  "host_dependency": false,
+  "network": {
+    "required": true,
+    "allowlist": ["*.fandom.com"]
+  },
+  "storage": {
+    "local_first": true,
+    "format": ["json", "jsonl"],
+    "direct_canon_writes": false
+  },
+  "adapters": ["hearthfire", "arcsweep", "notion-export"],
+  "governing_invariant": "Universal Horizon is the sky. Hearthfire: Arkfire operates beneath it and does not supersede it. Every module runs on its own and connects to Hearthfire only through an optional, reversible adapter."
+}

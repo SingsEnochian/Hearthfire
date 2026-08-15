@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hearthfire-canon-ingest"
+version = "0.1.0"
+description = "Standalone MediaWiki/Fandom canon ingest for Hearthfire and Arcsweep"
+requires-python = ">=3.11"
+authors = [{name = "Hearthfire"}]
+dependencies = []
+
+[project.scripts]
+hearthfire-canon-ingest = "hearthfire_canon_ingest.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

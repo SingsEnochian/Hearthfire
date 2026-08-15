@@ -13,7 +13,23 @@
     "starwell:start": "npm --workspace @hearthfire/starwell-server start",
     "starwell:dev": "npm --workspace @hearthfire/starwell-server dev",
     "starwell:check": "npm --workspace @hearthfire/starwell-server check",
-    "starwell:test": "npm --workspace @hearthfire/starwell-server test"
+    "starwell:test": "npm --workspace @hearthfire/starwell-server test",
+    "bridge:start": "npm --workspace @hearthfire/bridge-session start",
+    "bridge:health": "npm --workspace @hearthfire/bridge-session run health",
+    "bridge:demo": "npm --workspace @hearthfire/bridge-session run demo",
+    "bridge:check": "npm --workspace @hearthfire/bridge-session run check",
+    "bridge:test": "npm --workspace @hearthfire/bridge-session test",
+    "bridge:lamination:start": "npm --workspace @hearthfire/bridge-session run lamination:start",
+    "bridge:lamination:health": "npm --workspace @hearthfire/bridge-session run lamination:health",
+    "bridge:lamination:demo": "npm --workspace @hearthfire/bridge-session run lamination:demo",
+    "bridge:lamination:latest": "npm --workspace @hearthfire/bridge-session run lamination:latest",
+    "bridge:lamination:replay": "npm --workspace @hearthfire/bridge-session run lamination:replay",
+    "bridge:review:start": "npm --workspace @hearthfire/bridge-session run review:start",
+    "bridge:review:health": "npm --workspace @hearthfire/bridge-session run review:health",
+    "bridge:continuity:health": "npm --workspace @hearthfire/bridge-session run continuity:health",
+    "bridge:continuity:export": "npm --workspace @hearthfire/bridge-session run continuity:export",
+    "bridge:continuity:latest": "npm --workspace @hearthfire/bridge-session run continuity:latest",
+    "bridge:continuity:replay": "npm --workspace @hearthfire/bridge-session run continuity:replay"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

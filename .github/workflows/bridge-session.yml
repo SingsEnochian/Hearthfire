@@ -1,0 +1,140 @@
+name: Bridge Session
+
+on:
+  pull_request:
+    paths:
+      - 'packages/bridge-session/**'
+      - 'package.json'
+      - '.github/workflows/bridge-session.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/bridge-session/**'
+      - 'package.json'
+      - '.github/workflows/bridge-session.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  vertical-slice:
+    name: Node 24 crossing, review, continuity, and loopback handoff
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Report runtime
+        run: node --version
+
+      - name: Syntax check
+        run: |
+          node --check packages/bridge-session/src/bridge-session.mjs
+          node --check packages/bridge-session/src/lamination-engine.mjs
+          node --check packages/bridge-session/src/bridge-lamination.mjs
+          node --check packages/bridge-session/src/lamination-review.mjs
+          node --check packages/bridge-session/src/continuity-exporter.mjs
+          node --check packages/bridge-session/src/loopback-cors.mjs
+          node --check packages/bridge-session/cli.mjs
+          node --check packages/bridge-session/lamination-cli.mjs
+          node --check packages/bridge-session/continuity-cli.mjs
+          node --check packages/bridge-session/review-room-server.mjs
+          node --check packages/bridge-session/review-room/review-room.js
+
+      - name: Run bridge, lamination, review, continuity, and CORS tests
+        run: node --test packages/bridge-session/test/*.test.mjs
+
+      - name: Run standalone bridge health check
+        run: node packages/bridge-session/cli.mjs health --data "$RUNNER_TEMP/bridge-health"
+
+      - name: Run first complete crossing
+        run: node packages/bridge-session/cli.mjs demo --world terra-aeterna --data "$RUNNER_TEMP/bridge-demo"
+
+      - name: Run standalone lamination health check
+        run: node packages/bridge-session/lamination-cli.mjs health --data "$RUNNER_TEMP/lamination-health"
+
+      - name: Run crossing with durable laminate
+        run: node packages/bridge-session/lamination-cli.mjs demo --world terra-aeterna --data "$RUNNER_TEMP/lamination-demo"
+
+      - name: Read latest laminate
+        run: node packages/bridge-session/lamination-cli.mjs latest --data "$RUNNER_TEMP/lamination-demo"
+
+      - name: Run standalone Review Room health check
+        run: node packages/bridge-session/review-room-server.mjs health --data "$RUNNER_TEMP/lamination-demo"
+
+      - name: Smoke-test review, continuity, and loopback handoff
+        run: |
+          node packages/bridge-session/review-room-server.mjs serve --data "$RUNNER_TEMP/lamination-demo" --port 4319 &
+          REVIEW_PID=$!
+          trap 'kill $REVIEW_PID 2>/dev/null || true' EXIT
+          sleep 1
+          curl --fail --silent http://127.0.0.1:4319/health
+          curl --fail --silent http://127.0.0.1:4319/api/lamination/latest
+          curl --fail --silent http://127.0.0.1:4319/ > /dev/null
+
+          DATA_DIR="$RUNNER_TEMP/lamination-demo" REVIEW_BODY="$RUNNER_TEMP/review-body.json" node --input-type=module - <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          const lamination = JSON.parse(await readFile(join(process.env.DATA_DIR, 'bridge-lamination.latest.json'), 'utf8'));
+          const decisions = Object.values(lamination.layers).flat().map((item) => ({
+            item_id: item.item_id,
+            text: item.text,
+            status: 'accepted',
+          }));
+          await writeFile(process.env.REVIEW_BODY, JSON.stringify({
+            lamination_id: lamination.lamination_id,
+            reviewer: 'Rowan',
+            decisions,
+            additions: [],
+            notes: 'CI acceptance pass',
+          }));
+          NODE
+
+          curl --fail --silent \
+            -H 'content-type: application/json' \
+            --data @"$RUNNER_TEMP/review-body.json" \
+            http://127.0.0.1:4319/api/reviews > "$RUNNER_TEMP/review-response.json"
+
+          DATA_DIR="$RUNNER_TEMP/lamination-demo" EXPORT_BODY="$RUNNER_TEMP/export-body.json" node --input-type=module - <<'NODE'
+          import { readFile, writeFile } from 'node:fs/promises';
+          import { join } from 'node:path';
+          const reviewed = JSON.parse(await readFile(join(process.env.DATA_DIR, 'bridge-lamination.reviewed.latest.json'), 'utf8'));
+          await writeFile(process.env.EXPORT_BODY, JSON.stringify({
+            review_id: reviewed.review.review_id,
+            exported_by: 'Rowan',
+          }));
+          NODE
+
+          curl --fail --silent \
+            -H 'content-type: application/json' \
+            --data @"$RUNNER_TEMP/export-body.json" \
+            http://127.0.0.1:4319/api/continuity/export > "$RUNNER_TEMP/continuity-response.json"
+
+          curl --fail --silent http://127.0.0.1:4319/api/continuity/latest
+          curl --fail --silent http://127.0.0.1:4319/api/continuity
+
+          curl --fail --silent \
+            --dump-header "$RUNNER_TEMP/cors-headers.txt" \
+            -H 'Origin: http://127.0.0.1:5173' \
+            http://127.0.0.1:4319/api/continuity/latest > "$RUNNER_TEMP/cors-packet.json"
+          grep -qi '^access-control-allow-origin: http://127.0.0.1:5173' "$RUNNER_TEMP/cors-headers.txt"
+          grep -qi '^vary: Origin' "$RUNNER_TEMP/cors-headers.txt"
+
+          curl --fail --silent --output /dev/null \
+            --request OPTIONS \
+            -H 'Origin: http://localhost:4173' \
+            -H 'Access-Control-Request-Method: GET' \
+            http://127.0.0.1:4319/api/continuity/latest
+
+      - name: Read standalone continuity export
+        run: |
+          node packages/bridge-session/continuity-cli.mjs health --data "$RUNNER_TEMP/lamination-demo"
+          node packages/bridge-session/continuity-cli.mjs latest --data "$RUNNER_TEMP/lamination-demo"
