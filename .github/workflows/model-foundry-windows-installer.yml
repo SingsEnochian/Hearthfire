@@ -1,0 +1,167 @@
+name: Arkfire Model Foundry Windows Installer
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "modules/model-foundry/**"
+      - ".nvmrc"
+      - ".node-version"
+      - ".npmrc"
+      - ".github/workflows/model-foundry-windows-installer.yml"
+  push:
+    branches:
+      - main
+    tags:
+      - "model-foundry-v*"
+    paths:
+      - "modules/model-foundry/**"
+      - ".nvmrc"
+      - ".node-version"
+      - ".npmrc"
+      - ".github/workflows/model-foundry-windows-installer.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: model-foundry-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Test and build Windows x64 package
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+    defaults:
+      run:
+        working-directory: modules/model-foundry
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Resolve pinned Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          check-latest: false
+          cache: npm
+          cache-dependency-path: modules/model-foundry/package.json
+
+      - name: Verify Node runtime contract
+        run: npm run node:verify
+
+      - name: Install packaging dependencies
+        run: npm install --package-lock=false --no-audit --no-fund
+
+      - name: Check source and contracts
+        run: |
+          npm run check
+          npm run check:packaging
+
+      - name: Run standalone tests
+        run: npm test
+
+      - name: Build unsigned NSIS installer and portable ZIP
+        run: npm run electron:build:win
+
+      - name: Verify package and write checksums
+        id: verify
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installers = @(Get-ChildItem -Path "dist-electron" -Filter "Arkfire-Model-Foundry-Setup-*.exe" -File)
+          $portable = @(Get-ChildItem -Path "dist-electron" -Filter "Arkfire-Model-Foundry-Setup-*.zip" -File)
+          if ($installers.Count -ne 1) {
+            throw "Expected one Model Foundry installer, found $($installers.Count)."
+          }
+          if ($portable.Count -ne 1) {
+            throw "Expected one Model Foundry portable ZIP, found $($portable.Count)."
+          }
+          if ($installers[0].Length -lt 1MB) {
+            throw "Installer is unexpectedly small: $($installers[0].Length) bytes."
+          }
+          if ($portable[0].Length -lt 1MB) {
+            throw "Portable ZIP is unexpectedly small: $($portable[0].Length) bytes."
+          }
+
+          $unpackedRoot = "dist-electron/win-unpacked/resources/app"
+          $required = @(
+            "$unpackedRoot/arkfire.module.json",
+            "$unpackedRoot/adapters/hearthgate.adapter.json",
+            "$unpackedRoot/public/index.html",
+            "$unpackedRoot/electron/main.cjs",
+            "$unpackedRoot/electron/preload.cjs",
+            "$unpackedRoot/src/server.mjs",
+            "$unpackedRoot/src/api-stuff-parser.mjs"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path)) { throw "Packaged application is missing $path" }
+          }
+
+          $mainSource = Get-Content -Raw -Path "$unpackedRoot/electron/main.cjs"
+          $rendererSource = Get-Content -Raw -Path "$unpackedRoot/public/index.html"
+          if (-not $mainSource.Contains("safeStorage.encryptString")) {
+            throw "Packaged desktop shell is missing OS-backed credential encryption."
+          }
+          if (-not $rendererSource.Contains("Import API Stuff.txt")) {
+            throw "Packaged renderer is missing API Stuff import control."
+          }
+
+          $files = @($installers[0], $portable[0])
+          $checksumLines = foreach ($file in $files) {
+            $hash = Get-FileHash -Path $file.FullName -Algorithm SHA256
+            "$($hash.Hash)  $($file.Name)"
+          }
+          $checksumLines | Set-Content -Path "dist-electron/SHA256SUMS.txt" -Encoding ascii
+
+          "installer_name=$($installers[0].Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "portable_name=$($portable[0].Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+          @"
+          ## Arkfire Model Foundry MF-001.1
+
+          - Installer: ``$($installers[0].Name)``
+          - Portable: ``$($portable[0].Name)``
+          - Node runtime: pinned by repository `.nvmrc`
+          - Standalone tests: passed
+          - API Stuff intake: native file picker + OS-backed encrypted credential store
+          - Registry/export secret leakage: prohibited by tests and packaging preflight
+          - Hearthgate runtime dependency: none
+          - Signing: unsigned development build
+          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+      - name: Upload Windows artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-foundry-windows-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 21
+          path: |
+            modules/model-foundry/dist-electron/Arkfire-Model-Foundry-Setup-*.exe
+            modules/model-foundry/dist-electron/Arkfire-Model-Foundry-Setup-*.zip
+            modules/model-foundry/dist-electron/SHA256SUMS.txt
+
+      - name: Publish tagged GitHub release
+        if: startsWith(github.ref, 'refs/tags/model-foundry-v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INSTALLER_NAME: ${{ steps.verify.outputs.installer_name }}
+          PORTABLE_NAME: ${{ steps.verify.outputs.portable_name }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $files = @(
+            "dist-electron/$($env:INSTALLER_NAME)",
+            "dist-electron/$($env:PORTABLE_NAME)",
+            "dist-electron/SHA256SUMS.txt"
+          )
+          if (gh release view $tag 2>$null) {
+            gh release upload $tag @files --clobber
+          } else {
+            gh release create $tag @files --title "Arkfire Model Foundry $tag" --generate-notes
+          }
