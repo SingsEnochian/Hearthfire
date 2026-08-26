@@ -3,4 +3,5 @@ export * from './owner-readiness.mjs';
 export * from './proving-chamber.mjs';
 export * from './refresh-recursion-proof.mjs';
 export * from './observer-state-proving.mjs';
+export * from './commons-persistence-proof.mjs';
 export * from './release-evidence.mjs';
