@@ -1,0 +1,29 @@
+{
+  "schema": "hearthfire.release-evidence/v1",
+  "releaseId": "project-zero-operational-spine-v1",
+  "commit": "<git-commit-sha>",
+  "schemas": [
+    "hearthfire.operational-event/v1",
+    "hearthfire.proving-receipt/v1",
+    "hearthfire.project-zero-diagnostics/v1",
+    "hearthfire.release-evidence/v1"
+  ],
+  "migrations": [],
+  "fixtures": [
+    "refresh.recursion",
+    "observer.malformed-state",
+    "commons.persistence-failure",
+    "runtime.offline-routing",
+    "replay.mismatch"
+  ],
+  "validationReceipts": [],
+  "deployment": {
+    "provider": null,
+    "identity": null
+  },
+  "provenance": {
+    "repository": "SingsEnochian/Hearthfire",
+    "branch": "feature/project-zero-operational-spine-v1"
+  },
+  "generatedAt": "<iso-8601>"
+}
