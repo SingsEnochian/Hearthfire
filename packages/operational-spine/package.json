@@ -9,10 +9,11 @@
     "./events": "./src/operational-events.mjs",
     "./readiness": "./src/owner-readiness.mjs",
     "./proving-chamber": "./src/proving-chamber.mjs",
+    "./refresh-recursion-proof": "./src/refresh-recursion-proof.mjs",
     "./evidence": "./src/release-evidence.mjs"
   },
   "scripts": {
-    "check": "node --check src/index.mjs && node --check src/operational-events.mjs && node --check src/owner-readiness.mjs && node --check src/proving-chamber.mjs && node --check src/release-evidence.mjs",
+    "check": "node --check src/index.mjs && node --check src/operational-events.mjs && node --check src/owner-readiness.mjs && node --check src/proving-chamber.mjs && node --check src/refresh-recursion-proof.mjs && node --check src/release-evidence.mjs",
     "test": "node --test test/*.test.mjs"
   }
 }
