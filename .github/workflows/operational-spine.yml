@@ -5,6 +5,8 @@ on:
     paths:
       - 'packages/operational-spine/**'
       - 'packages/bridge-session/src/continuity-replay-proof.mjs'
+      - 'api/project-zero/**'
+      - 'vercel.json'
       - 'docs/PROJECT_ZERO_OPERATIONAL_SPINE_V1.md'
       - 'docs/release-evidence/**'
       - 'package.json'
@@ -15,6 +17,8 @@ on:
     paths:
       - 'packages/operational-spine/**'
       - 'packages/bridge-session/src/continuity-replay-proof.mjs'
+      - 'api/project-zero/**'
+      - 'vercel.json'
       - 'docs/PROJECT_ZERO_OPERATIONAL_SPINE_V1.md'
       - 'docs/release-evidence/**'
       - 'package.json'

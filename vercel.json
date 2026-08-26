@@ -15,6 +15,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/project-zero/capabilities", "destination": "/api/project-zero/capabilities.mjs" },
+    { "source": "/api/project-zero/diagnostics", "destination": "/api/project-zero/diagnostics.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
