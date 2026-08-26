@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'packages/operational-spine/**'
+      - 'packages/bridge-session/src/continuity-replay-proof.mjs'
       - 'docs/PROJECT_ZERO_OPERATIONAL_SPINE_V1.md'
       - 'docs/release-evidence/**'
       - 'package.json'
@@ -13,6 +14,7 @@ on:
       - main
     paths:
       - 'packages/operational-spine/**'
+      - 'packages/bridge-session/src/continuity-replay-proof.mjs'
       - 'docs/PROJECT_ZERO_OPERATIONAL_SPINE_V1.md'
       - 'docs/release-evidence/**'
       - 'package.json'
@@ -40,3 +42,16 @@ jobs:
 
       - name: Run operational spine tests
         run: npm run operational:test
+
+      - name: Generate bound release evidence
+        env:
+          HEARTHFIRE_RELEASE_ID: operational-spine-${{ github.run_id }}-${{ github.run_attempt }}
+        run: npm run operational:evidence
+
+      - name: Upload release evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hearthfire-release-evidence
+          path: release-evidence/hearthfire-operational-spine-v1.json
+          if-no-files-found: error
+          retention-days: 30
