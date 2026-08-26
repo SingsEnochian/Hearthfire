@@ -1,4 +1,4 @@
-import { OperationalEventBuffer, OwnerReadinessRegistry, createScenarioDefinition, runProvingScenario } from '@hearthfire/operational-spine';
+import { OperationalEventBuffer, OwnerReadinessRegistry, createScenarioDefinition, runProvingScenario } from '../../operational-spine/src/index.mjs';
 
 export function validateBridgeSessionState(state) {
   const issues = [];
