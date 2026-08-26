@@ -45,6 +45,41 @@ test('complete proving set generates release evidence bound to release and commi
   assert.deepEqual(manifest.provenance.requiredScenarioIds, REQUIRED_PROVING_SCENARIOS);
 });
 
+test('release evidence binds deployment identity to the proven commit', () => {
+  const manifest = generateReleaseEvidence({
+    releaseId: 'deployed-release',
+    commit: 'abc123',
+    provingReceipts: completeReceipts(),
+    generatedAt: '2026-08-26T20:05:00.000Z',
+    deployment: {
+      provider: 'vercel',
+      environment: 'production',
+      deploymentId: 'dpl_fixture',
+      deployedCommit: 'abc123',
+      deployedAt: '2026-08-26T20:06:00.000Z',
+      url: 'https://example.invalid',
+    },
+  });
+  assert.equal(manifest.deployment.deployedCommit, manifest.commit);
+  assert.equal(manifest.deployment.provider, 'vercel');
+});
+
+test('deployment identity fails closed when deployed commit diverges from proof commit', () => {
+  assert.throws(() => generateReleaseEvidence({
+    releaseId: 'diverged-release',
+    commit: 'abc123',
+    provingReceipts: completeReceipts(),
+    generatedAt: '2026-08-26T20:05:00.000Z',
+    deployment: {
+      provider: 'vercel',
+      environment: 'production',
+      deploymentId: 'dpl_fixture',
+      deployedCommit: 'def456',
+      deployedAt: '2026-08-26T20:06:00.000Z',
+    },
+  }), /deployment\.deployedCommit must match release commit/);
+});
+
 test('missing, failed, mutated, and duplicate proving receipts are rejected', () => {
   const missing = completeReceipts().slice(1);
   assert.match(validateProvingReceiptSet(missing).join('\n'), /missing proving receipt: refresh\.recursion/);
