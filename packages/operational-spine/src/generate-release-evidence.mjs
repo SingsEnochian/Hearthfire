@@ -6,8 +6,8 @@ import {
   proveCommonsPersistenceFailureNonMutation,
   RuntimeRouteOwner,
   proveRuntimeOfflineRoutingNonMutation,
-  createReleaseEvidenceFromProvingReceipts,
-  stringifyReleaseEvidence,
+  generateReleaseEvidence,
+  serializeReleaseEvidence,
 } from './index.mjs';
 import { proveContinuityReplayMismatchNonMutation } from '../../bridge-session/src/continuity-replay-proof.mjs';
 
@@ -44,7 +44,7 @@ async function main() {
   };
   receipts.push(await proveContinuityReplayMismatchNonMutation(replayExporter));
 
-  const manifest = createReleaseEvidenceFromProvingReceipts({
+  const manifest = generateReleaseEvidence({
     releaseId,
     commit,
     provingReceipts: receipts,
@@ -61,7 +61,7 @@ async function main() {
   });
 
   await mkdir(dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, stringifyReleaseEvidence(manifest), 'utf8');
+  await writeFile(outputPath, serializeReleaseEvidence(manifest), 'utf8');
   console.log(outputPath);
 }
 
