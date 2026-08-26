@@ -12,10 +12,11 @@
     "./refresh-recursion-proof": "./src/refresh-recursion-proof.mjs",
     "./observer-state-proof": "./src/observer-state-proving.mjs",
     "./commons-persistence-proof": "./src/commons-persistence-proof.mjs",
+    "./runtime-offline-routing-proof": "./src/runtime-offline-routing-proof.mjs",
     "./evidence": "./src/release-evidence.mjs"
   },
   "scripts": {
-    "check": "node --check src/index.mjs && node --check src/operational-events.mjs && node --check src/owner-readiness.mjs && node --check src/proving-chamber.mjs && node --check src/refresh-recursion-proof.mjs && node --check src/observer-state-proving.mjs && node --check src/commons-persistence-proof.mjs && node --check src/release-evidence.mjs",
+    "check": "node --check src/index.mjs && node --check src/operational-events.mjs && node --check src/owner-readiness.mjs && node --check src/proving-chamber.mjs && node --check src/refresh-recursion-proof.mjs && node --check src/observer-state-proving.mjs && node --check src/commons-persistence-proof.mjs && node --check src/runtime-offline-routing-proof.mjs && node --check src/release-evidence.mjs",
     "test": "node --test test/*.test.mjs"
   }
 }
