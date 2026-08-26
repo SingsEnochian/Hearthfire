@@ -12,6 +12,7 @@
     "test": "node --test",
     "operational:check": "npm --workspace @hearthfire/operational-spine run check",
     "operational:test": "npm --workspace @hearthfire/operational-spine test",
+    "operational:evidence": "node packages/operational-spine/src/generate-release-evidence.mjs",
     "starwell:start": "npm --workspace @hearthfire/starwell-server start",
     "starwell:dev": "npm --workspace @hearthfire/starwell-server dev",
     "starwell:check": "npm --workspace @hearthfire/starwell-server check",
