@@ -1,29 +1,48 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import {
-  proveRefreshRecursionNonMutation,
-  proveObserverMalformedStateNonMutation,
+  proveRefreshRecursionBoundedNonMutation,
+  proveMalformedObserverStateNonMutation,
   proveCommonsPersistenceFailureNonMutation,
+  RuntimeRouteOwner,
   proveRuntimeOfflineRoutingNonMutation,
-  proveContinuityReplayMismatchNonMutation,
   createReleaseEvidenceFromProvingReceipts,
   stringifyReleaseEvidence,
 } from './index.mjs';
-import { ContinuityExporter } from '../../bridge-session/src/continuity-exporter.mjs';
+import { proveContinuityReplayMismatchNonMutation } from '../../bridge-session/src/continuity-replay-proof.mjs';
 
 const outputPath = resolve(process.env.HEARTHFIRE_RELEASE_EVIDENCE_PATH || 'release-evidence/hearthfire-operational-spine-v1.json');
 const releaseId = process.env.HEARTHFIRE_RELEASE_ID || `hearthfire-${process.env.GITHUB_RUN_ID || 'local'}`;
 const commit = process.env.GITHUB_SHA || process.env.HEARTHFIRE_COMMIT || 'local-unbound';
 
+const observerInitialState = Object.freeze({ P: 0.8, C: 0.8, R: 0.8, E: 0.2, M: 0.8, A: 0.8, Q: 0.8 });
+const observerMalformedState = Object.freeze({ P: 0.8, C: 0.8, R: 0.8, E: 0.2, M: 0.8, A: 0.8 });
+
 async function main() {
   const receipts = [];
-  receipts.push(await proveRefreshRecursionNonMutation());
-  receipts.push(await proveObserverMalformedStateNonMutation());
+  receipts.push(await proveRefreshRecursionBoundedNonMutation());
+  receipts.push(await proveMalformedObserverStateNonMutation({
+    initialState: observerInitialState,
+    malformedState: observerMalformedState,
+  }));
   receipts.push(await proveCommonsPersistenceFailureNonMutation());
-  receipts.push(await proveRuntimeOfflineRoutingNonMutation());
 
-  const exporter = new ContinuityExporter({ dataDirectory: resolve('.tmp-release-evidence-continuity') });
-  receipts.push(await proveContinuityReplayMismatchNonMutation(exporter));
+  const routeOwner = new RuntimeRouteOwner({
+    routes: {
+      primary: { online: false },
+      fallback: { online: true },
+    },
+    fallbackRoute: 'fallback',
+  });
+  receipts.push(await proveRuntimeOfflineRoutingNonMutation(routeOwner, 'primary'));
+
+  const canonicalPacket = Object.freeze({ continuity_packet_id: 'release-evidence-canonical', world: 'terra-prime', revision: 1 });
+  const mismatchPacket = Object.freeze({ continuity_packet_id: 'release-evidence-mismatch', world: 'terra-prime', revision: 0 });
+  const replayExporter = {
+    async latest() { return canonicalPacket; },
+    async replay() { return [mismatchPacket]; },
+  };
+  receipts.push(await proveContinuityReplayMismatchNonMutation(replayExporter));
 
   const manifest = createReleaseEvidenceFromProvingReceipts({
     releaseId,
