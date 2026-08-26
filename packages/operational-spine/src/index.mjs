@@ -6,3 +6,4 @@ export * from './observer-state-proving.mjs';
 export * from './commons-persistence-proof.mjs';
 export * from './runtime-offline-routing-proof.mjs';
 export * from './release-evidence.mjs';
+export * from './release-evidence-generator.mjs';
