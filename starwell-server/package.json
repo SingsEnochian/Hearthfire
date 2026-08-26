@@ -7,9 +7,9 @@
     "node": ">=24"
   },
   "scripts": {
-    "start": "node server.mjs",
-    "dev": "node --watch server.mjs",
-    "check": "node --check server.mjs && node --check public/concordance-engine.js && node --check public/starwell.js",
+    "start": "node project-zero-front-controller.mjs",
+    "dev": "node --watch project-zero-front-controller.mjs",
+    "check": "node --check project-zero-front-controller.mjs && node --check project-zero-router.mjs && node --check project-zero-capabilities.mjs && node --check project-zero-diagnostics.mjs && node --check server.mjs && node --check public/concordance-engine.js && node --check public/starwell.js",
     "test": "node --test test/*.test.mjs"
   }
 }
