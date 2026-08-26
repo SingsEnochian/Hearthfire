@@ -1,0 +1,42 @@
+name: Operational Spine
+
+on:
+  pull_request:
+    paths:
+      - 'packages/operational-spine/**'
+      - 'docs/PROJECT_ZERO_OPERATIONAL_SPINE_V1.md'
+      - 'docs/release-evidence/**'
+      - 'package.json'
+      - '.github/workflows/operational-spine.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/operational-spine/**'
+      - 'docs/PROJECT_ZERO_OPERATIONAL_SPINE_V1.md'
+      - 'docs/release-evidence/**'
+      - 'package.json'
+      - '.github/workflows/operational-spine.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Node 24 contracts and proving chamber
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Check operational spine syntax
+        run: npm run operational:check
+
+      - name: Run operational spine tests
+        run: npm run operational:test

@@ -1,6 +1,7 @@
 import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { bridgeDiagnostics, createBridgeOperationalRuntime, updateBridgeOwner } from './bridge-operational.mjs';
 
 export const BRIDGE_SCHEMA = 'hearthweave.bridge-session/v0.1';
 export const PACKET_SCHEMA = 'hearthweave.bridge-packet/v0.1';
@@ -121,28 +122,51 @@ export class BridgeSession {
       updated_at: timestamp,
       last_packet_id: null,
     };
+    this.operational = createBridgeOperationalRuntime(this.snapshot());
+    this.operational.events.emit({
+      subsystem: 'bridge.session',
+      event: 'BRIDGE_SESSION_CREATED',
+      message: 'Bridge session owner created and validated',
+      owner: 'bridge-session',
+      provenance: { source: '@hearthfire/bridge-session' },
+      context: { sessionId, worldSlug },
+    });
   }
 
   snapshot() {
     return clone(this.session);
   }
 
+  diagnostics() {
+    return bridgeDiagnostics(this.operational);
+  }
+
+  #refreshReadiness() {
+    return updateBridgeOwner(this.operational, this.snapshot());
+  }
+
   async open() {
+    this.#refreshReadiness();
     await this.#record('session.opened', { session: this.snapshot() });
     return this.snapshot();
   }
 
   async transition(nextState, details = {}) {
+    this.#refreshReadiness();
     if (!STATES.includes(nextState)) {
-      throw new BridgeStateError(`Unknown bridge state: ${nextState}`, 'unknown-bridge-state');
+      const error = new BridgeStateError(`Unknown bridge state: ${nextState}`, 'unknown-bridge-state');
+      this.operational.events.emit({ level: 'error', subsystem: 'bridge.session', event: 'BRIDGE_TRANSITION_REJECTED', message: error.message, owner: 'bridge-session', error, context: { from: this.session.state, to: nextState } });
+      throw error;
     }
 
     const current = this.session.state;
     if (!TRANSITIONS[current].has(nextState)) {
-      throw new BridgeStateError(
+      const error = new BridgeStateError(
         `Invalid bridge transition: ${current} → ${nextState}`,
         'invalid-bridge-transition',
       );
+      this.operational.events.emit({ level: 'error', subsystem: 'bridge.session', event: 'BRIDGE_TRANSITION_REJECTED', message: error.message, owner: 'bridge-session', error, context: { from: current, to: nextState } });
+      throw error;
     }
 
     if (nextState === 'LOAD') {
@@ -172,6 +196,8 @@ export class BridgeSession {
 
     this.session.state = nextState;
     this.session.updated_at = nowIso(this.clock);
+    this.#refreshReadiness();
+    this.operational.events.emit({ subsystem: 'bridge.session', event: 'BRIDGE_TRANSITION_ACCEPTED', message: `Bridge transitioned ${current} to ${nextState}`, owner: 'bridge-session', context: { from: current, to: nextState, details } });
     await this.#record('session.transitioned', {
       from: current,
       to: nextState,
@@ -212,11 +238,13 @@ export class BridgeSession {
   }
 
   async plainPass() {
+    this.#refreshReadiness();
     if (this.session.state === 'CLOSED') {
       throw new BridgeStateError('Closed bridge cannot change presentation mode', 'bridge-closed');
     }
     this.session.presentation_mode = 'plain';
     this.session.updated_at = nowIso(this.clock);
+    this.#refreshReadiness();
     await this.#record('session.presentation-changed', {
       presentation_mode: 'plain',
       session: this.snapshot(),
@@ -242,6 +270,7 @@ export class BridgeSession {
     epistemicRegister,
     provenance = {},
   }) {
+    this.#refreshReadiness();
     if (this.session.state !== 'EXCHANGE') {
       throw new BridgeStateError('Packets may cross only while the bridge is in EXCHANGE', 'bridge-not-exchanging');
     }
@@ -289,26 +318,33 @@ export class BridgeSession {
 
     this.session.last_packet_id = packetId;
     this.session.updated_at = packet.sent_at;
+    this.#refreshReadiness();
+    this.operational.events.emit({ subsystem: 'bridge.session', event: 'BRIDGE_PACKET_CROSSED', message: 'Bridge packet crossed', owner: 'bridge-session', correlationId: packetId, provenance: packet.provenance, context: { direction, channel, epistemicRegister } });
     await this.#record('packet.crossed', { packet });
     return clone(packet);
   }
 
   async replay() {
+    this.#refreshReadiness();
     try {
       const contents = await readFile(this.ledgerPath, 'utf8');
-      return contents
+      const ledger = contents
         .split('\n')
         .filter(Boolean)
         .map((line) => JSON.parse(line));
+      this.operational.events.emit({ subsystem: 'bridge.session', event: 'BRIDGE_REPLAY_READ', message: 'Bridge ledger replay loaded', owner: 'bridge-session', context: { records: ledger.length, ledgerPath: this.ledgerPath } });
+      return ledger;
     } catch (error) {
       if (error?.code === 'ENOENT') return [];
+      this.operational.events.emit({ level: 'error', subsystem: 'bridge.session', event: 'BRIDGE_REPLAY_FAILURE', message: 'Bridge ledger replay failed', owner: 'bridge-session', error, context: { ledgerPath: this.ledgerPath } });
       throw error;
     }
   }
 
   async health() {
+    const readiness = this.#refreshReadiness();
     return {
-      ok: this.session.state !== 'ERROR',
+      ok: this.session.state !== 'ERROR' && readiness.ready,
       module: 'arkfire.bridge-session',
       version: '0.1.0',
       standalone: true,
@@ -317,6 +353,7 @@ export class BridgeSession {
       world_slug: this.session.world_slug,
       return_anchor_active: this.session.return_anchor.active,
       ledger_path: this.ledgerPath,
+      operational: this.diagnostics(),
     };
   }
 
@@ -382,5 +419,6 @@ export async function runVerticalSlice(options) {
     outbound,
     inbound,
     ledger: await session.replay(),
+    diagnostics: session.diagnostics(),
   };
 }
