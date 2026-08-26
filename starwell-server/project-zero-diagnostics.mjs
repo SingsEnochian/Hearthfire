@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyContinuityReplay } from '../packages/bridge-session/src/continuity-replay-proof.mjs';
 import { ContinuityExporter } from '../packages/bridge-session/src/continuity-exporter.mjs';
+import { createDeploymentEvidenceParityReceipt } from '../packages/operational-spine/src/deployment-evidence-parity.mjs';
 
 async function filePresence(path) {
   try {
@@ -24,6 +25,7 @@ async function readOptionalJson(path) {
 export async function buildProjectZeroDiagnostics({
   rootDirectory = resolve(fileURLToPath(new URL('..', import.meta.url))),
   dataDirectory = resolve(fileURLToPath(new URL('./data', import.meta.url))),
+  diagnosticsCommit = process.env.HEARTHFIRE_DIAGNOSTICS_COMMIT || process.env.GITHUB_SHA || null,
 } = {}) {
   const continuity = new ContinuityExporter({ dataDirectory });
   const replay = await verifyContinuityReplay(continuity);
@@ -42,6 +44,15 @@ export async function buildProjectZeroDiagnostics({
   const evidenceReady = evidence?.schema === 'hearthfire.release-evidence/v1'
     && evidenceReceipts.length > 0
     && evidenceReceipts.every((receipt) => receipt?.passed === true && receipt?.mutationDetected !== true);
+
+  const deployment = evidence?.deployment ?? null;
+  const parityReceipt = createDeploymentEvidenceParityReceipt({
+    releaseCommit: evidence?.commit ?? null,
+    deployedCommit: deployment?.deployedCommit ?? null,
+    diagnosticsCommit,
+    provingArtifactCommit: evidence?.commit ?? null,
+  });
+  const parityReady = parityReceipt.passed === true;
 
   const subsystems = [
     {
@@ -62,6 +73,12 @@ export async function buildProjectZeroDiagnostics({
       lastFailure: evidenceReady ? null : { code: 'RELEASE_EVIDENCE_UNAVAILABLE_OR_INVALID', path: evidencePath },
       provenance: { source: evidencePath, contract: 'hearthfire.release-evidence/v1' },
     },
+    {
+      id: 'deployment-evidence-parity',
+      ready: parityReady,
+      lastFailure: parityReady ? null : { code: 'DEPLOYMENT_EVIDENCE_COMMIT_MISMATCH', parity: parityReceipt.actual },
+      provenance: { source: '@hearthfire/operational-spine', contract: 'hearthfire.deployment-evidence-parity/v1' },
+    },
   ];
 
   return {
@@ -69,18 +86,29 @@ export async function buildProjectZeroDiagnostics({
     generatedAt: new Date().toISOString(),
     ready: subsystems.every((subsystem) => subsystem.ready),
     subsystems,
-    scenarioResults: evidenceReceipts.map((receipt) => ({
-      scenarioId: receipt.scenarioId,
-      subsystem: receipt.subsystem,
-      passed: receipt.passed === true,
-      mutationDetected: receipt.mutationDetected === true,
-      actual: receipt.actual ?? null,
-      provenance: receipt.provenance ?? null,
-    })),
+    scenarioResults: [
+      ...evidenceReceipts.map((receipt) => ({
+        scenarioId: receipt.scenarioId,
+        subsystem: receipt.subsystem,
+        passed: receipt.passed === true,
+        mutationDetected: receipt.mutationDetected === true,
+        actual: receipt.actual ?? null,
+        provenance: receipt.provenance ?? null,
+      })),
+      {
+        scenarioId: parityReceipt.scenarioId,
+        subsystem: parityReceipt.subsystem,
+        passed: parityReceipt.passed,
+        mutationDetected: parityReceipt.mutationDetected,
+        actual: parityReceipt.actual,
+        provenance: parityReceipt.provenance,
+      },
+    ],
     replayHealth: {
       consistent: replayReady,
       verification: replay,
     },
+    deploymentParity: parityReceipt,
     releaseEvidence: evidence
       ? {
           present: true,
@@ -91,6 +119,7 @@ export async function buildProjectZeroDiagnostics({
           generatedAt: evidence.generatedAt ?? null,
           receiptCount: evidenceReceipts.length,
           requiredScenarioIds: evidence.provenance?.requiredScenarioIds ?? [],
+          deployment,
           path: evidencePath,
         }
       : {
@@ -102,6 +131,7 @@ export async function buildProjectZeroDiagnostics({
           generatedAt: null,
           receiptCount: 0,
           requiredScenarioIds: [],
+          deployment: null,
           path: evidencePath,
         },
     provenance: {
