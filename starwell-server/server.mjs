@@ -7,8 +7,6 @@ import { concordanceSchema, evaluateConcordance } from './public/concordance-eng
 import { fetchEnvironmentReading } from './observer-environment.mjs';
 import { calculateSheetConvergence, normaliseLocationState } from './sheet-convergence.mjs';
 import { APP_IDENTITY, APP_NAME, APP_VERSION } from './version.mjs';
-import { buildProjectZeroDiagnostics } from './project-zero-diagnostics.mjs';
-import { buildProjectZeroCapabilities } from './project-zero-capabilities.mjs';
 import {
   queryBM25, getNode, getEdges, traverse, queryByKind, getStats as graphStats,
   addNode as graphAddNode, addEdge as graphAddEdge,
@@ -256,8 +254,6 @@ const server = createServer(async (request, response) => {
       hearthgateModules: '/api/hearthgate/modules',
       hearthgateRegistry: '/api/hearthgate/registry',
       hearthgateVersion: APP_IDENTITY,
-      projectZeroDiagnostics: '/api/project-zero/diagnostics',
-      projectZeroCapabilities: '/api/project-zero/capabilities',
       rooms: '/api/rooms',
       wizard: '/api/wizard',
       wizardConfig: '/api/wizard/config',
@@ -271,32 +267,6 @@ const server = createServer(async (request, response) => {
       uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
       timestamp: new Date().toISOString(),
     }, request.method);
-    return;
-  }
-
-  if (path === '/api/project-zero/capabilities') {
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
-      return;
-    }
-    json(response, 200, buildProjectZeroCapabilities(), request.method);
-    return;
-  }
-
-  if (path === '/api/project-zero/diagnostics') {
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
-      return;
-    }
-    try {
-      json(response, 200, await buildProjectZeroDiagnostics(), request.method);
-    } catch (error) {
-      json(response, 503, {
-        ok: false,
-        error: 'project-zero-diagnostics-unavailable',
-        message: error instanceof Error ? error.message : String(error),
-      }, request.method);
-    }
     return;
   }
 
@@ -408,20 +378,893 @@ const server = createServer(async (request, response) => {
         place: { id: 'hearthfire', label: 'Hearthfire' },
         world: targetWorld.id,
         kind: 'glyph-cast',
-        emotion: primaryEmotion,
-        emotions: body.emotions,
-        concordance,
-        entanglement: {
-          coefficient: round4(entanglementCoefficient),
-          entropyEstimate: round4(entropyEstimate),
+        claimLabel: targetWorld.defaultEpistemicStatus === 'observation'
+          ? 'subjective-observation'
+          : targetWorld.claimLabel,
+        consent: body.consent ?? 'local-only',
+        provenance: {
+          source: 'observer-instrument',
+          createdBy: body.observedBy ?? 'observer',
         },
-        coherence: await _coherenceSnapshot(await getSanctumAnchor()),
+        payload: {
+          emotions: body.emotions,
+          primaryEmotion,
+          narrativeThread: body.narrativeThread ?? '',
+          description: body.description ?? '',
+          notes: body.notes ?? '',
+          concordance,
+          worldFiber: {
+            id: targetWorld.id,
+            label: targetWorld.label,
+            fiberPosition: targetWorld.fiberPosition,
+            coupledWorlds: targetWorld.coupledWorlds,
+            entanglementCoefficient: Math.round(entanglementCoefficient * 100000) / 100000,
+          },
+        },
       };
 
-      await appendLedger({ action: 'observer.cast', observation });
-      json(response, 200, observation, request.method);
+      json(response, 200, { ok: true, observation }, request.method);
     } catch (error) {
-      json(response, 500, { ok: false, error: 'observer-cast-failed', message: error.message }, request.method);
+      const tooLarge = error?.code === 'request-body-too-large';
+      json(response, tooLarge ? 413 : 400, {
+        ok: false,
+        error: tooLarge ? 'request-body-too-large' : 'invalid-cast-request',
+      }, request.method);
+    }
+    return;
+  }
+
+  if (path === '/api/observer/environment') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    try {
+      const anchor = await getSanctumAnchor();
+      const anchorKey = _anchorKey(anchor);
+      const now = Date.now();
+      if (!_envCache || now - _envCache.fetchedAt > ENV_TTL_MS || _envCache.anchorKey !== anchorKey) {
+        _envCache = { value: await fetchEnvironmentReading(anchor), fetchedAt: now, anchorKey };
+      }
+      const reading = _envCache.value;
+      const concordance = evaluateConcordance(reading.premaq, {
+        mode: 'environment-feed',
+        sources: ['noaa-solar-wind', 'noaa-kp', 'noaa-sunspots', 'usgs-seismic', 'gwosc-gw', 'meeus-lunar'],
+        note: 'Derived from live physical environment channels',
+      });
+      json(response, 200, { ok: true, reading, concordance }, request.method);
+    } catch (err) {
+      json(response, 503, { ok: false, error: 'environment-fetch-failed', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  // ── Sanctum Anchor ────────────────────────────────────────────────────────
+
+  if (path === '/api/sanctum-anchor') {
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const anchor = await getSanctumAnchor();
+      json(response, 200, { ok: true, sanctumAnchor: anchor }, request.method);
+      return;
+    }
+    if (request.method === 'PUT') {
+      try {
+        const body = await readRequestJson(request);
+        const lat = Number(body.lat);
+        const lon = Number(body.lon);
+        if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+          json(response, 400, { ok: false, error: 'lat-invalid', details: 'lat must be a number in [-90, 90]' }, request.method);
+          return;
+        }
+        if (!Number.isFinite(lon) || lon < -180 || lon > 180) {
+          json(response, 400, { ok: false, error: 'lon-invalid', details: 'lon must be a number in [-180, 180]' }, request.method);
+          return;
+        }
+        const anchor = {
+          lat: Math.round(lat * 10000) / 10000,
+          lon: Math.round(lon * 10000) / 10000,
+          label: typeof body.label === 'string' ? body.label.slice(0, 64) : null,
+          setAt: new Date().toISOString(),
+        };
+        _sanctumAnchor = anchor;
+        _envCache = null; // bust cache so next read uses new anchor
+        await saveSanctumAnchor(anchor);
+        json(response, 200, { ok: true, sanctumAnchor: anchor }, request.method);
+      } catch (err) {
+        const tooLarge = err?.code === 'request-body-too-large';
+        json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'anchor-error' }, request.method);
+      }
+      return;
+    }
+    json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+    return;
+  }
+
+  // ── Hearthgate: Arkfire 0.001 ────────────────────────────────────────────
+  // Multi-lens fold analysis: math (Vee) + environment (PREMAQ) + graph (BM25)
+  // Advisor validates epistemic registers before synthesis.
+  // All readings appended to data/action-ledger.jsonl (DR-003: JSONL = append-only history).
+
+  if (path === '/api/hearthgate/fold') {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    try {
+      const body = await readRequestJson(request);
+      const anchor = body.sanctumAnchor ?? await getSanctumAnchor();
+      if (!anchor || !Number.isFinite(anchor.lat) || !Number.isFinite(anchor.lon)) {
+        json(response, 400, { ok: false, error: 'sanctum-anchor-required', details: 'Provide sanctumAnchor:{lat,lon} or set one via PUT /api/sanctum-anchor' }, request.method);
+        return;
+      }
+
+      const foldId = randomUUID();
+      const now = new Date();
+
+      // ── Worker 1: Location-direct math lens (MATHEMATICAL_DERIVATION + LOCATION_INPUT)
+      const locationState = normaliseLocationState({
+        latitude: anchor.lat,
+        longitude: anchor.lon,
+        altitudeM: anchor.elevation ?? 0,
+        timestamp: now,
+      });
+      const mathResult = calculateSheetConvergence(locationState);
+
+      // ── Worker 2: Environment + PREMAQ lens (PHYSICS_MODEL)
+      const envAnchor = await getSanctumAnchor();
+      const envAnchorKey = _anchorKey(envAnchor);
+      const envNow = Date.now();
+      if (!_envCache || envNow - _envCache.fetchedAt > ENV_TTL_MS || _envCache.anchorKey !== envAnchorKey) {
+        _envCache = { value: await fetchEnvironmentReading(envAnchor), fetchedAt: envNow, anchorKey: envAnchorKey };
+      }
+      const envReading = _envCache.value;
+
+      // ── Worker 3: Graph lens (BM25 retrieval — fold-relevant concepts)
+      const graphPrompt = body.intent ?? `J-space fold at lat ${anchor.lat} lon ${anchor.lon}`;
+      const graphHits = queryBM25(graphPrompt, 8);
+
+      // ── Advisor: epistemic register validation
+      const lenses = {
+        math: mathResult,
+        environment: envReading,
+        graph: graphHits,
+      };
+      const advisorResult = advisorValidate(lenses);
+
+      // ── Orchestrator synthesis
+      const synthesis = {
+        foldId,
+        hearthgate: APP_IDENTITY,
+        anchor: { lat: anchor.lat, lon: anchor.lon, elevation: anchor.elevation ?? 0, label: anchor.label ?? null },
+        analyzedAt: now.toISOString(),
+
+        // Math lens — MATHEMATICAL_DERIVATION + LOCATION_INPUT
+        mathematicalAnalysis: {
+          registers: ['MATHEMATICAL_DERIVATION', 'LOCATION_INPUT'],
+          locationState: locationState.map(round4),
+          mappedCoordinate: mathResult.mapped.map(round4),
+          convergenceScore: round4(mathResult.convergenceScore),
+          foldSusceptibility: round4(mathResult.susceptibility),
+          targetResidual: round4(mathResult.targetResidual),
+          nearestPreimageDistance: round4(mathResult.nearestPreimageDistance),
+          preimageDistances: mathResult.preimageDistances.map(round4),
+          determinant: round4(mathResult.determinant),
+          orientation: mathResult.orientation,
+          localFoldProbability: mathResult.localFoldProbability,
+          physicalFoldProbability: mathResult.physicalFoldProbability,
+          physicalStatus: mathResult.physicalStatus,
+          claimLabel: 'speculative-theory',
+        },
+
+        // Environment lens — PHYSICS_MODEL
+        environmentAnalysis: {
+          register: 'PHYSICS_MODEL',
+          premaq: envReading.premaq,
+          jspaceState: envReading.jspace?.state ?? null,
+          jspaceClosestFiber: envReading.jspace?.closestFiberLabel ?? null,
+          jspaceFiberDistances: envReading.jspace?.fiberDistances ?? null,
+          foldWindows: envReading.foldWindows ?? null,
+          confidence: envReading.confidence,
+          claimLabel: 'speculative-theory',
+        },
+
+        // Graph lens — retrieved concepts
+        graphAnalysis: {
+          register: 'OBSERVATION',
+          prompt: graphPrompt,
+          retrievedNodes: graphHits.slice(0, 5).map(({ node, score }) => ({
+            id: node.id,
+            label: node.label,
+            kind: node.kind,
+            epistemicStatus: node.epistemicStatus,
+            activationScore: Math.round(Math.min(1, score / 5) * 1000) / 1000,
+          })),
+        },
+
+        // Advisor validation
+        advisor: advisorResult,
+
+        // Boundary
+        boundary: 'det(J)=-2 everywhere: no mathematical fold singularity exists. Physical fold probability is null and uncalibrated. Convergence score measures proximity to certified preimage fibers — not a validated physical measurement.',
+      };
+
+      // Append to ledger (DR-003: JSONL = append-only history)
+      await appendLedger({
+        schema: 'hearthfire.fold-reading/v1',
+        hearthgate: APP_IDENTITY,
+        foldId,
+        anchor: synthesis.anchor,
+        convergenceScore: synthesis.mathematicalAnalysis.convergenceScore,
+        foldSusceptibility: synthesis.mathematicalAnalysis.foldSusceptibility,
+        advisorPassed: advisorResult.passed,
+        advisorFlags: advisorResult.flags,
+      });
+
+      json(response, 200, { ok: true, synthesis }, request.method);
+    } catch (err) {
+      const tooLarge = err?.code === 'request-body-too-large';
+      json(response, tooLarge ? 413 : 500, { ok: false, error: tooLarge ? 'request-body-too-large' : 'hearthgate-fold-error', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  if (path === '/api/hearthgate/ledger') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    try {
+      const raw = await readFile(ledgerPath, 'utf8').catch(() => '');
+      const entries = raw.trim().split('\n').filter(Boolean).map((line) => {
+        try { return JSON.parse(line); } catch { return null; }
+      }).filter(Boolean);
+      const limit = Math.min(Number(new URL(request.url, 'http://h').searchParams.get('limit') ?? 20), 100);
+      json(response, 200, { ok: true, hearthgate: APP_IDENTITY, count: entries.length, entries: entries.slice(-limit) }, request.method);
+    } catch (err) {
+      json(response, 500, { ok: false, error: 'ledger-read-error', details: err.message }, request.method);
+    }
+    return;
+  }
+
+  // ── Rooms ─────────────────────────────────────────────────────────────────
+
+  if (path === '/api/rooms') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const rooms = await getAllRoomsWithAgents();
+    json(response, 200, {
+      ok: true,
+      hearthgate: APP_IDENTITY,
+      arkfireCanonicalLoop: 'Observe → Model → Interpret → Generate → Narrate → Evaluate → Record → Reobserve',
+      count: rooms.length,
+      rooms,
+    }, request.method);
+    return;
+  }
+
+  const roomMatch = path.match(/^\/api\/rooms\/([^/]+)$/);
+  if (roomMatch && request.method !== 'POST') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const room = await getRoomWithAgent(roomMatch[1]);
+    if (!room) {
+      json(response, 404, { ok: false, error: 'room-not-found', id: roomMatch[1] }, request.method);
+      return;
+    }
+    json(response, 200, { ok: true, room }, request.method);
+    return;
+  }
+
+  // ── Room chat dispatch ────────────────────────────────────────────────────
+  // Each room dispatches to its canonical service. No room duplicates shared services.
+  // Multi-agent: message is routed to the room's assignedAgent (configurable via Wizard).
+
+  const roomChatMatch = path.match(/^\/api\/rooms\/([^/]+)\/chat$/);
+  if (roomChatMatch) {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const roomId = roomChatMatch[1];
+    const room = await getRoomWithAgent(roomId);
+    if (!room) {
+      json(response, 404, { ok: false, error: 'room-not-found', id: roomId }, request.method);
+      return;
+    }
+
+    let body;
+    try { body = await readRequestJson(request); }
+    catch (err) {
+      const tooLarge = err?.code === 'request-body-too-large';
+      json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'invalid-json' }, request.method);
+      return;
+    }
+
+    const message = body.message ?? body.content ?? '';
+    const dispatchedAt = new Date().toISOString();
+
+    try {
+      let roomResponse;
+
+      if (roomId === 'science-centre') {
+        const anchor = body.sanctumAnchor ?? await getSanctumAnchor();
+        const anchorKey = _anchorKey(anchor);
+        const now = Date.now();
+        if (!_envCache || now - _envCache.fetchedAt > ENV_TTL_MS || _envCache.anchorKey !== anchorKey) {
+          _envCache = { value: await fetchEnvironmentReading(anchor), fetchedAt: now, anchorKey };
+        }
+        const graphHits = message ? queryBM25(message, 6) : [];
+        roomResponse = {
+          centre: 'science-centre',
+          environment: {
+            premaq: _envCache.value.premaq,
+            jspace: _envCache.value.jspace,
+            confidence: _envCache.value.confidence,
+            foldWindows: _envCache.value.foldWindows ?? null,
+            locationDirectConvergence: _envCache.value.locationDirectConvergence ?? null,
+          },
+          graphContext: graphHits.slice(0, 4).map(({ node, score }) => ({
+            id: node.id, label: node.label, kind: node.kind,
+            epistemicStatus: node.epistemicStatus,
+            activationScore: round4(Math.min(1, score / 5)),
+          })),
+          note: anchor ? null : 'Set a Sanctum Anchor via PUT /api/sanctum-anchor for location-direct analysis.',
+        };
+
+      } else if (roomId === 'temporal-centre') {
+        const raw = await readFile(ledgerPath, 'utf8').catch(() => '');
+        const allEntries = raw.trim().split('\n').filter(Boolean).map(line => {
+          try { return JSON.parse(line); } catch { return null; }
+        }).filter(Boolean);
+
+        if (body.logEntry) {
+          await appendLedger({ ...body.logEntry, room: 'temporal-centre', message });
+        }
+
+        const limit = Math.min(Number(body.limit ?? 20), 100);
+        roomResponse = {
+          centre: 'temporal-centre',
+          ledgerCount: allEntries.length,
+          recentEntries: allEntries.slice(-limit),
+          temporalNote: message || null,
+          arkfirePhases: room.arkfirePhases,
+        };
+
+      } else if (roomId === 'ingestion-centre') {
+        const content = body.content ?? body.message ?? '';
+        const anchor = await getSanctumAnchor();
+        const [graphHits, coherence] = await Promise.all([
+          Promise.resolve(content ? queryBM25(content, 8) : []),
+          _coherenceSnapshot(anchor),
+        ]);
+        const proposedNode = content ? {
+          id: `ingested-${Date.now()}`,
+          kind: body.kind ?? 'ingested',
+          label: body.label ?? content.slice(0, 60).replace(/\s+/g, ' ').trim(),
+          description: content.slice(0, 500),
+          worldId: body.worldId ?? 'earth',
+          epistemicStatus: body.epistemicStatus ?? 'observation',
+          properties: {
+            ingestedAt: dispatchedAt,
+            source: body.source ?? 'ingestion-centre',
+            agentId: room.assignedAgent,
+            coherenceAtIngestion: coherence,
+          },
+          attribution: body.attribution ?? null,
+        } : null;
+        roomResponse = {
+          centre: 'ingestion-centre',
+          proposedNode,
+          coherence,
+          relatedNodes: graphHits.slice(0, 6).map(({ node, score }) => ({
+            id: node.id, label: node.label, kind: node.kind,
+            epistemicStatus: node.epistemicStatus,
+            activationScore: round4(Math.min(1, score / 5)),
+          })),
+          stewardNote: 'Graph proposals require Steward approval before commit. Use POST /api/graph (addNode) after review.',
+        };
+
+      } else if (roomId === 'continuity-centre') {
+        const graphHits = message ? queryBM25(message, 10) : [];
+        const raw = await readFile(ledgerPath, 'utf8').catch(() => '');
+        const ledgerCount = raw.trim().split('\n').filter(Boolean).length;
+        roomResponse = {
+          centre: 'continuity-centre',
+          graphContext: graphHits.slice(0, 8).map(({ node, score }) => ({
+            id: node.id, label: node.label, kind: node.kind,
+            epistemicStatus: node.epistemicStatus, worldId: node.worldId,
+            activationScore: round4(Math.min(1, score / 5)),
+          })),
+          ledgerEntryCount: ledgerCount,
+          arkfirePhases: room.arkfirePhases,
+          note: 'Continuity state is the knowledge graph + action ledger. Query graph via /api/graph/query.',
+        };
+
+      } else if (roomId === 'hearthfire') {
+        const history = Array.isArray(body.history) ? body.history : [];
+        const anchor = await getSanctumAnchor();
+        const [dispatch, coherence] = await Promise.all([
+          dispatchRoom('hearthfire', message, history),
+          _coherenceSnapshot(anchor),
+        ]);
+        roomResponse = {
+          centre: 'hearthfire',
+          reply: dispatch.reply,
+          member: dispatch.member,
+          mode: dispatch.mode,
+          coherence,
+        };
+
+      } else if (roomId === 'grove') {
+        const history = Array.isArray(body.history) ? body.history : [];
+        const anchor = await getSanctumAnchor();
+        const [dispatch, coherence] = await Promise.all([
+          dispatchRoom('grove', message, history),
+          _coherenceSnapshot(anchor),
+        ]);
+        roomResponse = {
+          centre: 'grove',
+          reply: dispatch.reply,
+          member: dispatch.member,
+          mode: dispatch.mode,
+          coherence,
+        };
+
+      } else if (roomId === 'hall') {
+        const history = Array.isArray(body.history) ? body.history : [];
+        const anchor = await getSanctumAnchor();
+        const [chorus, coherence, allRooms] = await Promise.all([
+          dispatchHallChorus(message, history),
+          _coherenceSnapshot(anchor),
+          getAllRoomsWithAgents(),
+        ]);
+        roomResponse = {
+          centre: 'hall',
+          chorus,
+          presence: allRooms.map(r => ({ room: r.id, agent: r.assignedAgent })),
+          coherence,
+        };
+
+      } else {
+        roomResponse = { centre: roomId, note: 'Room handler not yet implemented.' };
+      }
+
+      json(response, 200, {
+        ok: true,
+        roomId,
+        roomName: room.name,
+        assignedAgent: room.assignedAgent,
+        dispatchedAt,
+        message: message || null,
+        response: roomResponse,
+      }, request.method);
+
+    } catch (err) {
+      json(response, 500, { ok: false, error: 'room-dispatch-error', details: err.message ?? String(err) }, request.method);
+    }
+    return;
+  }
+
+  // ── Wizard ────────────────────────────────────────────────────────────────
+
+  if (path === '/api/wizard') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    json(response, 200, {
+      ok: true,
+      hearthgate: APP_IDENTITY,
+      description: 'Configuration and extension governor. Assigns agents to rooms, installs/removes modules, manages providers, permissions, memory scopes, and world access.',
+      routes: {
+        config: 'GET/PUT /api/wizard/config',
+        constellation: 'GET /api/wizard/constellation',
+        modules: 'GET /api/hearthgate/modules',
+        rooms: 'GET /api/rooms',
+      },
+      moduleManifestSchema: MODULE_MANIFEST_SCHEMA,
+    }, request.method);
+    return;
+  }
+
+  if (path === '/api/wizard/config') {
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const cfg = await loadWizardConfig();
+      json(response, 200, { ok: true, config: cfg }, request.method);
+      return;
+    }
+    if (request.method === 'PUT') {
+      try {
+        const body = await readRequestJson(request);
+        const patch = {};
+        if (body.roomAgents && typeof body.roomAgents === 'object') patch.roomAgents = body.roomAgents;
+        if (Array.isArray(body.customModules)) patch.customModules = body.customModules;
+        const updated = await saveWizardConfig(patch);
+        json(response, 200, { ok: true, config: updated }, request.method);
+      } catch (err) {
+        const tooLarge = err?.code === 'request-body-too-large';
+        const unknownRoom = err?.code === 'unknown-room';
+        json(response, tooLarge ? 413 : unknownRoom ? 400 : 500, {
+          ok: false, error: tooLarge ? 'request-body-too-large' : unknownRoom ? 'unknown-room' : 'wizard-config-error',
+          details: err.message,
+        }, request.method);
+      }
+      return;
+    }
+    json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+    return;
+  }
+
+  if (path === '/api/wizard/constellation') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const cfg = await loadWizardConfig();
+    const constellationWithRuntime = activeAgentRegistry.map(agent => {
+      const runtime = cfg.agentConfigs?.[agent.id] ?? { status: 'not-started' };
+      return {
+        ...agent,
+        status: runtime.status ?? agent.status,
+        runtimeConfig: runtime,
+        assignedRooms: Object.entries(cfg.roomAgents)
+          .filter(([, agentId]) => agentId === agent.id)
+          .map(([roomId]) => roomId),
+      };
+    });
+    const activeCount = constellationWithRuntime.filter(a => a.status === 'active').length;
+    json(response, 200, {
+      ok: true,
+      hearthgate: APP_IDENTITY,
+      activeCount,
+      totalConstellation: activeAgentRegistry.length,
+      agents: constellationWithRuntime,
+    }, request.method);
+    return;
+  }
+
+  const constellationAgentMatch = path.match(/^\/api\/wizard\/constellation\/([^/]+)$/);
+  if (constellationAgentMatch) {
+    const agentId = constellationAgentMatch[1];
+    if (!AGENT_IDS.includes(agentId)) {
+      json(response, 404, { ok: false, error: 'agent-not-found', agentId }, request.method);
+      return;
+    }
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const staticDef = activeAgentRegistry.find(a => a.id === agentId);
+      const runtime = await getAgentRuntimeConfig(agentId);
+      json(response, 200, {
+        ok: true,
+        agent: { ...staticDef, status: runtime.status ?? staticDef.status, runtimeConfig: runtime },
+      }, request.method);
+      return;
+    }
+    json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+    return;
+  }
+
+  const agentStartMatch = path.match(/^\/api\/wizard\/constellation\/([^/]+)\/(start|stop)$/);
+  if (agentStartMatch) {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const agentId = agentStartMatch[1];
+    const action = agentStartMatch[2];
+    if (!AGENT_IDS.includes(agentId)) {
+      json(response, 404, { ok: false, error: 'agent-not-found', agentId }, request.method);
+      return;
+    }
+    try {
+      let body = {};
+      try { body = await readRequestJson(request); } catch { /* optional body */ }
+      let updatedCfg;
+      if (action === 'start') {
+        updatedCfg = await startAgent(agentId, {
+          provider: body.provider ?? null,
+          model: body.model ?? null,
+          memoryScope: body.memoryScope ?? null,
+          worldAccess: body.worldAccess ?? null,
+        });
+      } else {
+        updatedCfg = await stopAgent(agentId);
+      }
+      const runtime = updatedCfg.agentConfigs?.[agentId] ?? {};
+      const staticDef = activeAgentRegistry.find(a => a.id === agentId);
+      json(response, 200, {
+        ok: true,
+        action,
+        agent: { ...staticDef, status: runtime.status, runtimeConfig: runtime },
+      }, request.method);
+    } catch (err) {
+      json(response, 500, { ok: false, error: 'agent-lifecycle-error', details: err.message }, request.method);
+    }
+    return;
+  }
+
+  if (path === '/api/hearthgate/modules') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const modules = await loadModuleManifests();
+    json(response, 200, {
+      ok: true,
+      hearthgate: APP_IDENTITY,
+      count: modules.length,
+      modules,
+    }, request.method);
+    return;
+  }
+
+  const moduleMatch = path.match(/^\/api\/hearthgate\/modules\/([^/]+)$/);
+  if (moduleMatch) {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const modules = await loadModuleManifests();
+    const mod = modules.find((m) => m.id === moduleMatch[1]);
+    if (!mod) {
+      json(response, 404, { ok: false, error: 'module-not-found', id: moduleMatch[1] }, request.method);
+      return;
+    }
+    json(response, 200, { ok: true, module: mod }, request.method);
+    return;
+  }
+
+  if (path === '/api/hearthgate/registry') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    json(response, 200, {
+      ok: true,
+      hearthgate: APP_IDENTITY,
+      cosmologicalPosition: 'Universal Horizon is the sky above the Ark. Hearthgate and Hearthfire operate beneath it, not beside it. UH is not a module or contributor — it is the field within which all of this operates.',
+      arkfireCanonicalLoop: 'Observe → Model → Interpret → Generate → Narrate → Evaluate → Record → Reobserve',
+      activeAgentRegistry,
+      contributorAttributionRegistry,
+    }, request.method);
+    return;
+  }
+
+  if (path === '/api/graph') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    json(response, 200, { ok: true, stats: graphStats() }, request.method);
+    return;
+  }
+
+  if (path === '/api/graph/query') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const q = requestUrl.searchParams.get('q') ?? '';
+    const k = Math.min(Number(requestUrl.searchParams.get('k') ?? 15), 50);
+    const world = requestUrl.searchParams.get('world') ?? null;
+    const kind = requestUrl.searchParams.get('kind') ?? null;
+    if (!q.trim()) {
+      json(response, 400, { ok: false, error: 'q-required' }, request.method);
+      return;
+    }
+    const filter = {};
+    if (world) filter.worldId = world;
+    if (kind) filter.kind = kind;
+    const results = queryBM25(q, k, filter);
+    json(response, 200, { ok: true, query: q, count: results.length, results }, request.method);
+    return;
+  }
+
+  const graphNodeMatch = path.match(/^\/api\/graph\/node\/([^/]+)$/);
+  if (graphNodeMatch) {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    const node = getNode(decodeURIComponent(graphNodeMatch[1]));
+    if (!node) {
+      json(response, 404, { ok: false, error: 'node-not-found' }, request.method);
+      return;
+    }
+    const edges = getEdges(node.id, 'both');
+    json(response, 200, { ok: true, node, edges }, request.method);
+    return;
+  }
+
+  if (path === '/api/graph/traverse') {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    try {
+      const body = await readRequestJson(request);
+      if (!body.nodeId) {
+        json(response, 400, { ok: false, error: 'nodeId-required' }, request.method);
+        return;
+      }
+      const maxHops = Math.min(body.maxHops ?? 3, 6);
+      const result = traverse(body.nodeId, body.relation ?? null, maxHops);
+      json(response, 200, { ok: true, ...result, nodeCount: result.nodes.length, edgeCount: result.edges.length }, request.method);
+    } catch (err) {
+      const tooLarge = err?.code === 'request-body-too-large';
+      json(response, tooLarge ? 413 : 400, { ok: false, error: tooLarge ? 'request-body-too-large' : 'traverse-error' }, request.method);
+    }
+    return;
+  }
+
+  if (path === '/api/observer/workspace') {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    try {
+      const body = await readRequestJson(request);
+      if (!body.prompt || typeof body.prompt !== 'string') {
+        json(response, 400, { ok: false, error: 'prompt-required', details: 'body.prompt must be a non-empty string' }, request.method);
+        return;
+      }
+
+      const anchor = await getSanctumAnchor();
+      const anchorKey = _anchorKey(anchor);
+      const now = Date.now();
+      if (!_envCache || now - _envCache.fetchedAt > ENV_TTL_MS || _envCache.anchorKey !== anchorKey) {
+        _envCache = { value: await fetchEnvironmentReading(anchor), fetchedAt: now, anchorKey };
+      }
+      const envReading = _envCache.value;
+
+      let modelWorkspace = { available: false };
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), JLENS_TIMEOUT_MS);
+        const jlensRes = await fetch(`${JLENS_BASE}/workspace`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            prompt: body.prompt,
+            layers: body.layers ?? null,
+            top_k: body.topK ?? 10,
+            positions: body.positions ?? [-1],
+          }),
+          signal: ctrl.signal,
+        }).finally(() => clearTimeout(timer));
+
+        if (jlensRes.ok) {
+          const jlensData = await jlensRes.json();
+          if (jlensData.workspace_available) {
+            const topConcepts = (jlensData.top_concepts ?? []).map((c) => ({
+              token: c.token,
+              rank: c.rank,
+              layer: c.layer,
+              position: c.position,
+            }));
+            modelWorkspace = {
+              available: true,
+              model: jlensData.model,
+              lensVersion: jlensData.lens_version,
+              workspaceBand: jlensData.workspace_band,
+              topConcepts,
+              crossChecked: false,
+              divergences: [],
+            };
+          } else {
+            modelWorkspace = { available: false, error: jlensData.error };
+          }
+        }
+      } catch (_jlensErr) {
+        modelWorkspace = { available: false, error: 'jlens-service-unavailable' };
+      }
+
+      const workspaceId = randomUUID();
+      const topK = Math.min(body.topNodes ?? 15, 20);
+      const bm25Results = queryBM25(body.prompt, topK);
+      const activeNodeIds = new Set(bm25Results.map(r => r.node.id));
+      const worldsInScope = body.worlds ?? ['earth'];
+      for (const wId of worldsInScope) {
+        const wNode = getNode(`world-${wId}`);
+        if (wNode && activeNodeIds.size < 20) activeNodeIds.add(wNode.id);
+      }
+
+      const activeNodes = bm25Results.map(({ node, score }) => ({
+        nodeId: node.id,
+        label: node.label,
+        kind: node.kind,
+        worldId: node.worldId,
+        activationScore: Math.min(1, score / 5),
+        retrievedBy: 'bm25',
+        epistemicStatus: node.epistemicStatus,
+      }));
+
+      for (const wId of worldsInScope) {
+        const nodeId = `world-${wId}`;
+        if (!activeNodeIds.has(nodeId)) {
+          const wNode = getNode(nodeId);
+          if (wNode) {
+            activeNodes.push({ nodeId, label: wNode.label, kind: 'world', worldId: wNode.worldId, activationScore: 0.5, retrievedBy: 'world-scope', epistemicStatus: wNode.epistemicStatus });
+            activeNodeIds.add(nodeId);
+          }
+        }
+      }
+
+      const activeEdges = [];
+      const seenEdgeKeys = new Set();
+      for (const nodeId of activeNodeIds) {
+        for (const edge of getEdges(nodeId, 'out')) {
+          if (activeNodeIds.has(edge.toId)) {
+            const key = `${edge.fromId}|${edge.relation}|${edge.toId}`;
+            if (!seenEdgeKeys.has(key)) {
+              seenEdgeKeys.add(key);
+              activeEdges.push({ fromId: edge.fromId, toId: edge.toId, relation: edge.relation, weight: edge.weight ?? 1 });
+            }
+          }
+        }
+      }
+
+      const workspace = {
+        schema: 'hearthfire.jspace-workspace/v1',
+        workspaceId,
+        query: body.prompt,
+        activeWorlds: worldsInScope,
+        activeNodes,
+        activeEdges,
+        externalJspace: {
+          state: envReading.jspace?.state ?? [0, 0, 0],
+          closestFiber: envReading.jspace?.closestFiber ?? 0,
+          closestFiberLabel: envReading.jspace?.closestFiberLabel ?? 'earth-p1',
+          fiberDistances: envReading.jspace?.fiberDistances ?? [0, 0, 0],
+          premaqSnapshot: envReading.premaq,
+          claimLabel: 'speculative-theory',
+        },
+        modelWorkspace,
+        createdAt: new Date().toISOString(),
+      };
+
+      json(response, 200, { ok: true, workspace }, request.method);
+    } catch (err) {
+      const tooLarge = err?.code === 'request-body-too-large';
+      json(response, tooLarge ? 413 : 500, {
+        ok: false,
+        error: tooLarge ? 'request-body-too-large' : 'workspace-error',
+        details: err.message ?? String(err),
+      }, request.method);
+    }
+    return;
+  }
+
+  if (path === '/api/concordance/schema') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+    json(response, 200, concordanceSchema(), request.method);
+    return;
+  }
+
+  if (path === '/api/concordance/evaluate') {
+    if (request.method !== 'POST') {
+      json(response, 405, { ok: false, error: 'method-not-allowed' }, request.method);
+      return;
+    }
+
+    try {
+      const body = await readRequestJson(request);
+      const reading = evaluateConcordance(body.vector || body, body.provenance || {});
+      json(response, 200, reading, request.method);
+    } catch (error) {
+      const tooLarge = error?.code === 'request-body-too-large';
+      const invalidVector = error?.code === 'invalid-concordance-vector';
+      json(response, tooLarge ? 413 : 400, {
+        ok: false,
+        error: tooLarge ? 'request-body-too-large' : invalidVector ? error.code : 'invalid-json-or-vector',
+        details: error?.details || null,
+      }, request.method);
     }
     return;
   }
@@ -430,5 +1273,16 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`${APP_NAME} ${APP_VERSION} listening at http://${host}:${port}`);
+  console.log('STARWELL is listening at http://' + host + ':' + port);
+  console.log('Framework: REI Mythience');
+  console.log('Concordance Engine: 0.2.0');
 });
+
+function close(signal) {
+  console.log(`${signal} received; banking the Hearthfire.`);
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 5_000).unref();
+}
+
+process.on('SIGINT', () => close('SIGINT'));
+process.on('SIGTERM', () => close('SIGTERM'));
