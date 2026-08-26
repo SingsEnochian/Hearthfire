@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'starwell-server/**'
+      - 'api/project-zero/**'
+      - 'vercel.json'
       - 'package.json'
       - '.nvmrc'
       - '.github/workflows/starwell-server.yml'
@@ -14,6 +16,8 @@ on:
       - main
     paths:
       - 'starwell-server/**'
+      - 'api/project-zero/**'
+      - 'vercel.json'
       - 'package.json'
       - '.nvmrc'
       - '.github/workflows/starwell-server.yml'
@@ -46,6 +50,9 @@ jobs:
 
       - name: Check server syntax
         run: node --check starwell-server/server.mjs
+
+      - name: Check Project Zero Vercel function syntax
+        run: node --check api/project-zero/capabilities.mjs && node --check api/project-zero/diagnostics.mjs
 
       - name: Check Concordance Engine syntax
         run: node --check starwell-server/public/concordance-engine.js
