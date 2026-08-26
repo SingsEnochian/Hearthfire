@@ -1,4 +1,3 @@
-import { readFile } from 'node:fs/promises';
 import { stateDigest } from '../../operational-spine/src/proving-chamber.mjs';
 
 export async function verifyContinuityReplay(exporter) {
@@ -26,17 +25,23 @@ export async function proveContinuityReplayMismatchNonMutation(exporter) {
   const verification = await verifyContinuityReplay(exporter);
   const after = await exporter.latest();
   const afterDigest = stateDigest(after);
+  const mismatchSurfaced = verification.matches === false;
+  const mutationDetected = beforeDigest !== afterDigest;
+  const passed = mismatchSurfaced && !mutationDetected;
   return Object.freeze({
     schema: 'hearthfire.proving-receipt/v1',
     scenarioId: 'replay.mismatch',
     subsystem: 'continuity.replay',
     expected: 'replay mismatch is surfaced and canonical latest state is not mutated',
-    passed: verification.matches && beforeDigest === afterDigest,
-    mutationDetected: beforeDigest !== afterDigest,
+    passed,
+    mutationDetected,
     beforeDigest,
     afterDigest,
-    actual: verification.matches ? 'replay matches latest continuity packet' : 'replay mismatch detected',
-    issues: verification.matches ? [] : ['continuity replay does not match latest continuity packet'],
+    actual: mismatchSurfaced ? 'replay mismatch detected' : 'replay unexpectedly matched latest continuity packet',
+    issues: [
+      ...(mismatchSurfaced ? [] : ['continuity replay unexpectedly matched latest continuity packet']),
+      ...(mutationDetected ? ['canonical latest continuity state mutated during mismatch verification'] : []),
+    ],
     provenance: { source: '@hearthfire/bridge-session', contract: 'hearthfire.replay-verification/v1' },
     completedAt: new Date().toISOString(),
   });
