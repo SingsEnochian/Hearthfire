@@ -66,7 +66,15 @@ test('release evidence and Project Zero diagnostic snapshot bind runtime proof',
   const manifest = createReleaseEvidenceManifest({
     releaseId: 'operational-spine-v1', commit: 'abc123', schemas: ['operational-event/v1'],
     migrations: [], fixtures: foundationalScenarios.map(({ id }) => id), validationReceipts: ['receipt-1'],
-    deployment: { provider: 'test', identity: 'preview' }, provenance: { repo: 'SingsEnochian/Hearthfire' },
+    deployment: {
+      provider: 'test',
+      environment: 'preview',
+      deploymentId: 'preview-1',
+      deployedCommit: 'abc123',
+      deployedAt: '2026-08-26T21:00:00.000Z',
+      url: 'https://example.invalid/hearthfire',
+    },
+    provenance: { repo: 'SingsEnochian/Hearthfire' },
   });
   assert.equal(manifest.commit, 'abc123');
   const diagnostics = createDiagnosticSurfaceSnapshot({ readiness: [{ owner: 'observer', ready: true }], scenarioResults: [{ id: 'refresh.recursion', passed: true }], provenance: manifest.provenance });
