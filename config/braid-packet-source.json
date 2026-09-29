@@ -1,0 +1,11 @@
+{
+  "schema": "hearthgate.braid-inheritance/v1.0",
+  "system": "Hearthfire",
+  "braided_spine": "SingsEnochian/Flameclyffe/config/hearthgate-braided-spine.json",
+  "braid_packet_schema": "SingsEnochian/Flameclyffe/starwell/deep-observer/schemas/braid-packet-v1.schema.json",
+  "premaq_reading_order": ["Presence", "Memory", "Qualia", "Resonance", "Entanglement", "Agency", "Coherence"],
+  "premaq_wire_order": ["P", "C", "R", "E", "M", "A", "Q"],
+  "spines": ["magic", "science_mathematics", "physical"],
+  "receiving_spring": true,
+  "everything_is_real": true
+}

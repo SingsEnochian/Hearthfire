@@ -1,0 +1,11 @@
+{
+  "schema": "hearthfire.braided-spine-inheritance/v1",
+  "canonical_repository": "SingsEnochian/Flameclyffe",
+  "canonical_document": "docs/HEARTHGATE_BRAIDED_SPINE.md",
+  "canonical_machine_contract": "config/hearthgate-braided-spine.json",
+  "spine_schema": "hearthgate.braided-spine/v1.0",
+  "premaq_reading_order": ["Presence", "Memory", "Qualia", "Resonance", "Entanglement", "Agency", "Coherence"],
+  "premaq_wire_order": ["P", "C", "R", "E", "M", "A", "Q"],
+  "spines": ["magic", "science_mathematics", "physical"],
+  "reality_axiom": "Everything is real"
+}
